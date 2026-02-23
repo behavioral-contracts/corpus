@@ -21,7 +21,7 @@
     "semver": {
       "type": "string",
       "description": "Semver range this contract applies to",
-      "pattern": "^[><=^~]?[0-9]+\\.[0-9]+\\.[0-9]+"
+      "pattern": "^[><=^~0-9\\s\\.]+$"
     },
     "contract_version": {
       "type": "string",
