@@ -1,0 +1,182 @@
+package: axios
+semver: ">=1.0.0 <2.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-23"
+
+functions:
+  - name: get
+    import_path: "axios"
+    description: "Makes an HTTP GET request to the specified URL"
+
+    preconditions:
+      - id: absolute-url-node
+        description: "URL must be absolute when running in Node.js environments"
+        source: "https://axios-http.com/docs/req_config"
+        severity: warning
+
+    postconditions:
+      - id: success-2xx
+        condition: "response status is 2xx"
+        returns: "AxiosResponse object with data, status, statusText, headers, config, and request fields"
+        source: "https://axios-http.com/docs/res_schema"
+        severity: info
+
+      - id: error-4xx-5xx
+        condition: "response status is 4xx or 5xx and validateStatus is default"
+        throws: "AxiosError with error.response containing the error response"
+        required_handling: >
+          Caller MUST catch AxiosError and check error.response.status to distinguish
+          between client errors (4xx) and server errors (5xx).
+        source: "https://axios-http.com/docs/handling_errors"
+        severity: error
+
+      - id: rate-limited-429
+        condition: "response status is 429 (Too Many Requests)"
+        throws: "AxiosError with error.response.status === 429"
+        required_handling: >
+          Caller MUST either:
+          1. Implement exponential backoff retry logic with the Retry-After header, OR
+          2. Explicitly handle 429 as a terminal error and surface to the user, OR
+          3. Use a request queue that respects rate limits.
+          Silently catching and ignoring 429 without retry logic is a violation.
+        source: "https://axios-http.com/docs/handling_errors"
+        severity: error
+
+      - id: network-failure
+        condition: "network error, connection timeout, or DNS resolution failure"
+        throws: "AxiosError with error.request populated but error.response === undefined"
+        required_handling: >
+          Caller MUST check if error.response exists before accessing error.response.status.
+          Network errors have error.request but NO error.response property.
+          Code that assumes error.response is always present will crash.
+        source: "https://axios-http.com/docs/handling_errors"
+        severity: error
+
+      - id: request-setup-error
+        condition: "error during request setup (before request is sent)"
+        throws: "AxiosError with both error.request === undefined and error.response === undefined"
+        required_handling: >
+          Caller MUST handle errors where neither error.request nor error.response exist.
+          These are configuration or setup errors.
+        source: "https://axios-http.com/docs/handling_errors"
+        severity: warning
+
+    edge_cases:
+      - id: relative-url-node
+        description: "Passing relative URLs (e.g., '/api/users') throws error in Node.js but works in browsers"
+        source: "https://github.com/axios/axios/issues/1212"
+        severity: warning
+
+      - id: timeout-default-zero
+        description: "Default timeout is 0 (no timeout). Production code should set explicit timeout values."
+        source: "https://axios-http.com/docs/req_config"
+        severity: info
+
+      - id: request-cancellation
+        description: "Cancelled requests throw AxiosError with error.code === 'ERR_CANCELED'"
+        source: "https://axios-http.com/docs/cancellation"
+        severity: info
+
+  - name: post
+    import_path: "axios"
+    description: "Makes an HTTP POST request to the specified URL with request body"
+
+    postconditions:
+      - id: success-2xx
+        condition: "response status is 2xx"
+        returns: "AxiosResponse object"
+        source: "https://axios-http.com/docs/res_schema"
+        severity: info
+
+      - id: error-4xx-5xx
+        condition: "response status is 4xx or 5xx"
+        throws: "AxiosError with error.response"
+        required_handling: "Caller MUST catch AxiosError and inspect error.response.status"
+        source: "https://axios-http.com/docs/handling_errors"
+        severity: error
+
+      - id: rate-limited-429
+        condition: "response status is 429"
+        throws: "AxiosError with error.response.status === 429"
+        required_handling: >
+          For POST requests, retry logic MUST be idempotency-aware.
+          Either use idempotency keys or handle 429 as terminal error.
+        source: "https://axios-http.com/docs/handling_errors"
+        severity: error
+
+      - id: network-failure
+        condition: "network error, timeout, or DNS failure"
+        throws: "AxiosError with error.response === undefined"
+        required_handling: "Check error.response exists before accessing error.response.status"
+        source: "https://axios-http.com/docs/handling_errors"
+        severity: error
+
+    edge_cases:
+      - id: retry-post-idempotency
+        description: "Retrying POST requests can cause duplicate operations. Use idempotency keys for unsafe operations."
+        source: "https://axios-http.com/docs/req_config"
+        severity: warning
+
+  - name: put
+    import_path: "axios"
+    description: "Makes an HTTP PUT request to the specified URL"
+
+    postconditions:
+      - id: error-handling
+        condition: "response status is 4xx or 5xx"
+        throws: "AxiosError"
+        required_handling: "Caller MUST catch AxiosError and inspect error.response.status"
+        source: "https://axios-http.com/docs/handling_errors"
+        severity: error
+
+      - id: network-failure
+        condition: "network error or timeout"
+        throws: "AxiosError with error.response === undefined"
+        required_handling: "Check error.response exists before accessing error.response.status"
+        source: "https://axios-http.com/docs/handling_errors"
+        severity: error
+
+  - name: delete
+    import_path: "axios"
+    description: "Makes an HTTP DELETE request to the specified URL"
+
+    postconditions:
+      - id: error-handling
+        condition: "response status is 4xx or 5xx"
+        throws: "AxiosError"
+        required_handling: "Caller MUST catch AxiosError and inspect error.response.status"
+        source: "https://axios-http.com/docs/handling_errors"
+        severity: error
+
+      - id: network-failure
+        condition: "network error or timeout"
+        throws: "AxiosError with error.response === undefined"
+        required_handling: "Check error.response exists before accessing error.response.status"
+        source: "https://axios-http.com/docs/handling_errors"
+        severity: error
+
+    edge_cases:
+      - id: retry-delete-idempotency
+        description: "DELETE is idempotent by HTTP spec, but implementations may vary. Verify your API's behavior."
+        source: "https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/DELETE"
+        severity: info
+
+  - name: request
+    import_path: "axios"
+    description: "Makes an HTTP request with full config object (generic method)"
+
+    postconditions:
+      - id: error-handling
+        condition: "response status fails validateStatus check (default: not 2xx)"
+        throws: "AxiosError"
+        required_handling: "Caller MUST catch AxiosError and handle all error states"
+        source: "https://axios-http.com/docs/handling_errors"
+        severity: error
+
+      - id: network-failure
+        condition: "network error or timeout"
+        throws: "AxiosError with error.response === undefined"
+        required_handling: "Check error.response exists before accessing properties"
+        source: "https://axios-http.com/docs/handling_errors"
+        severity: error
