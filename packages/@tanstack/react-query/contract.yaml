@@ -1,0 +1,286 @@
+package: "@tanstack/react-query"
+semver: ">=5.0.0 <6.0.0"
+contract_version: "1.0.0"
+maintainer: "behavioral-contracts"
+last_verified: "2026-02-24"
+
+functions:
+  - name: useQuery
+    import_path: "@tanstack/react-query"
+    description: "Hook that fetches data and manages query state, caching, and refetching"
+
+    postconditions:
+      - id: query-error-unhandled
+        condition: "queryFn throws an error and error state is not checked"
+        throws: "Error (type specified by TError generic, defaults to Error)"
+        required_handling: |
+          Caller MUST handle query errors using one of these methods:
+          1. Check the `error` property and `isError` state returned by useQuery, OR
+          2. Wrap the component in an ErrorBoundary with throwOnError: true, OR
+          3. Provide an onError callback in query options.
+
+          Query errors are NOT thrown - they are returned in the error property.
+          Ignoring the error state leaves users with broken UI and no feedback.
+        source: "https://tanstack.com/query/latest/docs/framework/react/guides/query-functions"
+        severity: error
+
+      - id: query-retry-client-errors
+        condition: "retry is configured without checking error type (retries on 4xx)"
+        throws: "N/A"
+        required_handling: |
+          When configuring custom retry logic, MUST NOT retry on client errors (400, 401, 403, 404).
+
+          Bad: retry: 3 (retries all errors including 4xx)
+          Good: retry: (failureCount, error) => {
+            if (error.response?.status >= 400 && error.response?.status < 500) return false;
+            return failureCount < 3;
+          }
+
+          Retrying client errors wastes resources and delays user feedback.
+          Only server errors (5xx) and network errors should trigger retries.
+        source: "https://tanstack.com/query/latest/docs/framework/react/guides/query-retries"
+        severity: warning
+
+      - id: stale-query-refetch-error
+        condition: "stale query refetches in background and new fetch fails"
+        throws: "Error from queryFn"
+        required_handling: |
+          When staleTime expires and background refetch fails, the error property will be populated.
+          Previous cached data remains available via the `data` property.
+
+          Caller MUST either:
+          1. Check `isError` state and show error UI/toast, OR
+          2. Configure global error handler via QueryCache onError, OR
+          3. Use `failureReason` to track errors without entering error state.
+
+          Silent failures leave users viewing stale data with no indication of problems.
+        source: "https://tanstack.com/query/latest/docs/framework/react/guides/caching"
+        severity: error
+
+      - id: network-error-handling
+        condition: "network failure prevents query from executing"
+        throws: "Network error (TypeError, fetch errors, etc.)"
+        required_handling: |
+          Network errors (DNS failures, timeouts, connection refused) are treated as query errors.
+
+          Caller MUST handle network errors separately from HTTP errors:
+          1. Check error type/message to distinguish network vs HTTP errors
+          2. Show appropriate user feedback ("No internet connection" vs "Server error")
+          3. Consider different retry strategies (network errors may need exponential backoff)
+
+          Treating all errors the same provides poor user experience.
+        source: "https://tanstack.com/query/latest/docs/framework/react/guides/query-functions"
+        severity: error
+
+    edge_cases:
+      - id: query-fn-returns-error
+        description: "If queryFn returns an error object instead of throwing, React Query treats it as successful data"
+        source: "https://tanstack.com/query/latest/docs/framework/react/guides/query-functions"
+        severity: warning
+
+      - id: concurrent-query-errors
+        description: "Multiple components using same query key share error state. Error in one affects all."
+        source: "https://tanstack.com/query/latest/docs/framework/react/guides/queries"
+        severity: info
+
+  - name: useMutation
+    import_path: "@tanstack/react-query"
+    description: "Hook that performs mutations (POST, PUT, DELETE) and manages mutation state"
+
+    postconditions:
+      - id: mutation-error-unhandled
+        condition: "mutationFn throws an error and error is not handled"
+        throws: "Error (type specified by TError generic, defaults to Error)"
+        required_handling: |
+          Caller MUST handle mutation errors using one of these methods:
+          1. Check the `error` property and `isError` state returned by useMutation, OR
+          2. Provide onError callback in mutation options, OR
+          3. Handle errors in the .catch() when calling mutate/mutateAsync, OR
+          4. Configure global mutation error handler via QueryClient mutationCache.onError.
+
+          Mutations modify server state - users MUST know if they failed.
+          Silent failures lead to data inconsistency and user confusion.
+        source: "https://tanstack.com/query/latest/docs/framework/react/guides/mutations"
+        severity: error
+
+      - id: mutation-optimistic-update-rollback
+        condition: "optimistic update is performed and mutation fails"
+        throws: "Error from mutationFn"
+        required_handling: |
+          When using optimistic updates, the onError callback MUST roll back the optimistic changes.
+
+          Required pattern:
+          ```
+          onMutate: async (newData) => {
+            await queryClient.cancelQueries({ queryKey })
+            const previousData = queryClient.getQueryData(queryKey)
+            queryClient.setQueryData(queryKey, newData) // optimistic update
+            return { previousData } // context for rollback
+          },
+          onError: (err, newData, context) => {
+            queryClient.setQueryData(queryKey, context.previousData) // ROLLBACK
+          }
+          ```
+
+          Without rollback, failed mutations leave UI showing incorrect data.
+        source: "https://tanstack.com/query/latest/docs/framework/react/guides/optimistic-updates"
+        severity: error
+
+      - id: mutation-default-no-retry
+        condition: "mutation fails and caller expects retry behavior"
+        throws: "N/A"
+        required_handling: |
+          Mutations do NOT retry by default (unlike queries).
+
+          If retry is needed for idempotent mutations:
+          1. Explicitly configure retry option
+          2. Ensure mutation is idempotent or uses idempotency keys
+          3. Only retry on network/server errors, NOT client errors
+
+          Bad: retry: 3 (may duplicate non-idempotent operations)
+          Good: retry: false (default, explicit)
+          Acceptable: retry: (failureCount, error) => {
+            // Only retry GET-like mutations or with idempotency keys
+            return error.response?.status >= 500 && failureCount < 2
+          }
+        source: "https://tanstack.com/query/latest/docs/framework/react/guides/mutations"
+        severity: warning
+
+      - id: mutation-parallel-execution
+        condition: "multiple mutations executing concurrently cause race conditions"
+        throws: "N/A"
+        required_handling: |
+          By default, mutations execute in parallel which can cause race conditions.
+
+          For sequential mutations, caller MUST:
+          1. Use mutateAsync with await for sequential execution, OR
+          2. Use onSuccess callback to chain mutations, OR
+          3. Configure mutation queue in QueryClient.
+
+          Parallel mutations can cause: last-write-wins conflicts, data inconsistency, incorrect UI state.
+        source: "https://tanstack.com/query/latest/docs/framework/react/guides/mutations"
+        severity: warning
+
+    edge_cases:
+      - id: mutate-vs-mutateasync
+        description: "mutate() doesn't return a Promise. Use mutateAsync() if you need to await the result."
+        source: "https://tanstack.com/query/latest/docs/framework/react/reference/useMutation"
+        severity: info
+
+      - id: mutation-context-type-safety
+        description: "Context returned from onMutate must match type expected in onError/onSuccess"
+        source: "https://tanstack.com/query/latest/docs/framework/react/guides/optimistic-updates"
+        severity: info
+
+  - name: useInfiniteQuery
+    import_path: "@tanstack/react-query"
+    description: "Hook for infinite scrolling/pagination that manages multiple pages of data"
+
+    postconditions:
+      - id: infinite-query-error-unhandled
+        condition: "fetchNextPage fails and error is not handled"
+        throws: "Error from queryFn for failed page"
+        required_handling: |
+          Caller MUST handle errors when fetching additional pages:
+          1. Check `error` and `isError` state, OR
+          2. Check `fetchNextPageError` for page-specific errors, OR
+          3. Provide onError callback in query options.
+
+          When fetchNextPage fails, previously loaded pages remain accessible via `data`.
+          User must be informed that loading more failed.
+        source: "https://tanstack.com/query/latest/docs/framework/react/guides/infinite-queries"
+        severity: error
+
+      - id: infinite-query-refetch-all-pages
+        condition: "query is refetched and middle pages fail"
+        throws: "Error from queryFn"
+        required_handling: |
+          When refetching infinite query, ALL pages are refetched by default.
+          If any page fails, the entire query enters error state.
+
+          Caller MUST either:
+          1. Handle errors gracefully (show toast, retry button), OR
+          2. Configure refetchPages to only refetch first page: refetchPages: 'first', OR
+          3. Use refetchOnWindowFocus: false to prevent automatic refetches.
+
+          Refetch failures can lose all previously loaded pages if not handled.
+        source: "https://tanstack.com/query/latest/docs/framework/react/guides/infinite-queries"
+        severity: error
+
+    edge_cases:
+      - id: getnextpageparam-undefined
+        description: "If getNextPageParam returns undefined, hasNextPage becomes false. Ensure this is intentional."
+        source: "https://tanstack.com/query/latest/docs/framework/react/guides/infinite-queries"
+        severity: info
+
+      - id: infinite-query-memory
+        description: "Infinite queries accumulate pages in memory. Consider gcTime for cleanup or limit max pages."
+        source: "https://tanstack.com/query/latest/docs/framework/react/guides/infinite-queries"
+        severity: info
+
+  - name: QueryClient
+    import_path: "@tanstack/react-query"
+    description: "Main client for managing queries, mutations, and cache configuration"
+
+    preconditions:
+      - id: missing-global-error-handlers
+        description: "QueryClient created without global error handlers in production"
+        required_handling: |
+          Production applications SHOULD configure global error handlers for better UX:
+
+          ```typescript
+          new QueryClient({
+            queryCache: new QueryCache({
+              onError: (error) => {
+                // Global query error handling: toasts, logging, navigation
+                if (error.response?.status === 401) {
+                  router.navigate('/login')
+                }
+                toast.error('Something went wrong')
+              }
+            }),
+            mutationCache: new MutationCache({
+              onError: (error) => {
+                // Global mutation error handling
+              }
+            })
+          })
+          ```
+
+          Without global handlers, developers must handle errors in every hook usage.
+          Global handlers ensure consistent error UX across the application.
+        source: "https://tanstack.com/query/latest/docs/framework/react/guides/query-functions"
+        severity: warning
+
+      - id: default-retry-strategy-production
+        description: "Using default retry strategy (3 retries for all errors) in production"
+        required_handling: |
+          Default retry behavior retries ALL errors 3 times, including client errors (4xx).
+
+          Production apps SHOULD configure smarter retry logic:
+          ```typescript
+          new QueryClient({
+            defaultOptions: {
+              queries: {
+                retry: (failureCount, error) => {
+                  // Don't retry client errors
+                  if (error?.response?.status >= 400 && error?.response?.status < 500) {
+                    return false
+                  }
+                  // Retry server/network errors up to 3 times
+                  return failureCount < 3
+                }
+              }
+            }
+          })
+          ```
+
+          Smart retry prevents wasted API calls and provides faster user feedback.
+        source: "https://tanstack.com/query/latest/docs/framework/react/guides/query-retries"
+        severity: warning
+
+    edge_cases:
+      - id: staletime-vs-gctime
+        description: "staleTime (data freshness) and gcTime (memory cleanup) serve different purposes. Understand the difference."
+        source: "https://tanstack.com/query/latest/docs/framework/react/guides/caching"
+        severity: info

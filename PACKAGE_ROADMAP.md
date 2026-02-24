@@ -8,15 +8,17 @@
 
 ## Current Coverage
 
-- **Total Packages in Corpus:** 7
+- **Total Packages in Corpus:** 9
 - **Packages Onboarded:**
   - ✅ @prisma/client
   - ✅ @supabase/supabase-js
+  - ✅ @tanstack/react-query
   - ✅ axios
   - ✅ express
   - ✅ openai
   - ✅ pg
   - ✅ stripe
+  - ✅ zod
 
 ---
 
@@ -51,30 +53,30 @@
 - **Target:** Sprint 1
 
 #### @tanstack/react-query
-- **Status:** 🔴 Not Started
+- **Status:** ✅ Complete
 - **Priority:** P0 - Critical
-- **Usage:** Data fetching and caching
+- **Usage:** Data fetching and caching (jake-tennis: v5.74.3)
 - **Key Behaviors:**
   - Query failures and retries
   - Mutation errors
   - Stale data handling
-  - Cache invalidation
+  - Optimistic updates with rollback
 - **Research:** [docs](https://tanstack.com/query/latest/docs/framework/react/overview)
-- **Assigned:** Unassigned
-- **Target:** Sprint 1
+- **Completed:** 2026-02-24
+- **Note:** Contract complete. Analyzer enhancement needed for hook-based error pattern detection.
 
 #### zod
-- **Status:** 🔴 Not Started
+- **Status:** ✅ Complete
 - **Priority:** P0 - Critical
-- **Usage:** Schema validation (pairs with react-hook-form)
+- **Usage:** Schema validation (pairs with react-hook-form, 20+ files in jake-tennis)
 - **Key Behaviors:**
   - Schema parsing errors
   - Type coercion failures
   - Custom validator errors
   - Async validation
 - **Research:** [docs](https://zod.dev/)
-- **Assigned:** Unassigned
-- **Target:** Sprint 1
+- **Completed:** 2026-02-24
+- **Note:** Contract complete with 4 functions (parse, parseAsync, safeParse, safeParseAsync). Analyzer enhancement needed for factory pattern detection. CVE-2023-4316 documented.
 
 ---
 
@@ -383,6 +385,18 @@ To nominate a package for the roadmap:
 - **Completed:** 2026-02-23
 - **Contract Version:** 1.0.0
 - **Key Findings:** Card errors, API errors, idempotency
+
+### @tanstack/react-query
+- **Completed:** 2026-02-24
+- **Contract Version:** 1.0.0
+- **Key Findings:** Query/mutation error handling, retry patterns, stale data handling
+- **Note:** Analyzer requires hook-based error pattern detection enhancement for full support
+
+### zod
+- **Completed:** 2026-02-24
+- **Contract Version:** 1.0.0
+- **Key Findings:** parse() throws ZodError, safeParse() returns result object, factory pattern creates schema instances
+- **Note:** Analyzer requires factory pattern tracking enhancement. Contract validated against jake-tennis usage patterns. CVE-2023-4316 ReDoS in email validation (fixed in v3.22.3+).
 
 ---
 
