@@ -1,0 +1,172 @@
+package: express
+semver: ">=4.0.0 <6.0.0"
+contract_version: 1.0.0
+maintainer: behavioral-contracts
+last_verified: "2026-02-24"
+description: |
+  Behavioral contracts for Express.js focusing on async error handling in route handlers
+  and middleware. Express 4.x requires explicit error forwarding via next(err), while
+  Express 5+ automatically handles promise rejections.
+
+# Note: Express follows a method-based API pattern where route handlers and middleware
+# are passed as callbacks to app.get(), app.post(), app.use(), etc. This contract
+# documents the error handling requirements for these callback functions.
+
+functions:
+  # Async Route Handlers - app.get, app.post, app.put, app.delete, app.patch
+  - name: "app.METHOD"
+    import_path: express
+    description: |
+      Route handler methods (get, post, put, delete, patch, etc.) that accept
+      async callback functions. In Express 4.x, unhandled promise rejections
+      in async route handlers will not be caught automatically.
+
+    postconditions:
+      - id: async-route-handler-unhandled-rejection
+        condition: |
+          When an async function is used as a route handler (callback to app.get,
+          app.post, etc.) and contains await expressions without try-catch blocks
+        throws: UnhandledPromiseRejection
+        required_handling: |
+          Must wrap async operations in try-catch blocks and call next(err) with
+          the caught error to forward it to error-handling middleware. Alternatively,
+          use the express-async-errors package or upgrade to Express 5.x for automatic
+          promise rejection handling.
+
+          Example:
+          app.get('/path', async (req, res, next) => {
+            try {
+              const data = await asyncOperation();
+              res.json(data);
+            } catch (err) {
+              next(err); // Forward to error handler
+            }
+          });
+        source: https://expressjs.com/en/guide/error-handling.html
+        severity: error
+        notes: |
+          Express 5.x automatically handles promise rejections by calling next(value)
+          when async route handlers reject or throw errors. Express 4.x requires
+          explicit error handling.
+
+  # Async Middleware - app.use
+  - name: "app.use"
+    import_path: express
+    description: |
+      Middleware registration function. When async functions are used as middleware,
+      they must handle errors properly.
+
+    postconditions:
+      - id: async-middleware-unhandled-rejection
+        condition: |
+          When an async function is used as middleware and contains await expressions
+          without try-catch blocks
+        throws: UnhandledPromiseRejection
+        required_handling: |
+          Must wrap async operations in try-catch blocks and call next(err) to forward
+          errors to error-handling middleware. Alternatively, use express-async-errors.
+
+          Example:
+          app.use(async (req, res, next) => {
+            try {
+              await authenticateUser(req);
+              next(); // Continue to next middleware
+            } catch (err) {
+              next(err); // Forward to error handler
+            }
+          });
+        source: https://expressjs.com/en/guide/error-handling.html
+        severity: error
+
+      - id: error-middleware-signature
+        condition: |
+          When defining error-handling middleware
+        throws: N/A
+        required_handling: |
+          Error-handling middleware must be defined with exactly 4 parameters
+          (err, req, res, next) to be recognized by Express. Error-handling
+          middleware must be defined AFTER all other middleware and routes.
+
+          Example:
+          app.use((err, req, res, next) => {
+            console.error(err.stack);
+            res.status(500).send('Something broke!');
+          });
+        source: https://expressjs.com/en/guide/error-handling.html
+        severity: warning
+        notes: |
+          This is a structural requirement rather than a runtime error. Middleware
+          with fewer than 4 parameters will not be treated as error handlers.
+
+  # Router methods - same patterns as app
+  - name: "router.METHOD"
+    import_path: express
+    description: |
+      Router methods (get, post, put, delete, patch, etc.) created via express.Router().
+      Same async error handling requirements as app.METHOD.
+
+    postconditions:
+      - id: async-router-handler-unhandled-rejection
+        condition: |
+          When an async function is used as a router handler and contains await
+          expressions without try-catch blocks
+        throws: UnhandledPromiseRejection
+        required_handling: |
+          Must wrap async operations in try-catch blocks and call next(err).
+          Same requirements as app.METHOD route handlers.
+
+          Example:
+          const router = express.Router();
+          router.get('/users', async (req, res, next) => {
+            try {
+              const users = await User.findAll();
+              res.json(users);
+            } catch (err) {
+              next(err);
+            }
+          });
+        source: https://expressjs.com/en/guide/error-handling.html
+        severity: error
+
+  - name: "router.use"
+    import_path: express
+    description: |
+      Router middleware registration. Same async error handling requirements as app.use.
+
+    postconditions:
+      - id: async-router-middleware-unhandled-rejection
+        condition: |
+          When an async function is used as router middleware and contains await
+          expressions without try-catch blocks
+        throws: UnhandledPromiseRejection
+        required_handling: |
+          Must wrap async operations in try-catch blocks and call next(err).
+          Same requirements as app.use middleware.
+        source: https://expressjs.com/en/guide/error-handling.html
+        severity: error
+
+related_packages:
+  - express-async-errors
+  - express-async-handler
+
+notes: |
+  Express error handling has evolved significantly:
+
+  1. Express 4.x: Requires explicit try-catch and next(err) for async functions
+  2. Express 5.x: Automatically handles promise rejections in route handlers and middleware
+
+  Common anti-patterns:
+  - Forgetting try-catch in async route handlers
+  - Not calling next(err) to forward errors
+  - Defining error middleware with wrong number of parameters
+  - Placing error middleware before route definitions
+
+  CVEs related to Express error handling:
+  - CVE-2024-29041: Open redirect via malformed URLs in res.redirect()
+  - CVE-2024-10491: Link header injection in response.links()
+
+  These CVEs highlight the importance of input validation and sanitization,
+  but are not directly related to async error handling patterns.
+
+  The most common real-world issues are unhandled promise rejections that can
+  crash the Node.js process or leave the server in an inconsistent state.

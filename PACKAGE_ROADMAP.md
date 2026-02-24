@@ -8,11 +8,12 @@
 
 ## Current Coverage
 
-- **Total Packages in Corpus:** 6
+- **Total Packages in Corpus:** 7
 - **Packages Onboarded:**
   - ✅ @prisma/client
   - ✅ @supabase/supabase-js
   - ✅ axios
+  - ✅ express
   - ✅ openai
   - ✅ pg
   - ✅ stripe
@@ -24,7 +25,7 @@
 ### Tier 1: Critical Infrastructure (P0)
 
 #### express
-- **Status:** 🔴 Not Started
+- **Status:** ✅ Complete
 - **Priority:** P0 - Critical
 - **Usage:** Backend API framework (widely used)
 - **Key Behaviors:**
@@ -33,8 +34,8 @@
   - Request validation failures
   - Response status codes
 - **Research:** [docs](https://expressjs.com/en/guide/error-handling.html)
-- **Assigned:** Unassigned
-- **Target:** Sprint 1
+- **Completed:** 2026-02-24
+- **Note:** Contract complete, analyzer enhancement needed for callback pattern detection
 
 #### react-hook-form
 - **Status:** 🔴 Not Started
@@ -361,6 +362,12 @@ To nominate a package for the roadmap:
 - **Completed:** 2026-02-23
 - **Contract Version:** 1.0.0
 - **Key Findings:** Network errors, timeout handling, response validation
+
+### express
+- **Completed:** 2026-02-24
+- **Contract Version:** 1.0.0
+- **Key Findings:** Async error handling in route handlers/middleware, error middleware patterns
+- **Note:** Analyzer requires callback pattern detection enhancement for full support
 
 ### openai
 - **Completed:** 2026-02-23
