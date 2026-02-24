@@ -1,0 +1,272 @@
+package: "@prisma/client"
+semver: ">=4.0.0 <7.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-23"
+
+functions:
+  - name: create
+    import_path: "@prisma/client"
+    description: "Creates a new database record"
+
+    postconditions:
+      - id: unique-constraint-violation
+        condition: "Unique constraint violation (duplicate key)"
+        throws: "PrismaClientKnownRequestError with code 'P2002'"
+        required_handling: >
+          Caller MUST catch P2002 errors and handle duplicate key violations gracefully.
+          Extract conflicting field from error.meta.target.
+          DO NOT retry without changing the unique field value.
+        source: "https://www.prisma.io/docs/reference/api-reference/error-reference#p2002"
+        severity: error
+
+      - id: foreign-key-constraint
+        condition: "Foreign key constraint violation"
+        throws: "PrismaClientKnownRequestError with code 'P2003'"
+        required_handling: >
+          Caller MUST verify referenced record exists before creating.
+          This indicates data integrity issue - DO NOT retry.
+        source: "https://www.prisma.io/docs/reference/api-reference/error-reference#p2003"
+        severity: error
+
+      - id: required-field-missing
+        condition: "Required field is missing from data"
+        throws: "PrismaClientValidationError"
+        required_handling: "Validate data completeness before calling Prisma. This is a client-side error."
+        source: "https://www.prisma.io/docs/reference/api-reference/error-reference#prismaclientvalidationerror"
+        severity: error
+
+      - id: connection-error
+        condition: "Database connection failed"
+        throws: "PrismaClientInitializationError or PrismaClientRustPanicError"
+        required_handling: >
+          Caller MUST handle connection errors separately from business logic errors.
+          Implement exponential backoff retry for transient connection issues.
+          Alert operations if connection errors persist.
+        source: "https://www.prisma.io/docs/reference/api-reference/error-reference#prismaclientinitializationerror"
+        severity: error
+
+    edge_cases:
+      - id: auto-generated-ids
+        description: "If id field is auto-generated, do not pass it in create data"
+        source: "https://www.prisma.io/docs/concepts/components/prisma-client/crud#create"
+        severity: warning
+
+  - name: update
+    import_path: "@prisma/client"
+    description: "Updates an existing database record"
+
+    postconditions:
+      - id: record-not-found
+        condition: "Record to update does not exist"
+        throws: "PrismaClientKnownRequestError with code 'P2025'"
+        required_handling: >
+          Caller MUST handle P2025 (record not found) errors.
+          Decide whether to: 1. Create the record, 2. Return error to user, or 3. Silently ignore.
+          DO NOT retry update on non-existent record.
+        source: "https://www.prisma.io/docs/reference/api-reference/error-reference#p2025"
+        severity: error
+
+      - id: unique-constraint-violation
+        condition: "Update would violate unique constraint"
+        throws: "PrismaClientKnownRequestError with code 'P2002'"
+        required_handling: "Check if new value conflicts with existing record. DO NOT retry."
+        source: "https://www.prisma.io/docs/reference/api-reference/error-reference#p2002"
+        severity: error
+
+      - id: foreign-key-constraint
+        condition: "Update would violate foreign key constraint"
+        throws: "PrismaClientKnownRequestError with code 'P2003'"
+        required_handling: "Verify referenced record exists. This indicates data integrity issue."
+        source: "https://www.prisma.io/docs/reference/api-reference/error-reference#p2003"
+        severity: error
+
+      - id: connection-error
+        condition: "Database connection failed"
+        throws: "PrismaClientInitializationError"
+        required_handling: "Implement retry with exponential backoff"
+        source: "https://www.prisma.io/docs/reference/api-reference/error-reference"
+        severity: error
+
+    edge_cases:
+      - id: partial-updates
+        description: "Only fields specified in 'data' are updated. Missing fields are not set to null."
+        source: "https://www.prisma.io/docs/concepts/components/prisma-client/crud#update"
+        severity: info
+
+  - name: delete
+    import_path: "@prisma/client"
+    description: "Deletes a database record"
+
+    postconditions:
+      - id: record-not-found
+        condition: "Record to delete does not exist"
+        throws: "PrismaClientKnownRequestError with code 'P2025'"
+        required_handling: >
+          Caller MUST handle P2025 errors. Decide if missing record is acceptable (idempotent delete).
+          DO NOT retry delete on non-existent record.
+        source: "https://www.prisma.io/docs/reference/api-reference/error-reference#p2025"
+        severity: error
+
+      - id: foreign-key-constraint
+        condition: "Cannot delete because of foreign key constraint (dependent records exist)"
+        throws: "PrismaClientKnownRequestError with code 'P2003' or 'P2014'"
+        required_handling: >
+          Caller MUST either: 1. Delete dependent records first (cascade delete), or 2. Return error to user.
+          Check referencing tables before attempting delete.
+        source: "https://www.prisma.io/docs/reference/api-reference/error-reference#p2014"
+        severity: error
+
+      - id: connection-error
+        condition: "Database connection failed"
+        throws: "PrismaClientInitializationError"
+        required_handling: "Implement retry with exponential backoff"
+        source: "https://www.prisma.io/docs/reference/api-reference/error-reference"
+        severity: error
+
+    edge_cases:
+      - id: cascade-deletes
+        description: "If onDelete: Cascade is set in schema, dependent records are automatically deleted"
+        source: "https://www.prisma.io/docs/concepts/components/prisma-schema/relations#referential-actions"
+        severity: info
+
+  - name: findUnique
+    import_path: "@prisma/client"
+    description: "Finds a single record by unique identifier"
+
+    postconditions:
+      - id: record-not-found
+        condition: "Record with specified ID does not exist"
+        returns: "null"
+        required_handling: >
+          Caller MUST check if result is null before accessing properties.
+          Code that assumes findUnique always returns a record will crash.
+        source: "https://www.prisma.io/docs/concepts/components/prisma-client/crud#findunique"
+        severity: error
+
+      - id: connection-error
+        condition: "Database connection failed"
+        throws: "PrismaClientInitializationError"
+        required_handling: "Implement retry with exponential backoff"
+        source: "https://www.prisma.io/docs/reference/api-reference/error-reference"
+        severity: error
+
+    edge_cases:
+      - id: findunique-vs-findfirst
+        description: "findUnique requires unique field. For non-unique queries, use findFirst or findMany."
+        source: "https://www.prisma.io/docs/concepts/components/prisma-client/crud#findunique"
+        severity: warning
+
+  - name: findUniqueOrThrow
+    import_path: "@prisma/client"
+    description: "Finds a single record by unique identifier, throws if not found"
+
+    postconditions:
+      - id: record-not-found
+        condition: "Record with specified ID does not exist"
+        throws: "PrismaClientKnownRequestError with code 'P2025'"
+        required_handling: >
+          Caller MUST catch P2025 errors when using findUniqueOrThrow.
+          This method throws instead of returning null, requiring explicit error handling.
+        source: "https://www.prisma.io/docs/concepts/components/prisma-client/crud#finduniqueorthrow"
+        severity: error
+
+      - id: connection-error
+        condition: "Database connection failed"
+        throws: "PrismaClientInitializationError"
+        required_handling: "Implement retry with exponential backoff"
+        source: "https://www.prisma.io/docs/reference/api-reference/error-reference"
+        severity: error
+
+  - name: $transaction
+    import_path: "@prisma/client"
+    description: "Executes multiple operations in a database transaction"
+
+    postconditions:
+      - id: transaction-failed
+        condition: "Any operation in transaction fails"
+        throws: "PrismaClientKnownRequestError (various codes) or PrismaClientUnknownRequestError"
+        required_handling: >
+          Caller MUST handle transaction failures. All operations are rolled back.
+          Identify which operation failed using error.code and error.meta.
+          Consider retry strategy for transient errors (connection issues).
+        source: "https://www.prisma.io/docs/concepts/components/prisma-client/transactions"
+        severity: error
+
+      - id: deadlock-error
+        condition: "Transaction deadlock detected by database"
+        throws: "PrismaClientKnownRequestError with code 'P2034'"
+        required_handling: >
+          Caller SHOULD implement retry logic for deadlock errors.
+          Use exponential backoff with jitter to reduce contention.
+          Consider redesigning transaction to reduce lock duration.
+        source: "https://www.prisma.io/docs/reference/api-reference/error-reference#p2034"
+        severity: error
+
+      - id: connection-error-in-transaction
+        condition: "Connection lost during transaction"
+        throws: "PrismaClientInitializationError"
+        required_handling: >
+          Transaction is automatically rolled back. Retry entire transaction.
+          Implement idempotency if retrying critical transactions (payments, etc).
+        source: "https://www.prisma.io/docs/concepts/components/prisma-client/transactions#transaction-timeouts"
+        severity: error
+
+      - id: transaction-timeout
+        condition: "Transaction exceeded max duration"
+        throws: "PrismaClientKnownRequestError with code 'P2024'"
+        required_handling: >
+          Break transaction into smaller units or increase timeout.
+          Long transactions hold locks and can cause performance issues.
+        source: "https://www.prisma.io/docs/reference/api-reference/error-reference#p2024"
+        severity: warning
+
+    edge_cases:
+      - id: nested-transactions
+        description: "Prisma does not support nested transactions. Use a single top-level transaction."
+        source: "https://www.prisma.io/docs/concepts/components/prisma-client/transactions#nested-transactions"
+        severity: warning
+
+  - name: $connect
+    import_path: "@prisma/client"
+    description: "Explicitly connects to the database"
+
+    postconditions:
+      - id: connection-failed
+        condition: "Unable to establish database connection"
+        throws: "PrismaClientInitializationError"
+        required_handling: >
+          Caller MUST handle connection failures. Common causes:
+          1. Database server is down
+          2. Invalid connection string
+          3. Network issues
+          4. Database authentication failure
+          Implement retry with exponential backoff for transient errors.
+        source: "https://www.prisma.io/docs/reference/api-reference/error-reference#prismaclientinitializationerror"
+        severity: error
+
+    edge_cases:
+      - id: auto-connect
+        description: "Prisma Client connects automatically on first query. Explicit $connect is optional."
+        source: "https://www.prisma.io/docs/concepts/components/prisma-client/working-with-prismaclient/connection-management#connect"
+        severity: info
+
+  - name: $disconnect
+    import_path: "@prisma/client"
+    description: "Closes all database connections"
+
+    postconditions:
+      - id: disconnect-with-pending-queries
+        condition: "Disconnecting while queries are pending"
+        throws: "May throw errors for pending queries"
+        required_handling: >
+          Caller SHOULD await all pending queries before calling $disconnect.
+          Use in graceful shutdown handlers (SIGTERM, SIGINT).
+        source: "https://www.prisma.io/docs/concepts/components/prisma-client/working-with-prismaclient/connection-management#disconnect"
+        severity: warning
+
+    edge_cases:
+      - id: disconnect-in-serverless
+        description: "In serverless environments, do NOT call $disconnect in every function invocation"
+        source: "https://www.prisma.io/docs/guides/performance-and-optimization/connection-management#serverless-environments-faas"
+        severity: warning
