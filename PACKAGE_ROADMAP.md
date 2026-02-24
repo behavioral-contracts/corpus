@@ -40,17 +40,17 @@
 - **Note:** Contract complete, analyzer enhancement needed for callback pattern detection
 
 #### react-hook-form
-- **Status:** 🔴 Not Started
+- **Status:** ✅ Complete
 - **Priority:** P0 - Critical
-- **Usage:** Form handling (18+ files in jake-tennis)
+- **Usage:** Form handling (19 files in jake-tennis)
 - **Key Behaviors:**
-  - Validation errors
-  - Form submission failures
-  - Field registration errors
-  - Schema integration with zod
+  - Async form submission errors (unhandled promises)
+  - Empty catch blocks (silent failures)
+  - Server validation errors (missing setError)
+  - useFormContext without FormProvider (crashes)
 - **Research:** [docs](https://react-hook-form.com/docs)
-- **Assigned:** Unassigned
-- **Target:** Sprint 1
+- **Completed:** 2026-02-24
+- **Note:** Contract complete. Analyzer support limited - only detects useFormContext issues. Async error detection and empty catch block detection need analyzer improvements.
 
 #### @tanstack/react-query
 - **Status:** ✅ Complete
@@ -253,10 +253,10 @@
 ### Sprint 1 Goals (Tier 1 - P0 Packages)
 **Target:** 4 packages → Coverage increase from 1.5% to ~4.5%
 
-- [ ] express
-- [ ] react-hook-form
-- [ ] @tanstack/react-query
-- [ ] zod
+- [x] express
+- [x] react-hook-form
+- [x] @tanstack/react-query
+- [x] zod
 
 **Success Criteria:**
 - All 4 contracts validated against real codebases
