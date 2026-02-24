@@ -23,8 +23,7 @@ export const expected: ExpectedViolations = {
       "min": 0,
       "max": 0
     }
-  }
-},
+  },
   "pending": true,
-  "pendingReason": "Analyzer does not yet support callback pattern detection (async functions passed to app.get/post/use)"
+  "pendingReason": "Analyzer does not yet support callback pattern detection"
 };
