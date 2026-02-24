@@ -5,9 +5,9 @@ maintainer: "corpus-team"
 last_verified: "2026-02-24"
 
 functions:
-  - name: Client.query
+  - name: query
     import_path: "pg"
-    description: "Executes a SQL query using a single client connection"
+    description: "Executes a SQL query (Client.query or Pool.query)"
 
     postconditions:
       - id: syntax-error
@@ -82,9 +82,9 @@ functions:
         source: "https://node-postgres.com/apis/client"
         severity: warning
 
-  - name: Pool.connect
+  - name: connect
     import_path: "pg"
-    description: "Checks out a client from the connection pool"
+    description: "Establishes connection (Client.connect or Pool.connect)"
 
     postconditions:
       - id: pool-exhausted
@@ -135,87 +135,3 @@ functions:
         source: "https://node-postgres.com/apis/pool"
         severity: warning
 
-  - name: Pool.query
-    import_path: "pg"
-    description: "Executes a query using an automatically checked-out client from pool"
-
-    postconditions:
-      - id: unique-violation
-        condition: "Unique constraint violation (23505)"
-        throws: "Error with code '23505'"
-        required_handling: "Handle duplicate key violations. DO NOT retry without changing data."
-        source: "https://www.postgresql.org/docs/current/errcodes-appendix.html"
-        severity: error
-
-      - id: foreign-key-violation
-        condition: "Foreign key constraint violation (23503)"
-        throws: "Error with code '23503'"
-        required_handling: "Verify referenced records exist. DO NOT retry."
-        source: "https://www.postgresql.org/docs/current/errcodes-appendix.html"
-        severity: error
-
-      - id: connection-error
-        condition: "Database connection failed"
-        throws: "Connection error"
-        required_handling: "Implement retry with exponential backoff"
-        source: "https://node-postgres.com/"
-        severity: error
-
-    edge_cases:
-      - id: auto-release
-        description: "Pool.query() automatically checks out and releases client. Use Pool.connect() for transactions."
-        source: "https://node-postgres.com/features/pooling"
-        severity: info
-
-  - name: Client.connect
-    import_path: "pg"
-    description: "Establishes connection to PostgreSQL database"
-
-    postconditions:
-      - id: authentication-failed
-        condition: "Invalid credentials (28P01)"
-        throws: "Error with code '28P01'"
-        required_handling: >
-          Caller MUST handle authentication failures.
-          DO NOT retry with same credentials.
-          Verify username, password, and database name.
-          Check connection string format.
-        source: "https://www.postgresql.org/docs/current/errcodes-appendix.html"
-        severity: error
-
-      - id: database-not-found
-        condition: "Database does not exist (3D000)"
-        throws: "Error with code '3D000'"
-        required_handling: >
-          Verify database name is correct.
-          Create database if needed.
-          DO NOT retry without creating database.
-        source: "https://www.postgresql.org/docs/current/errcodes-appendix.html"
-        severity: error
-
-      - id: connection-refused
-        condition: "Cannot connect to server (ECONNREFUSED)"
-        throws: "Error with code 'ECONNREFUSED'"
-        required_handling: >
-          Check PostgreSQL server is running.
-          Verify host and port are correct.
-          Check firewall settings.
-          Implement retry for transient failures.
-        source: "https://node-postgres.com/"
-        severity: error
-
-      - id: ssl-required
-        condition: "Server requires SSL but client didn't request it (28000)"
-        throws: "Error indicating SSL is required"
-        required_handling: >
-          Update connection configuration to enable SSL:
-          `ssl: { rejectUnauthorized: false }` for dev,
-          proper certificate validation for production.
-        source: "https://node-postgres.com/features/ssl"
-        severity: error
-
-    edge_cases:
-      - id: connection-not-closed
-        description: "Forgetting to call client.end() leaves connections open, exhausting server connections"
-        source: "https://node-postgres.com/apis/client"
-        severity: warning
