@@ -5,7 +5,7 @@ maintainer: "corpus-team"
 last_verified: "2026-02-24"
 
 functions:
-  - name: auth.signUp
+  - name: signUp
     import_path: "@supabase/supabase-js"
     description: "Creates a new user account"
 
@@ -58,7 +58,7 @@ functions:
         source: "https://supabase.com/docs/guides/auth/troubleshooting"
         severity: warning
 
-  - name: auth.signInWithPassword
+  - name: signInWithPassword
     import_path: "@supabase/supabase-js"
     description: "Signs in a user with email and password"
 
@@ -100,9 +100,23 @@ functions:
         source: "https://supabase.com/docs/guides/troubleshooting/resolving-500-status-authentication-errors-7bU5U8"
         severity: error
 
-  - name: from.select
+  - name: from
     import_path: "@supabase/supabase-js"
-    description: "Queries data from a table"
+    description: "Initiates query builder for a table (builder entry point)"
+
+    postconditions:
+      - id: table-not-found
+        condition: "Table does not exist"
+        throws: "Error indicating table not found"
+        required_handling: >
+          Verify table name is correct.
+          Ensure migrations have been applied.
+        source: "https://supabase.com/docs/guides/database/tables"
+        severity: error
+
+  - name: select
+    import_path: "@supabase/supabase-js"
+    description: "Queries data from a table (can be chained after from())"
 
     postconditions:
       - id: rls-policy-violation
@@ -148,7 +162,7 @@ functions:
         source: "https://supabase.com/docs/guides/database/postgres/row-level-security"
         severity: warning
 
-  - name: from.insert
+  - name: insert
     import_path: "@supabase/supabase-js"
     description: "Inserts data into a table"
 
@@ -195,7 +209,7 @@ functions:
         source: "https://supabase.com/docs/guides/troubleshooting/why-is-my-service-role-key-client-getting-rls-errors-or-not-returning-data-7_1K9z"
         severity: warning
 
-  - name: from.update
+  - name: update
     import_path: "@supabase/supabase-js"
     description: "Updates data in a table"
 
@@ -227,7 +241,7 @@ functions:
         source: "https://supabase.com/docs/reference/javascript/v1"
         severity: error
 
-  - name: from.delete
+  - name: delete
     import_path: "@supabase/supabase-js"
     description: "Deletes data from a table"
 
