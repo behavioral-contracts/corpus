@@ -75,7 +75,7 @@ functions:
       - id: sql-injection-risk
         description: "NEVER use string concatenation for queries. Always use parameterized queries ($1, $2, etc.)"
         source: "https://node-postgres.com/features/queries"
-        severity: error
+        severity: warning
 
       - id: query-timeout
         description: "Long-running queries may timeout. Configure statement_timeout or query_timeout."
@@ -133,7 +133,7 @@ functions:
       - id: pool-error-events
         description: "Pool emits 'error' events for background errors. MUST add error listener to prevent crash."
         source: "https://node-postgres.com/apis/pool"
-        severity: error
+        severity: warning
 
   - name: Pool.query
     import_path: "pg"

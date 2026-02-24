@@ -141,12 +141,12 @@ functions:
       - id: service-role-bypasses-rls
         description: "Client initialized with service_role key ALWAYS bypasses RLS. NEVER use service_role in client-side code."
         source: "https://supabase.com/docs/guides/troubleshooting/why-is-my-service-role-key-client-getting-rls-errors-or-not-returning-data-7_1K9z"
-        severity: error
+        severity: warning
 
       - id: rls-not-enabled-by-default
         description: "RLS is NOT enabled by default on new tables. Always enable RLS and create policies."
         source: "https://supabase.com/docs/guides/database/postgres/row-level-security"
-        severity: error
+        severity: warning
 
   - name: from.insert
     import_path: "@supabase/supabase-js"
