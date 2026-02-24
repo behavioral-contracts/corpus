@@ -1,0 +1,221 @@
+package: pg
+semver: ">=8.0.0 <9.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-24"
+
+functions:
+  - name: Client.query
+    import_path: "pg"
+    description: "Executes a SQL query using a single client connection"
+
+    postconditions:
+      - id: syntax-error
+        condition: "SQL syntax error (42601)"
+        throws: "Error with code '42601'"
+        required_handling: >
+          Caller MUST validate SQL syntax before execution.
+          This indicates a SQL syntax error - DO NOT retry.
+          Check error.position for location of syntax error in query.
+        source: "https://www.postgresql.org/docs/current/errcodes-appendix.html"
+        severity: error
+
+      - id: unique-violation
+        condition: "Unique constraint violation (23505)"
+        throws: "Error with code '23505'"
+        required_handling: >
+          Caller MUST handle duplicate key violations gracefully.
+          Extract constraint name from error.constraint.
+          DO NOT retry without changing the unique field value.
+        source: "https://www.postgresql.org/docs/current/errcodes-appendix.html"
+        severity: error
+
+      - id: foreign-key-violation
+        condition: "Foreign key constraint violation (23503)"
+        throws: "Error with code '23503'"
+        required_handling: >
+          Caller MUST verify referenced record exists before insertion.
+          Extract constraint and table from error.constraint and error.table.
+          This indicates data integrity issue - DO NOT retry.
+        source: "https://www.postgresql.org/docs/current/errcodes-appendix.html"
+        severity: error
+
+      - id: not-null-violation
+        condition: "NOT NULL constraint violation (23502)"
+        throws: "Error with code '23502'"
+        required_handling: >
+          Caller MUST provide all required fields.
+          Extract column name from error.column.
+          Validate data completeness before query execution.
+        source: "https://www.postgresql.org/docs/current/errcodes-appendix.html"
+        severity: error
+
+      - id: connection-error
+        condition: "Connection to database failed"
+        throws: "Error with code 'ECONNREFUSED' or similar network errors"
+        required_handling: >
+          Caller MUST handle connection failures separately from query errors.
+          Common causes: database down, wrong host/port, network issues.
+          Implement retry with exponential backoff for transient connection issues.
+          Alert operations if connection errors persist.
+        source: "https://node-postgres.com/"
+        severity: error
+
+      - id: undefined-table
+        condition: "Table or view does not exist (42P01)"
+        throws: "Error with code '42P01'"
+        required_handling: >
+          Caller MUST verify table exists before querying.
+          Check error.message for table name.
+          DO NOT retry - this indicates schema mismatch or missing migration.
+        source: "https://www.postgresql.org/docs/current/errcodes-appendix.html"
+        severity: error
+
+    edge_cases:
+      - id: sql-injection-risk
+        description: "NEVER use string concatenation for queries. Always use parameterized queries ($1, $2, etc.)"
+        source: "https://node-postgres.com/features/queries"
+        severity: error
+
+      - id: query-timeout
+        description: "Long-running queries may timeout. Configure statement_timeout or query_timeout."
+        source: "https://node-postgres.com/apis/client"
+        severity: warning
+
+  - name: Pool.connect
+    import_path: "pg"
+    description: "Checks out a client from the connection pool"
+
+    postconditions:
+      - id: pool-exhausted
+        condition: "All clients in pool are busy and connectionTimeoutMillis exceeded"
+        throws: "Error with message 'timeout exceeded when trying to connect'"
+        required_handling: >
+          Caller MUST handle pool exhaustion errors.
+          Root causes:
+          1. Clients not released (forgot client.release())
+          2. Pool size too small for load
+          3. Queries taking too long
+          Implement proper client.release() in finally blocks.
+          Monitor pool metrics to identify leaks.
+        source: "https://node-postgres.com/apis/pool"
+        severity: error
+
+      - id: connection-error
+        condition: "Cannot establish database connection"
+        throws: "Error with code 'ECONNREFUSED', 'ETIMEDOUT', etc."
+        required_handling: >
+          Caller MUST handle connection failures.
+          Implement retry with exponential backoff.
+          Check database server status.
+          Verify connection string credentials.
+        source: "https://node-postgres.com/features/pooling"
+        severity: error
+
+      - id: client-not-released
+        condition: "Caller forgets to release client back to pool"
+        throws: "No error thrown, but pool becomes exhausted over time"
+        required_handling: >
+          Caller MUST ALWAYS release clients in a finally block:
+          ```
+          const client = await pool.connect();
+          try {
+            await client.query(...);
+          } finally {
+            client.release();
+          }
+          ```
+          Failure to release causes pool exhaustion and application hangs.
+        source: "https://node-postgres.com/features/pooling"
+        severity: error
+
+    edge_cases:
+      - id: pool-error-events
+        description: "Pool emits 'error' events for background errors. MUST add error listener to prevent crash."
+        source: "https://node-postgres.com/apis/pool"
+        severity: error
+
+  - name: Pool.query
+    import_path: "pg"
+    description: "Executes a query using an automatically checked-out client from pool"
+
+    postconditions:
+      - id: unique-violation
+        condition: "Unique constraint violation (23505)"
+        throws: "Error with code '23505'"
+        required_handling: "Handle duplicate key violations. DO NOT retry without changing data."
+        source: "https://www.postgresql.org/docs/current/errcodes-appendix.html"
+        severity: error
+
+      - id: foreign-key-violation
+        condition: "Foreign key constraint violation (23503)"
+        throws: "Error with code '23503'"
+        required_handling: "Verify referenced records exist. DO NOT retry."
+        source: "https://www.postgresql.org/docs/current/errcodes-appendix.html"
+        severity: error
+
+      - id: connection-error
+        condition: "Database connection failed"
+        throws: "Connection error"
+        required_handling: "Implement retry with exponential backoff"
+        source: "https://node-postgres.com/"
+        severity: error
+
+    edge_cases:
+      - id: auto-release
+        description: "Pool.query() automatically checks out and releases client. Use Pool.connect() for transactions."
+        source: "https://node-postgres.com/features/pooling"
+        severity: info
+
+  - name: Client.connect
+    import_path: "pg"
+    description: "Establishes connection to PostgreSQL database"
+
+    postconditions:
+      - id: authentication-failed
+        condition: "Invalid credentials (28P01)"
+        throws: "Error with code '28P01'"
+        required_handling: >
+          Caller MUST handle authentication failures.
+          DO NOT retry with same credentials.
+          Verify username, password, and database name.
+          Check connection string format.
+        source: "https://www.postgresql.org/docs/current/errcodes-appendix.html"
+        severity: error
+
+      - id: database-not-found
+        condition: "Database does not exist (3D000)"
+        throws: "Error with code '3D000'"
+        required_handling: >
+          Verify database name is correct.
+          Create database if needed.
+          DO NOT retry without creating database.
+        source: "https://www.postgresql.org/docs/current/errcodes-appendix.html"
+        severity: error
+
+      - id: connection-refused
+        condition: "Cannot connect to server (ECONNREFUSED)"
+        throws: "Error with code 'ECONNREFUSED'"
+        required_handling: >
+          Check PostgreSQL server is running.
+          Verify host and port are correct.
+          Check firewall settings.
+          Implement retry for transient failures.
+        source: "https://node-postgres.com/"
+        severity: error
+
+      - id: ssl-required
+        condition: "Server requires SSL but client didn't request it (28000)"
+        throws: "Error indicating SSL is required"
+        required_handling: >
+          Update connection configuration to enable SSL:
+          `ssl: { rejectUnauthorized: false }` for dev,
+          proper certificate validation for production.
+        source: "https://node-postgres.com/features/ssl"
+        severity: error
+
+    edge_cases:
+      - id: connection-not-closed
+        description: "Forgetting to call client.end() leaves connections open, exhausting server connections"
+        source: "https://node-postgres.com/apis/client"
+        severity: warning

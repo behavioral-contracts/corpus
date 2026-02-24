@@ -1,0 +1,291 @@
+package: "@supabase/supabase-js"
+semver: ">=2.0.0 <3.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-24"
+
+functions:
+  - name: auth.signUp
+    import_path: "@supabase/supabase-js"
+    description: "Creates a new user account"
+
+    postconditions:
+      - id: weak-password
+        condition: "Password does not meet strength requirements"
+        throws: "AuthApiError with error.message about password strength"
+        required_handling: >
+          Caller MUST validate password strength before signup.
+          Display user-friendly error with password requirements.
+          DO NOT retry without user changing password.
+        source: "https://supabase.com/docs/guides/auth/debugging/error-codes"
+        severity: error
+
+      - id: user-already-exists
+        condition: "Email already registered"
+        throws: "AuthApiError with error related to duplicate user"
+        required_handling: >
+          Caller MUST handle duplicate user gracefully.
+          Provide clear error message to user.
+          Consider redirecting to login page.
+        source: "https://supabase.com/docs/guides/auth/debugging/error-codes"
+        severity: error
+
+      - id: rate-limit-exceeded
+        condition: "Too many signup attempts (429)"
+        throws: "AuthApiError with status 429"
+        required_handling: >
+          Caller MUST handle rate limit errors gracefully.
+          Implement exponential backoff.
+          Show user-friendly message about trying again later.
+          DO NOT automatically retry - may indicate abuse.
+        source: "https://supabase.com/docs/guides/auth/troubleshooting"
+        severity: error
+
+      - id: server-error
+        condition: "Auth server degraded (500)"
+        throws: "AuthApiError with status 500"
+        required_handling: >
+          500 errors typically indicate issues with database or SMTP provider.
+          Retry with exponential backoff.
+          Check logs for database triggers or SMTP issues.
+          Alert operations if persistent.
+        source: "https://supabase.com/docs/guides/troubleshooting/resolving-500-status-authentication-errors-7bU5U8"
+        severity: error
+
+    edge_cases:
+      - id: email-confirmation
+        description: "By default, users must confirm email before login. Handle unconfirmed state gracefully."
+        source: "https://supabase.com/docs/guides/auth/troubleshooting"
+        severity: warning
+
+  - name: auth.signInWithPassword
+    import_path: "@supabase/supabase-js"
+    description: "Signs in a user with email and password"
+
+    postconditions:
+      - id: invalid-credentials
+        condition: "Email or password incorrect"
+        throws: "AuthApiError with error about invalid credentials"
+        required_handling: >
+          Caller MUST handle invalid credentials gracefully.
+          DO NOT specify whether email or password was wrong (security).
+          Implement rate limiting to prevent brute force attacks.
+          Consider account lockout after multiple failures.
+        source: "https://supabase.com/docs/guides/auth/debugging/error-codes"
+        severity: error
+
+      - id: rate-limit-exceeded
+        condition: "Too many login attempts (429)"
+        throws: "AuthApiError with status 429"
+        required_handling: >
+          Handle rate limit errors with user-friendly message.
+          This often indicates potential abuse.
+          Consider CAPTCHA or additional verification.
+        source: "https://supabase.com/docs/guides/auth/debugging/error-codes"
+        severity: error
+
+      - id: user-not-confirmed
+        condition: "User hasn't confirmed email"
+        throws: "AuthApiError indicating email not confirmed"
+        required_handling: >
+          Redirect user to email confirmation flow.
+          Provide option to resend confirmation email.
+        source: "https://supabase.com/docs/guides/auth/troubleshooting"
+        severity: error
+
+      - id: server-error
+        condition: "Auth server error (500)"
+        throws: "AuthApiError with status 500"
+        required_handling: "Retry with exponential backoff. Check database and SMTP provider health."
+        source: "https://supabase.com/docs/guides/troubleshooting/resolving-500-status-authentication-errors-7bU5U8"
+        severity: error
+
+  - name: from.select
+    import_path: "@supabase/supabase-js"
+    description: "Queries data from a table"
+
+    postconditions:
+      - id: rls-policy-violation
+        condition: "Row Level Security policy denies access (42501)"
+        throws: "Error with code '42501' or status 403"
+        required_handling: >
+          Caller MUST handle RLS policy violations gracefully.
+          This indicates user doesn't have permission to access data.
+          CRITICAL: Ensure RLS policies are configured for all tables.
+          Using anon or authenticated role without RLS is a MAJOR security risk.
+          Return empty result or access denied message to user.
+        source: "https://supabase.com/docs/guides/troubleshooting/database-api-42501-errors"
+        severity: error
+
+      - id: column-access-denied
+        condition: "Column-level RLS denies access to specific columns"
+        throws: "Error with code '42501' when using select *"
+        required_handling: >
+          Avoid using select * if column-level RLS is configured.
+          Explicitly select only columns user should access.
+          Handle 42501 errors by selecting subset of columns.
+        source: "https://supabase.com/docs/guides/troubleshooting/database-api-42501-errors"
+        severity: error
+
+      - id: connection-error
+        condition: "Database connection failed"
+        throws: "Network or connection error"
+        required_handling: >
+          Implement retry with exponential backoff.
+          Check database health status.
+          Alert operations if persistent.
+        source: "https://supabase.com/docs/reference/javascript/v1"
+        severity: error
+
+    edge_cases:
+      - id: service-role-bypasses-rls
+        description: "Client initialized with service_role key ALWAYS bypasses RLS. NEVER use service_role in client-side code."
+        source: "https://supabase.com/docs/guides/troubleshooting/why-is-my-service-role-key-client-getting-rls-errors-or-not-returning-data-7_1K9z"
+        severity: error
+
+      - id: rls-not-enabled-by-default
+        description: "RLS is NOT enabled by default on new tables. Always enable RLS and create policies."
+        source: "https://supabase.com/docs/guides/database/postgres/row-level-security"
+        severity: error
+
+  - name: from.insert
+    import_path: "@supabase/supabase-js"
+    description: "Inserts data into a table"
+
+    postconditions:
+      - id: rls-policy-violation
+        condition: "RLS policy denies insert permission (42501)"
+        throws: "Error with code '42501'"
+        required_handling: >
+          Ensure RLS policies allow INSERT for user's role.
+          Check if user is authenticated if policy requires it.
+          Return clear error about insufficient permissions.
+        source: "https://supabase.com/docs/guides/troubleshooting/database-api-42501-errors"
+        severity: error
+
+      - id: unique-constraint-violation
+        condition: "Unique constraint violated (23505)"
+        throws: "Error with code '23505'"
+        required_handling: >
+          Handle duplicate key violations gracefully.
+          Check if record already exists before inserting.
+          Return user-friendly error message.
+        source: "https://supabase.com/docs/reference/javascript/v1"
+        severity: error
+
+      - id: foreign-key-violation
+        condition: "Foreign key constraint violated (23503)"
+        throws: "Error with code '23503'"
+        required_handling: >
+          Verify referenced records exist before insert.
+          DO NOT retry without fixing data integrity issue.
+        source: "https://supabase.com/docs/reference/javascript/v1"
+        severity: error
+
+      - id: connection-error
+        condition: "Database connection failed"
+        throws: "Network error"
+        required_handling: "Retry with exponential backoff"
+        source: "https://supabase.com/docs/reference/javascript/v1"
+        severity: error
+
+    edge_cases:
+      - id: returning-minimal-for-rls
+        description: "If RLS blocks select after insert, set returning: 'minimal' to avoid error"
+        source: "https://supabase.com/docs/guides/troubleshooting/why-is-my-service-role-key-client-getting-rls-errors-or-not-returning-data-7_1K9z"
+        severity: warning
+
+  - name: from.update
+    import_path: "@supabase/supabase-js"
+    description: "Updates data in a table"
+
+    postconditions:
+      - id: rls-policy-violation
+        condition: "RLS policy denies update permission (42501)"
+        throws: "Error with code '42501'"
+        required_handling: >
+          Ensure RLS policies allow UPDATE for user.
+          Verify user owns the record if policy checks ownership.
+          Return insufficient permissions error.
+        source: "https://supabase.com/docs/guides/troubleshooting/database-api-42501-errors"
+        severity: error
+
+      - id: record-not-found
+        condition: "No records match the update criteria"
+        returns: "Empty data array"
+        required_handling: >
+          Check if returned data array is empty.
+          This may indicate record doesn't exist or RLS filters it out.
+          Distinguish between "not found" and "no permission".
+        source: "https://supabase.com/docs/reference/javascript/v1"
+        severity: warning
+
+      - id: unique-constraint-violation
+        condition: "Update would violate unique constraint (23505)"
+        throws: "Error with code '23505'"
+        required_handling: "Check for conflicts before updating. DO NOT retry."
+        source: "https://supabase.com/docs/reference/javascript/v1"
+        severity: error
+
+  - name: from.delete
+    import_path: "@supabase/supabase-js"
+    description: "Deletes data from a table"
+
+    postconditions:
+      - id: rls-policy-violation
+        condition: "RLS policy denies delete permission (42501)"
+        throws: "Error with code '42501'"
+        required_handling: >
+          Ensure RLS policies allow DELETE for user.
+          Verify user owns the record if policy checks ownership.
+        source: "https://supabase.com/docs/guides/troubleshooting/database-api-42501-errors"
+        severity: error
+
+      - id: foreign-key-violation
+        condition: "Cannot delete due to dependent records (23503)"
+        throws: "Error with code '23503'"
+        required_handling: >
+          Delete dependent records first or use CASCADE.
+          Return error about dependent records to user.
+        source: "https://supabase.com/docs/reference/javascript/v1"
+        severity: error
+
+  - name: rpc
+    import_path: "@supabase/supabase-js"
+    description: "Calls a PostgreSQL function (RPC)"
+
+    postconditions:
+      - id: function-not-found
+        condition: "PostgreSQL function does not exist (42883)"
+        throws: "Error with code '42883'"
+        required_handling: >
+          Verify function name is correct.
+          Ensure function is created in database.
+          DO NOT retry without fixing function name.
+        source: "https://supabase.com/docs/reference/javascript/v1"
+        severity: error
+
+      - id: permission-denied
+        condition: "User doesn't have permission to execute function (42501)"
+        throws: "Error with code '42501'"
+        required_handling: >
+          Grant EXECUTE permission on function to appropriate role.
+          Check if user is authenticated if required.
+        source: "https://supabase.com/docs/guides/troubleshooting/database-api-42501-errors"
+        severity: error
+
+      - id: rpc-error
+        condition: "Function execution error"
+        throws: "Error from function execution"
+        required_handling: >
+          Check function logs for specific error.
+          Handle business logic errors from function.
+          May include constraint violations, custom errors, etc.
+        source: "https://supabase.com/docs/reference/javascript/v1"
+        severity: error
+
+    edge_cases:
+      - id: security-definer
+        description: "Functions with SECURITY DEFINER run with creator's permissions, bypassing RLS. Use cautiously."
+        source: "https://supabase.com/docs/guides/database/postgres/row-level-security"
+        severity: warning

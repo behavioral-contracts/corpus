@@ -1,0 +1,226 @@
+package: openai
+semver: ">=4.0.0 <5.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-23"
+
+functions:
+  - name: chat.completions.create
+    import_path: "openai"
+    description: "Creates a completion for the chat message"
+
+    preconditions:
+      - id: max-tokens-configuration
+        description: "max_tokens should be set explicitly to avoid unexpected costs"
+        required_handling: >
+          Set max_tokens to a reasonable value based on expected response length.
+          Default behavior may generate more tokens than expected, increasing costs.
+        source: "https://developers.openai.com/api/docs/guides/rate-limits/"
+        severity: warning
+
+    postconditions:
+      - id: authentication-error
+        condition: "Invalid or missing API key (401)"
+        throws: "AuthenticationError with status 401"
+        required_handling: >
+          Caller MUST NOT retry with the same API key.
+          Verify API key is correct and not revoked.
+          Use environment variables, never hardcode keys.
+          Alert operations team - this is a configuration error.
+        source: "https://developers.openai.com/api/docs/guides/error-codes/"
+        severity: error
+
+      - id: rate-limit-error
+        condition: "Rate limit exceeded - RPM, TPM, RPD, TPD, or IPM (429)"
+        throws: "RateLimitError with status 429"
+        required_handling: >
+          Caller MUST implement exponential backoff retry logic.
+          Check rate limit headers (x-ratelimit-remaining-requests, x-ratelimit-remaining-tokens).
+          Consider implementing request queue to stay within limits.
+          For production apps, monitor usage and request limit increases if needed.
+          SDK automatically retries 2 times with exponential backoff, but you may need custom logic for sustained traffic.
+        source: "https://developers.openai.com/api/docs/guides/rate-limits/"
+        severity: error
+
+      - id: server-error
+        condition: "OpenAI server error (500, 502, 503)"
+        throws: "APIError with status >= 500"
+        required_handling: >
+          Caller SHOULD treat as transient failure and retry with exponential backoff.
+          SDK automatically retries 2 times, but you may want to implement additional retries.
+          If errors persist, check OpenAI status page.
+          Log errors for monitoring - sustained 5xx errors may indicate OpenAI outage.
+        source: "https://developers.openai.com/api/docs/guides/error-codes/"
+        severity: error
+
+      - id: timeout-error
+        condition: "Request timeout (default 10 minutes)"
+        throws: "APIConnectionTimeoutError"
+        required_handling: >
+          Caller SHOULD retry with exponential backoff.
+          Consider reducing max_tokens to decrease response time.
+          For streaming responses, implement client-side timeout handling.
+          SDK automatically retries, but long timeouts may require custom handling.
+        source: "https://www.npmjs.com/package/openai"
+        severity: error
+
+      - id: content-filter-error
+        condition: "Content was flagged by OpenAI's safety system"
+        throws: "APIError with error.code === 'content_filter'"
+        required_handling: >
+          Caller MUST handle content moderation failures gracefully.
+          DO NOT retry with the same content.
+          Return user-friendly error message.
+          Consider implementing pre-filtering or content sanitization.
+        source: "https://developers.openai.com/api/docs/guides/error-codes/"
+        severity: warning
+
+      - id: invalid-request-error
+        condition: "Invalid parameters (e.g., model not found, invalid temperature)"
+        throws: "BadRequestError with status 400"
+        required_handling: >
+          Caller MUST validate parameters before making API call.
+          Check error.message for specific parameter that failed.
+          DO NOT retry without fixing the parameter.
+          Common issues: model name typo, temperature out of range [0-2], invalid message format.
+        source: "https://developers.openai.com/api/docs/guides/error-codes/"
+        severity: error
+
+    edge_cases:
+      - id: token-limit-exceeded
+        description: "Response may be truncated if max_tokens limit is hit during generation"
+        source: "https://developers.openai.com/api/docs/guides/rate-limits/"
+        severity: warning
+
+      - id: streaming-timeout
+        description: "Streaming responses have separate timeout considerations. Implement stream-specific error handling."
+        source: "https://www.npmjs.com/package/openai"
+        severity: info
+
+      - id: automatic-retries
+        description: "SDK automatically retries 429, 500+, timeouts 2 times with exponential backoff. Configure maxRetries to change behavior."
+        source: "https://www.npmjs.com/package/openai"
+        severity: info
+
+  - name: images.generate
+    import_path: "openai"
+    description: "Generates images from text prompts using DALL-E"
+
+    postconditions:
+      - id: authentication-error
+        condition: "Invalid API key (401)"
+        throws: "AuthenticationError"
+        required_handling: "Verify API key, DO NOT retry. Alert operations."
+        source: "https://developers.openai.com/api/docs/guides/error-codes/"
+        severity: error
+
+      - id: rate-limit-error-images
+        condition: "Image generation rate limit exceeded (429) - measured in IPM (images per minute)"
+        throws: "RateLimitError"
+        required_handling: >
+          Implement exponential backoff.
+          Image generation has different rate limits than text completion (IPM vs RPM/TPM).
+          Consider implementing queue system for batch image generation.
+        source: "https://developers.openai.com/api/docs/guides/rate-limits/"
+        severity: error
+
+      - id: content-policy-violation
+        condition: "Prompt violates content policy"
+        throws: "BadRequestError with content policy violation message"
+        required_handling: >
+          DO NOT retry with same prompt.
+          Return user-friendly error about content policy.
+          Consider implementing prompt pre-filtering.
+        source: "https://developers.openai.com/api/docs/guides/error-codes/"
+        severity: error
+
+      - id: server-error
+        condition: "Server error (500+)"
+        throws: "APIError"
+        required_handling: "Retry with exponential backoff. SDK auto-retries 2 times."
+        source: "https://developers.openai.com/api/docs/guides/error-codes/"
+        severity: error
+
+  - name: embeddings.create
+    import_path: "openai"
+    description: "Creates an embedding vector from text"
+
+    postconditions:
+      - id: authentication-error
+        condition: "Invalid API key (401)"
+        throws: "AuthenticationError"
+        required_handling: "Verify API key, DO NOT retry"
+        source: "https://developers.openai.com/api/docs/guides/error-codes/"
+        severity: error
+
+      - id: rate-limit-error
+        condition: "Rate limit exceeded (429) - measured in RPM and TPM"
+        throws: "RateLimitError"
+        required_handling: >
+          Implement exponential backoff and batch processing.
+          Embeddings API has token-based rate limits.
+          Consider batching inputs to reduce request count.
+        source: "https://developers.openai.com/api/docs/guides/rate-limits/"
+        severity: error
+
+      - id: invalid-input
+        condition: "Input text exceeds model's token limit"
+        throws: "BadRequestError"
+        required_handling: >
+          Chunk input text to fit within model's context window.
+          For text-embedding-ada-002: 8191 tokens max.
+          Validate input length before API call.
+        source: "https://developers.openai.com/api/docs/guides/error-codes/"
+        severity: error
+
+      - id: server-error
+        condition: "Server error (500+)"
+        throws: "APIError"
+        required_handling: "Retry with exponential backoff"
+        source: "https://developers.openai.com/api/docs/guides/error-codes/"
+        severity: error
+
+  - name: audio.transcriptions.create
+    import_path: "openai"
+    description: "Transcribes audio into text using Whisper"
+
+    postconditions:
+      - id: authentication-error
+        condition: "Invalid API key (401)"
+        throws: "AuthenticationError"
+        required_handling: "Verify API key, DO NOT retry"
+        source: "https://developers.openai.com/api/docs/guides/error-codes/"
+        severity: error
+
+      - id: rate-limit-error
+        condition: "Rate limit exceeded (429)"
+        throws: "RateLimitError"
+        required_handling: "Implement exponential backoff. Audio processing may be slower than text APIs."
+        source: "https://developers.openai.com/api/docs/guides/rate-limits/"
+        severity: error
+
+      - id: file-too-large
+        condition: "Audio file exceeds size limit (25 MB)"
+        throws: "BadRequestError with file size error"
+        required_handling: >
+          Chunk large audio files before uploading.
+          Compress audio if possible (lossy formats accepted).
+          DO NOT retry without reducing file size.
+        source: "https://developers.openai.com/api/docs/guides/error-codes/"
+        severity: error
+
+      - id: unsupported-format
+        condition: "Audio format not supported"
+        throws: "BadRequestError with format error"
+        required_handling: >
+          Convert to supported format (mp3, mp4, mpeg, mpga, m4a, wav, webm).
+          DO NOT retry without format conversion.
+        source: "https://developers.openai.com/api/docs/guides/error-codes/"
+        severity: error
+
+      - id: server-error
+        condition: "Server error (500+)"
+        throws: "APIError"
+        required_handling: "Retry with exponential backoff"
+        source: "https://developers.openai.com/api/docs/guides/error-codes/"
+        severity: error
