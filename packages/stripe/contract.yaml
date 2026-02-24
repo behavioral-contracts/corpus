@@ -2,23 +2,16 @@ package: stripe
 semver: ">=8.0.0 <16.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
-last_verified: "2026-02-23"
+last_verified: "2026-02-24"
 
 functions:
-  - name: charges.create
+  - name: create
     import_path: "stripe"
-    description: "Creates a charge object to charge a credit or debit card"
-
-    preconditions:
-      - id: idempotency-key-required
-        description: "Charge creation MUST use an idempotency key to prevent duplicate charges"
-        required_handling: "Pass idempotencyKey in options: stripe.charges.create({...}, {idempotencyKey})"
-        source: "https://stripe.com/docs/api/idempotent_requests"
-        severity: error
+    description: "Creates a Stripe resource (charge, paymentIntent, customer, refund, etc.)"
 
     postconditions:
       - id: card-error
-        condition: "Card was declined or invalid (card_error type)"
+        condition: "Card was declined or invalid"
         throws: "StripeCardError with error.type === 'card_error'"
         required_handling: >
           Caller MUST catch StripeCardError and handle gracefully.
@@ -28,17 +21,16 @@ functions:
         severity: error
 
       - id: rate-limit-error
-        condition: "Too many API requests (rate_limit_error type)"
+        condition: "Too many API requests"
         throws: "StripeRateLimitError with error.type === 'rate_limit_error'"
         required_handling: >
           Caller MUST implement exponential backoff retry logic.
           Stripe rate limits are per-account, not per-key.
-          Use Retry-After header if present.
         source: "https://stripe.com/docs/rate-limits"
         severity: error
 
       - id: authentication-error
-        condition: "Invalid API key (authentication_error type)"
+        condition: "Invalid API key"
         throws: "StripeAuthenticationError with error.type === 'authentication_error'"
         required_handling: >
           Caller MUST NOT retry. This indicates configuration error.
@@ -52,37 +44,18 @@ functions:
         required_handling: >
           Caller MUST handle network errors separately from Stripe API errors.
           Implement retry with exponential backoff (max 3 attempts).
-          Check idempotency to prevent duplicate charges after retry.
         source: "https://stripe.com/docs/error-handling"
         severity: error
 
-    edge_cases:
-      - id: idempotency-key-reuse
-        description: "Reusing idempotency keys with different parameters returns the original request result, NOT an error"
-        source: "https://stripe.com/docs/api/idempotent_requests#idempotency-behavior"
-        severity: warning
-
-      - id: amount-must-be-positive
-        description: "Amount must be a positive integer in cents (e.g., $10.00 = 1000)"
-        source: "https://stripe.com/docs/api/charges/create#create_charge-amount"
-        severity: warning
-
-  - name: paymentIntents.create
+  - name: confirm
     import_path: "stripe"
-    description: "Creates a PaymentIntent object (recommended over charges for modern integrations)"
-
-    preconditions:
-      - id: idempotency-key-required
-        description: "PaymentIntent creation MUST use an idempotency key"
-        required_handling: "Pass idempotencyKey in options"
-        source: "https://stripe.com/docs/payments/payment-intents#best-practices"
-        severity: error
+    description: "Confirms a PaymentIntent to complete the payment"
 
     postconditions:
       - id: card-error
-        condition: "Card error during payment"
+        condition: "Card declined during confirmation"
         throws: "StripeCardError"
-        required_handling: "Handle card errors gracefully, allow user to retry with different card"
+        required_handling: "Return to payment form, allow user to update payment method"
         source: "https://stripe.com/docs/error-handling"
         severity: error
 
@@ -101,109 +74,15 @@ functions:
         severity: error
 
       - id: network-error
-        condition: "Network connectivity issue"
-        throws: "Network error"
-        required_handling: "Retry with exponential backoff, respect idempotency"
-        source: "https://stripe.com/docs/error-handling"
-        severity: error
-
-  - name: paymentIntents.confirm
-    import_path: "stripe"
-    description: "Confirms a PaymentIntent to complete the payment"
-
-    preconditions:
-      - id: idempotency-key-required
-        description: "Payment confirmation MUST use an idempotency key to prevent double-charging"
-        required_handling: "Pass idempotencyKey in options"
-        source: "https://stripe.com/docs/payments/payment-intents"
-        severity: error
-
-    postconditions:
-      - id: card-error
-        condition: "Card declined during confirmation"
-        throws: "StripeCardError"
-        required_handling: "Return to payment form, allow user to update payment method"
-        source: "https://stripe.com/docs/error-handling"
-        severity: error
-
-      - id: requires-action
-        condition: "Payment requires additional customer action (3D Secure)"
-        returns: "PaymentIntent with status === 'requires_action'"
-        required_handling: "Caller MUST handle requires_action status and present authentication flow to user"
-        source: "https://stripe.com/docs/payments/3d-secure"
-        severity: error
-
-      - id: rate-limit-error
-        condition: "Rate limit exceeded"
-        throws: "StripeRateLimitError"
-        required_handling: "Implement exponential backoff"
-        source: "https://stripe.com/docs/rate-limits"
-        severity: error
-
-      - id: network-error
         condition: "Network error during confirmation"
         throws: "Network error"
         required_handling: "Retry with idempotency key. Query payment status before creating new PaymentIntent."
         source: "https://stripe.com/docs/error-handling"
         severity: error
 
-    edge_cases:
-      - id: payment-already-confirmed
-        description: "Confirming an already-confirmed PaymentIntent with same idempotency key returns original result"
-        source: "https://stripe.com/docs/payments/payment-intents"
-        severity: info
-
-  - name: refunds.create
-    import_path: "stripe"
-    description: "Creates a refund for a charge"
-
-    preconditions:
-      - id: idempotency-key-required
-        description: "Refund creation MUST use an idempotency key to prevent duplicate refunds"
-        required_handling: "Pass idempotencyKey in options"
-        source: "https://stripe.com/docs/api/refunds/create"
-        severity: error
-
-    postconditions:
-      - id: charge-already-refunded
-        condition: "Charge has already been fully refunded"
-        throws: "StripeInvalidRequestError with code 'charge_already_refunded'"
-        required_handling: "Check refund status before attempting refund. This is NOT a retry-able error."
-        source: "https://stripe.com/docs/refunds"
-        severity: error
-
-      - id: rate-limit-error
-        condition: "Rate limit exceeded"
-        throws: "StripeRateLimitError"
-        required_handling: "Implement exponential backoff"
-        source: "https://stripe.com/docs/rate-limits"
-        severity: error
-
-      - id: network-error
-        condition: "Network error during refund"
-        throws: "Network error"
-        required_handling: "Retry with same idempotency key. Query refund status before retrying."
-        source: "https://stripe.com/docs/error-handling"
-        severity: error
-
-    edge_cases:
-      - id: partial-refunds
-        description: "Multiple partial refunds allowed until full charge amount is refunded"
-        source: "https://stripe.com/docs/refunds#partial-refunds"
-        severity: info
-
-  - name: webhookEndpoints.constructEvent
+  - name: constructEvent
     import_path: "stripe"
     description: "Verifies and constructs an event from webhook payload"
-
-    preconditions:
-      - id: signature-verification-required
-        description: "Webhook signature MUST be verified to prevent spoofing"
-        required_handling: >
-          Always call stripe.webhooks.constructEvent with signature from request headers.
-          NEVER process webhook data without signature verification.
-        source: "https://stripe.com/docs/webhooks/signatures"
-        severity: error
 
     postconditions:
       - id: signature-verification-failed
@@ -222,55 +101,16 @@ functions:
         source: "https://stripe.com/docs/webhooks/signatures"
         severity: error
 
-    edge_cases:
-      - id: duplicate-webhooks
-        description: "Stripe may send the same webhook event multiple times. Implement idempotent webhook handlers."
-        source: "https://stripe.com/docs/webhooks/best-practices#duplicate-events"
-        severity: warning
-
-  - name: customers.create
+  - name: retrieve
     import_path: "stripe"
-    description: "Creates a new customer object"
-
-    preconditions:
-      - id: idempotency-key-recommended
-        description: "Customer creation SHOULD use an idempotency key to prevent duplicate customers"
-        required_handling: "Pass idempotencyKey in options"
-        source: "https://stripe.com/docs/api/customers/create"
-        severity: warning
+    description: "Retrieves a Stripe resource (customer, paymentIntent, etc.)"
 
     postconditions:
-      - id: rate-limit-error
-        condition: "Rate limit exceeded"
-        throws: "StripeRateLimitError"
-        required_handling: "Implement exponential backoff"
-        source: "https://stripe.com/docs/rate-limits"
-        severity: error
-
-      - id: invalid-email
-        condition: "Email format is invalid"
-        throws: "StripeInvalidRequestError"
-        required_handling: "Validate email format before calling Stripe API"
-        source: "https://stripe.com/docs/api/customers/create#create_customer-email"
-        severity: warning
-
-      - id: network-error
-        condition: "Network error"
-        throws: "Network error"
-        required_handling: "Retry with idempotency key to prevent duplicate customers"
-        source: "https://stripe.com/docs/error-handling"
-        severity: error
-
-  - name: customers.retrieve
-    import_path: "stripe"
-    description: "Retrieves a customer object"
-
-    postconditions:
-      - id: customer-not-found
-        condition: "Customer ID does not exist"
+      - id: resource-not-found
+        condition: "Resource ID does not exist"
         throws: "StripeInvalidRequestError with code 'resource_missing'"
-        required_handling: "Handle missing customer gracefully. DO NOT retry."
-        source: "https://stripe.com/docs/api/customers/retrieve"
+        required_handling: "Handle missing resource gracefully. DO NOT retry."
+        source: "https://stripe.com/docs/api/errors"
         severity: error
 
       - id: rate-limit-error
@@ -278,6 +118,13 @@ functions:
         throws: "StripeRateLimitError"
         required_handling: "Implement exponential backoff"
         source: "https://stripe.com/docs/rate-limits"
+        severity: error
+
+      - id: authentication-error
+        condition: "Invalid API key"
+        throws: "StripeAuthenticationError"
+        required_handling: "DO NOT retry, alert operations"
+        source: "https://stripe.com/docs/error-handling"
         severity: error
 
       - id: network-error
