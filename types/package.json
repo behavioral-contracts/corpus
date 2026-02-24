@@ -1,0 +1,21 @@
+{
+  "name": "@behavioral-contracts/corpus-types",
+  "version": "1.0.0",
+  "description": "Type definitions for behavioral contracts corpus and testing",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf *.js *.d.ts"
+  },
+  "keywords": [
+    "behavioral-contracts",
+    "types",
+    "testing"
+  ],
+  "author": "behavioral-contracts",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}
