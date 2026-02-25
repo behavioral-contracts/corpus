@@ -6,8 +6,9 @@ last_verified: "2026-02-25"
 
 functions:
   # SMS/MMS Operations
-  - name: messages.create
+  - name: create
     import_path: "twilio"
+    namespace: "messages"
     description: "Sends SMS or MMS messages via Twilio API"
 
     postconditions:
@@ -62,8 +63,9 @@ functions:
         source: https://www.twilio.com/docs/api/errors
 
   # Voice Call Operations
-  - name: calls.create
+  - name: create
     import_path: "twilio"
+    namespace: "calls"
     description: "Initiates voice calls via Twilio API"
 
     postconditions:
@@ -84,8 +86,9 @@ functions:
         source: https://www.twilio.com/docs/api/errors
 
   # Verification Services (2FA)
-  - name: verifications.create
+  - name: create
     import_path: "twilio"
+    namespace: "verifications"
     description: "Sends verification codes for two-factor authentication"
 
     postconditions:
