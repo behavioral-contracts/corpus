@@ -1,196 +1,116 @@
-# Redis Behavioral Contract
-#
-# Package: redis
-# Version Range: ^5.0.0
-# Target: node-redis v5 (Promise-based API)
-#
-# Focus: Connection management and basic command error handling
-
-package: redis
-version_range: ^5.0.0
+package: "redis"
+semver: ">=5.0.0 <6.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-25"
 
 functions:
+  # createClient function
   - name: createClient
-    signature: createClient(options?: RedisClientOptions)
-    description: >
-      Creates a Redis client instance. The client MUST have an error event listener
-      registered, or uncaught errors will crash the Node.js process.
+    import_path: "redis"
+    description: "Creates a Redis client instance that requires error event listener"
 
     postconditions:
       - id: missing-error-listener
+        condition: "createClient() called without .on('error', handler) registered"
         severity: error
         description: >
-          Client created without error event listener will crash process on errors.
-          MUST call client.on('error', handler) immediately after createClient.
-
+          Client created without error event listener will crash the Node.js process on any error.
+          Redis documentation explicitly states: "If a client doesn't have at least one error listener
+          registered and an error occurs, that error will be thrown and the Node.js process will exit."
         detector: >
-          If createClient() is called and the returned client does not have
-          .on('error', ...) registered within the same function scope, flag as violation.
+          If createClient() is called and the returned client does not have .on('error', ...)
+          registered within the same function scope, flag as violation.
+        required_handling: >
+          MUST call client.on('error', handler) immediately after createClient(). Handler should
+          log error details and optionally trigger reconnection logic or graceful shutdown.
+        source: https://redis.io/docs/latest/develop/clients/nodejs/error-handling/
 
-        examples:
-          - |
-            // ❌ BAD - No error listener
-            const client = createClient();
-            await client.connect(); // Process will crash on connection error
-
-          - |
-            // ✅ GOOD - Error listener registered
-            const client = createClient();
-            client.on('error', (err) => console.error('Redis error:', err));
-            await client.connect();
-
-        references:
-          - https://redis.io/docs/latest/develop/clients/nodejs/error-handling/
-          - https://github.com/redis/node-redis#usage
-
-  - name: client.connect
-    signature: client.connect()
-    description: >
-      Establishes connection to Redis server. Returns a Promise that can reject
-      with connection errors (ECONNREFUSED, ETIMEDOUT, ECONNRESET, EAI_AGAIN).
+  # connect method
+  - name: connect
+    import_path: "redis"
+    description: "Establishes connection to Redis server"
 
     postconditions:
       - id: connect-no-error-handling
+        condition: "client.connect() called without try-catch or .catch() handler"
+        throws: "Connection errors (ECONNREFUSED, ETIMEDOUT, ECONNRESET, EAI_AGAIN)"
         severity: error
         description: >
-          client.connect() without try-catch can throw connection errors causing
-          unhandled promise rejection.
-
+          client.connect() without try-catch can throw connection errors causing unhandled promise
+          rejection. Common failures include ECONNREFUSED (Redis not running), ETIMEDOUT (network
+          timeout), ECONNRESET (connection lost), and EAI_AGAIN (DNS resolution failure).
         detector: >
-          If await client.connect() or client.connect().then() is not wrapped in
-          try-catch or .catch(), flag as violation.
+          If await client.connect() or client.connect().then() is not wrapped in try-catch
+          or does not have .catch() handler
+        required_handling: >
+          MUST wrap await client.connect() in try-catch block. Catch block should check error.code
+          and implement retry logic with exponential backoff for recoverable errors. Non-recoverable
+          errors should trigger graceful shutdown or fallback mode.
+        source: https://redis.io/docs/latest/develop/clients/nodejs/error-handling/
 
-        examples:
-          - |
-            // ❌ BAD - No error handling
-            await client.connect(); // Unhandled rejection on ECONNREFUSED
-
-          - |
-            // ✅ GOOD - Try-catch wrapper
-            try {
-              await client.connect();
-            } catch (err) {
-              console.error('Failed to connect:', err);
-            }
-
-        references:
-          - https://redis.io/docs/latest/develop/clients/nodejs/error-handling/
-
-  - name: client.get
-    signature: client.get(key: string)
-    description: >
-      Retrieves value for a key. Returns Promise<string | null>. Can throw
-      connection errors, timeout errors, or WRONGTYPE errors.
+  # get method
+  - name: get
+    import_path: "redis"
+    description: "Retrieves value for a key from Redis"
 
     postconditions:
       - id: get-no-error-handling
+        condition: "client.get() called without try-catch or .catch() handler"
+        throws: "Connection errors, timeout errors, or WRONGTYPE errors"
         severity: error
         description: >
-          client.get() without try-catch can throw connection/command errors causing
-          unhandled promise rejection or application crash.
-
+          client.get() without try-catch can throw connection errors (ECONNREFUSED, ETIMEDOUT),
+          timeout errors, or command errors (WRONGTYPE when key holds wrong type). Unhandled
+          promise rejection will crash application or cause incorrect behavior.
         detector: >
-          If await client.get() is not wrapped in try-catch or .catch(), flag as violation.
+          If await client.get() is not wrapped in try-catch or does not have .catch() handler
+        required_handling: >
+          MUST wrap await client.get() in try-catch block. For connection errors, implement
+          graceful degradation (fallback to database). For WRONGTYPE errors, fix data schema.
+          For timeout errors, retry with backoff or return cached/default value.
+        source: https://redis.io/docs/latest/develop/clients/nodejs/error-handling/
 
-        examples:
-          - |
-            // ❌ BAD - No error handling
-            const value = await client.get('key'); // Crashes on ECONNREFUSED/ETIMEDOUT
-
-          - |
-            // ✅ GOOD - Try-catch wrapper
-            try {
-              const value = await client.get('key');
-              return value;
-            } catch (err) {
-              console.error('Get failed:', err);
-              return null;
-            }
-
-        references:
-          - https://redis.io/docs/latest/develop/clients/nodejs/error-handling/
-
-  - name: client.set
-    signature: client.set(key: string, value: string, options?: SetOptions)
-    description: >
-      Sets a key-value pair. Returns Promise<string | null>. Can throw connection
-      errors, timeout errors, or command errors.
+  # set method
+  - name: set
+    import_path: "redis"
+    description: "Sets a key-value pair in Redis"
 
     postconditions:
       - id: set-no-error-handling
+        condition: "client.set() called without try-catch or .catch() handler"
+        throws: "Connection errors, timeout errors, or command errors"
         severity: error
         description: >
-          client.set() without try-catch can throw connection/command errors causing
-          unhandled promise rejection or data loss.
-
+          client.set() without try-catch can throw connection/command errors causing unhandled
+          promise rejection or silent data loss. Write operations must handle errors to ensure
+          data consistency and prevent application state corruption.
         detector: >
-          If await client.set() is not wrapped in try-catch or .catch(), flag as violation.
+          If await client.set() is not wrapped in try-catch or does not have .catch() handler
+        required_handling: >
+          MUST wrap await client.set() in try-catch block. For connection errors, consider
+          queueing write for retry. For critical writes, re-throw error to caller. For
+          non-critical cache writes, log error and continue without cache.
+        source: https://redis.io/docs/latest/develop/clients/nodejs/error-handling/
 
-        examples:
-          - |
-            // ❌ BAD - No error handling
-            await client.set('key', 'value'); // Silent failure on connection error
-
-          - |
-            // ✅ GOOD - Try-catch wrapper
-            try {
-              await client.set('key', 'value');
-            } catch (err) {
-              console.error('Set failed:', err);
-              throw err; // Re-throw or handle appropriately
-            }
-
-        references:
-          - https://redis.io/docs/latest/develop/clients/nodejs/error-handling/
-
-  - name: client.del
-    signature: client.del(key: string | string[])
-    description: >
-      Deletes one or more keys. Returns Promise<number> (count of deleted keys).
-      Can throw connection errors or timeout errors.
+  # del method
+  - name: del
+    import_path: "redis"
+    description: "Deletes one or more keys from Redis"
 
     postconditions:
       - id: del-no-error-handling
+        condition: "client.del() called without try-catch or .catch() handler"
+        throws: "Connection errors or timeout errors"
         severity: error
         description: >
-          client.del() without try-catch can throw connection errors causing
-          unhandled promise rejection.
-
+          client.del() without try-catch can throw connection errors causing unhandled promise
+          rejection. Delete operations affect application state and must handle errors to prevent
+          state inconsistency.
         detector: >
-          If await client.del() is not wrapped in try-catch or .catch(), flag as violation.
-
-        examples:
-          - |
-            // ❌ BAD - No error handling
-            await client.del('key'); // Crashes on connection error
-
-          - |
-            // ✅ GOOD - Try-catch wrapper
-            try {
-              const count = await client.del('key');
-              console.log(`Deleted ${count} keys`);
-            } catch (err) {
-              console.error('Delete failed:', err);
-            }
-
-        references:
-          - https://redis.io/docs/latest/develop/clients/nodejs/error-handling/
-
-metadata:
-  analyzed_repos:
-    - parse-server (v5.10.0)
-    - nestjs (v5.11.0)
-    - typeorm (v5.11.0)
-
-  common_patterns:
-    - Error listener on createClient
-    - Try-catch around connect()
-    - Try-catch around commands (get/set/del)
-    - Graceful degradation (fallback to DB on cache errors)
-
-  migration_notes:
-    v4_to_v5:
-      - client.quit() → client.close()
-      - client.disconnect() → client.destroy()
-      - Pipeline behavior: v5 discards unwritten commands on disconnect
-      - Return types: Many commands return number instead of boolean
+          If await client.del() is not wrapped in try-catch or does not have .catch() handler
+        required_handling: >
+          MUST wrap await client.del() in try-catch block. For connection errors, log error
+          and decide whether to retry, fail operation, or continue. Critical deletes should
+          re-throw error to caller for proper handling.
+        source: https://redis.io/docs/latest/develop/clients/nodejs/error-handling/
