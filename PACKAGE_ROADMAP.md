@@ -8,7 +8,7 @@
 
 ## Current Coverage
 
-- **Total Packages in Corpus:** 11
+- **Total Packages in Corpus:** 12
 - **Packages Onboarded:**
   - ✅ @octokit/rest
   - ✅ @prisma/client
@@ -16,6 +16,7 @@
   - ✅ @tanstack/react-query
   - ✅ axios
   - ✅ express
+  - ✅ mongodb
   - ✅ openai
   - ✅ pg
   - ✅ square
@@ -427,6 +428,21 @@ To nominate a package for the roadmap:
 - **Contract Version:** 1.0.0
 - **Key Findings:** Payments/Orders/Customers/Locations APIs, SquareError handling, rate limiting (429), idempotency conflicts (409), payment declines (422)
 - **Note:** 19 postconditions across 8 functions. Analyzer detected 75 errors correctly. No CVEs found. Phase 6 regression testing blocked by invalid contracts in corpus (unrelated issue).
+
+### mongodb
+- **Completed:** 2026-02-25
+- **Contract Version:** 1.0.0
+- **Key Findings:** Connection failures, query/write operations errors, duplicate key errors (11000), bulk write errors, network errors, instance tracking prevents false positives
+- **Metrics:**
+  - Functions Covered: 16 (connect, find, findOne, insertOne, insertMany, updateOne, updateMany, deleteOne, deleteMany, aggregate, countDocuments, createIndex, drop, collection, bulkWrite)
+  - Fixture Violations Detected: 13 (proper: 0, missing: 4, instance: 11)
+  - False Positive Rate: 0%
+  - Real-World Repos Tested: 2 (parse-server, typeorm)
+  - Regression Tests: 3/3 passed
+- **CVEs Documented:**
+  - CVE-2025-14847 (MongoBleed): Critical memory leak via zlib (CVSS 8.7)
+  - CVE-2021-32050: Authentication data exposure in command listeners
+- **Note:** Uses `require_instance_tracking: true` to prevent false positives on generic method names (.find, .update, etc.). Data-driven detection with 15 await patterns. TypeORM testing validated that ORM abstraction layers don't trigger violations.
 
 ---
 

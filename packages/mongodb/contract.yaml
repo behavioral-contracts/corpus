@@ -1,227 +1,257 @@
-name: mongodb
-version: 1.0.0
-description: MongoDB Node.js driver behavioral contract for error handling
+package: mongodb
 semver: ">=3.0.0"
-repository: https://github.com/mongodb/node-mongodb-native
-documentation: https://www.mongodb.com/docs/drivers/node/current/
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-25"
 
-contracts:
-  # Connection operations
-  - function: MongoClient.connect
-    mustHandle:
-      - scenario: connection_failure
-        description: Database connection failures (network, auth, timeout)
-        severity: ERROR
-        exceptionTypes:
-          - MongoNetworkError
-          - MongoServerSelectionError
-          - MongoNetworkTimeoutError
-          - MongoError
-        errorCodes:
-          - ENOTFOUND
-          - ECONNREFUSED
-          - ETIMEDOUT
-        sources:
-          - https://www.mongodb.com/docs/drivers/node/current/connection-troubleshooting/
-          - https://mongodb.github.io/node-mongodb-native/4.2/classes/MongoServerError.html
+# Detection rules for analyzer integration
+detection:
+  # MongoDB client and collection classes
+  class_names: ["MongoClient", "Db", "Collection"]
+  
+  # Type declarations for MongoDB instances
+  type_names: ["MongoClient", "Db", "Collection", "MongoClientOptions"]
+  
+  # No factory methods for MongoDB (uses constructors and methods)
+  factory_methods: []
+  
+  # CRITICAL: Require instance tracking to avoid false positives
+  # MongoDB method names (.find, .insertOne, .updateOne) could match other code
+  # Instance tracking ensures we only flag tracked MongoDB instances
+  require_instance_tracking: true
+  
+  # Patterns to identify MongoDB operations in await expressions
+  await_patterns:
+    # Connection
+    - ".connect("
+    
+    # Read operations
+    - ".find("
+    - ".findone("
+    - ".aggregate("
+    - ".countdocuments("
+    
+    # Write operations
+    - ".insertone("
+    - ".insertmany("
+    - ".updateone("
+    - ".updatemany("
+    - ".deleteone("
+    - ".deletemany("
+    - ".bulkwrite("
+    
+    # Admin operations
+    - ".createindex("
+    - ".drop("
+    - ".collection("
 
-  # Read operations
-  - function: Collection.find
-    mustHandle:
-      - scenario: query_failure
-        description: Query execution failures (network, timeout, invalid query)
-        severity: ERROR
-        exceptionTypes:
-          - MongoServerError
-          - MongoNetworkError
-          - MongoError
-        sources:
-          - https://www.mongodb.com/docs/drivers/node/current/
+functions:
+  - name: connect
+    import_path: "mongodb"
+    description: "Establishes connection to MongoDB server or cluster"
+    postconditions:
+      - id: connection-failure
+        condition: "Network error, authentication failure, or server selection timeout"
+        throws: "MongoNetworkError, MongoServerSelectionError, MongoNetworkTimeoutError, or MongoError"
+        required_handling: >
+          Caller MUST catch connection errors and handle them separately from query errors.
+          Implement retry logic with exponential backoff for transient connection issues.
+          Log connection errors for operations monitoring.
+        source: "https://www.mongodb.com/docs/drivers/node/current/connection-troubleshooting/"
+        severity: error
 
-  - function: Collection.findOne
-    mustHandle:
-      - scenario: query_failure
-        description: Single document query failures
-        severity: ERROR
-        exceptionTypes:
-          - MongoServerError
-          - MongoNetworkError
-          - MongoError
-        sources:
-          - https://www.mongodb.com/docs/drivers/node/current/
+  - name: find
+    import_path: "mongodb"
+    description: "Queries collection for documents matching filter criteria"
+    postconditions:
+      - id: query-failure
+        condition: "Network error, timeout, or invalid query syntax"
+        throws: "MongoServerError, MongoNetworkError, or MongoError"
+        required_handling: >
+          Caller MUST catch query errors.
+          Network errors (MongoNetworkError) may be transient and can be retried.
+          Invalid query errors (MongoServerError) should not be retried.
+        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        severity: error
 
-  - function: Collection.aggregate
-    mustHandle:
-      - scenario: aggregation_failure
-        description: Aggregation pipeline execution failures
-        severity: ERROR
-        exceptionTypes:
-          - MongoServerError
-          - MongoNetworkError
-          - MongoError
-        sources:
-          - https://www.mongodb.com/docs/drivers/node/current/
+  - name: findOne
+    import_path: "mongodb"
+    description: "Queries collection for a single document matching filter criteria"
+    postconditions:
+      - id: query-failure
+        condition: "Network error, timeout, or invalid query"
+        throws: "MongoServerError, MongoNetworkError, or MongoError"
+        required_handling: >
+          Caller MUST catch query errors.
+          Returns null if no document matches (not an error).
+          Network errors may be transient and retriable.
+        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        severity: error
 
-  - function: Collection.countDocuments
-    mustHandle:
-      - scenario: count_failure
-        description: Document count operation failures
-        severity: ERROR
-        exceptionTypes:
-          - MongoServerError
-          - MongoNetworkError
-          - MongoError
-        sources:
-          - https://www.mongodb.com/docs/drivers/node/current/
+  - name: insertOne
+    import_path: "mongodb"
+    description: "Inserts a single document into collection"
+    postconditions:
+      - id: duplicate-key
+        condition: "Document violates unique index constraint"
+        throws: "MongoServerError with error.code === 11000"
+        required_handling: >
+          Caller MUST catch duplicate key errors (code 11000) and handle gracefully.
+          Extract conflicting field from error message.
+          DO NOT retry without changing the unique field value.
+        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        severity: error
 
-  # Write operations
-  - function: Collection.insertOne
-    mustHandle:
-      - scenario: insert_failure
-        description: Document insertion failures (duplicate key, validation)
-        severity: ERROR
-        exceptionTypes:
-          - MongoServerError
-          - MongoWriteConcernError
-          - MongoError
-        errorCodes:
-          - 11000  # Duplicate key error
-        sources:
-          - https://www.mongodb.com/docs/drivers/node/current/
+  - name: insertMany
+    import_path: "mongodb"
+    description: "Inserts multiple documents into collection in bulk"
+    postconditions:
+      - id: bulk-write-failure
+        condition: "One or more documents failed to insert"
+        throws: "MongoBulkWriteError with details of failed operations"
+        required_handling: >
+          Caller MUST catch bulk write errors.
+          Check error.result to see which documents succeeded and which failed.
+          Handle partial success scenarios appropriately.
+        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        severity: error
 
-  - function: Collection.insertMany
-    mustHandle:
-      - scenario: bulk_insert_failure
-        description: Bulk document insertion failures
-        severity: ERROR
-        exceptionTypes:
-          - MongoServerError
-          - MongoBulkWriteError
-          - MongoError
-        sources:
-          - https://www.mongodb.com/docs/drivers/node/current/
+  - name: updateOne
+    import_path: "mongodb"
+    description: "Updates a single document matching filter"
+    postconditions:
+      - id: update-failure
+        condition: "Network error, invalid update operation, or write concern failure"
+        throws: "MongoServerError, MongoWriteConcernError, or MongoError"
+        required_handling: >
+          Caller MUST catch update errors.
+          Network errors may be transient.
+          Invalid update operators (MongoServerError) should not be retried.
+        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        severity: error
 
-  - function: Collection.updateOne
-    mustHandle:
-      - scenario: update_failure
-        description: Single document update failures
-        severity: ERROR
-        exceptionTypes:
-          - MongoServerError
-          - MongoWriteConcernError
-          - MongoError
-        sources:
-          - https://www.mongodb.com/docs/drivers/node/current/
+  - name: updateMany
+    import_path: "mongodb"
+    description: "Updates multiple documents matching filter"
+    postconditions:
+      - id: bulk-update-failure
+        condition: "Update operation failed or write concern not satisfied"
+        throws: "MongoServerError, MongoWriteConcernError, or MongoError"
+        required_handling: >
+          Caller MUST catch bulk update errors.
+          Check result.modifiedCount to verify how many documents were updated.
+          Implement retry logic for transient failures.
+        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        severity: error
 
-  - function: Collection.updateMany
-    mustHandle:
-      - scenario: bulk_update_failure
-        description: Multiple document update failures
-        severity: ERROR
-        exceptionTypes:
-          - MongoServerError
-          - MongoWriteConcernError
-          - MongoError
-        sources:
-          - https://www.mongodb.com/docs/drivers/node/current/
+  - name: deleteOne
+    import_path: "mongodb"
+    description: "Deletes a single document matching filter"
+    postconditions:
+      - id: delete-failure
+        condition: "Network error or write concern failure"
+        throws: "MongoServerError, MongoWriteConcernError, or MongoError"
+        required_handling: >
+          Caller MUST catch delete errors.
+          Deleting non-existent document is NOT an error (deletedCount = 0).
+          Network errors may be transient and retriable.
+        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        severity: error
 
-  - function: Collection.deleteOne
-    mustHandle:
-      - scenario: delete_failure
-        description: Single document deletion failures
-        severity: ERROR
-        exceptionTypes:
-          - MongoServerError
-          - MongoWriteConcernError
-          - MongoError
-        sources:
-          - https://www.mongodb.com/docs/drivers/node/current/
+  - name: deleteMany
+    import_path: "mongodb"
+    description: "Deletes multiple documents matching filter"
+    postconditions:
+      - id: bulk-delete-failure
+        condition: "Delete operation failed or write concern not satisfied"
+        throws: "MongoServerError, MongoWriteConcernError, or MongoError"
+        required_handling: >
+          Caller MUST catch bulk delete errors.
+          Check result.deletedCount to verify how many documents were deleted.
+          Implement retry logic for transient failures.
+        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        severity: error
 
-  - function: Collection.deleteMany
-    mustHandle:
-      - scenario: bulk_delete_failure
-        description: Multiple document deletion failures
-        severity: ERROR
-        exceptionTypes:
-          - MongoServerError
-          - MongoWriteConcernError
-          - MongoError
-        sources:
-          - https://www.mongodb.com/docs/drivers/node/current/
+  - name: aggregate
+    import_path: "mongodb"
+    description: "Executes aggregation pipeline on collection"
+    postconditions:
+      - id: aggregation-failure
+        condition: "Invalid pipeline stage, network error, or timeout"
+        throws: "MongoServerError, MongoNetworkError, or MongoError"
+        required_handling: >
+          Caller MUST catch aggregation errors.
+          Pipeline syntax errors (MongoServerError) should not be retried.
+          Network errors may be transient and retriable.
+        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        severity: error
 
-  # Admin operations
-  - function: Collection.createIndex
-    mustHandle:
-      - scenario: index_creation_failure
-        description: Index creation failures (invalid options, duplicate index)
-        severity: ERROR
-        exceptionTypes:
-          - MongoServerError
-          - MongoError
-        sources:
-          - https://www.mongodb.com/docs/drivers/node/current/
+  - name: countDocuments
+    import_path: "mongodb"
+    description: "Counts documents in collection matching filter"
+    postconditions:
+      - id: count-failure
+        condition: "Network error, timeout, or invalid filter"
+        throws: "MongoServerError, MongoNetworkError, or MongoError"
+        required_handling: >
+          Caller MUST catch count errors.
+          Network errors may be transient.
+          Invalid filters should not be retried.
+        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        severity: error
 
-  - function: Collection.drop
-    mustHandle:
-      - scenario: drop_failure
-        description: Collection drop operation failures
-        severity: ERROR
-        exceptionTypes:
-          - MongoServerError
-          - MongoError
-        sources:
-          - https://www.mongodb.com/docs/drivers/node/current/
+  - name: createIndex
+    import_path: "mongodb"
+    description: "Creates index on collection"
+    postconditions:
+      - id: index-creation-failure
+        condition: "Invalid index options, duplicate index name, or insufficient permissions"
+        throws: "MongoServerError or MongoError"
+        required_handling: >
+          Caller MUST catch index creation errors.
+          Index with same name but different options will fail.
+          Check if index already exists before creating.
+        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        severity: error
 
-  - function: Db.collection
-    mustHandle:
-      - scenario: collection_access_failure
-        description: Collection access failures (permissions, invalid name)
-        severity: ERROR
-        exceptionTypes:
-          - MongoServerError
-          - MongoError
-        sources:
-          - https://www.mongodb.com/docs/drivers/node/current/
+  - name: drop
+    import_path: "mongodb"
+    description: "Drops collection from database"
+    postconditions:
+      - id: drop-failure
+        condition: "Collection does not exist, insufficient permissions, or network error"
+        throws: "MongoServerError or MongoError"
+        required_handling: >
+          Caller MUST catch drop errors.
+          Dropping non-existent collection throws error.
+          Use dropCollection with ifExists option to avoid errors.
+        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        severity: error
 
-vulnerabilities:
-  - id: CVE-2025-14847
-    name: MongoBleed
-    description: Critical memory leak vulnerability via zlib compression allowing unauthenticated attackers to extract sensitive server memory
-    severity: CRITICAL
-    cvss: 8.7
-    affectedVersions: ">=3.6.0 <4.4.30 || >=5.0.0 <5.0.32 || >=6.0.0 <6.0.27 || >=7.0.0 <7.0.28 || >=8.0.0 <8.0.17 || >=8.2.0 <8.2.3"
-    fixedVersions: "4.4.30, 5.0.32, 6.0.27, 7.0.28, 8.0.17, 8.2.3"
-    sources:
-      - https://www.wiz.io/blog/mongobleed-cve-2025-14847-exploited-in-the-wild-mongodb
-      - https://snyk.io/node-js/mongodb
-    notes: "Affects instances with zlib compression enabled (default). Disable zlib or upgrade immediately."
+  - name: collection
+    import_path: "mongodb"
+    description: "Returns reference to collection in database"
+    postconditions:
+      - id: collection-access-failure
+        condition: "Invalid collection name or database not connected"
+        throws: "MongoError"
+        required_handling: >
+          Caller MUST catch collection access errors.
+          Ensure database connection is established before accessing collections.
+          Validate collection names before use.
+        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        severity: error
 
-  - id: CVE-2021-32050
-    name: Authentication Data Exposure
-    description: MongoDB drivers may publish authentication-related data to command listeners
-    severity: MEDIUM
-    cvss: 5.5
-    affectedVersions: "<3.6.10 || >=4.0.0 <4.0.5"
-    fixedVersions: "3.6.10, 4.0.5"
-    sources:
-      - https://www.acunetix.com/vulnerabilities/sca/cve-2021-32050-vulnerability-in-npm-package-mongodb/
-      - https://snyk.io/node-js/mongodb
-    notes: "Sensitive authentication data may be exposed to command listeners."
-
-metadata:
-  analyzed_repos:
-    - parse-server
-    - typeorm
-  best_practices:
-    - "Always wrap MongoDB operations in try-catch blocks"
-    - "Handle transient errors (network, timeout) with retry logic"
-    - "Check error codes for specific error types (e.g., 11000 for duplicate key)"
-    - "Use MongoError.hasErrorLabel() to detect transient transaction errors"
-    - "Validate connection strings and credentials before connecting"
-  common_error_codes:
-    - code: 11000
-      description: Duplicate key error
-    - code: 13
-      description: Unauthorized
-    - code: 17007
-      description: Missing geo index
+  - name: bulkWrite
+    import_path: "mongodb"
+    description: "Executes multiple write operations in bulk"
+    postconditions:
+      - id: bulk-write-failure
+        condition: "One or more operations failed"
+        throws: "MongoBulkWriteError with details of failed operations"
+        required_handling: >
+          Caller MUST catch bulk write errors.
+          Check error.result for success/failure details of each operation.
+          Handle partial success appropriately.
+        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        severity: error
