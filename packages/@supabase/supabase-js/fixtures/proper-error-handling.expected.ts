@@ -9,44 +9,15 @@ import type { ExpectedViolations } from '../../../types/index.js';
 
 export const expected: ExpectedViolations = {
   "fixtures": "proper-error-handling.ts",
-  "expectations": [
-    {
-      "id": "select-warning-violations",
-      "description": "WARNING violations in select",
-      "functionName": "select",
-      "minViolations": 2,
-      "expectedClauses": [
-        "connection-error"
-      ],
-      "severity": "warning",
-      "approximateLines": [
-        20,
-        41
-      ]
-    },
-    {
-      "id": "insert-warning-violations",
-      "description": "WARNING violations in insert",
-      "functionName": "insert",
-      "minViolations": 1,
-      "expectedClauses": [
-        "connection-error"
-      ],
-      "severity": "warning",
-      "approximateLines": [
-        41,
-        41
-      ]
-    }
-  ],
+  "expectations": [],
   "summary": {
     "expectedErrorCount": {
       "min": 0,
       "max": 0
     },
     "expectedWarningCount": {
-      "min": 3,
-      "max": 3
+      "min": 0,
+      "max": 0
     },
     "expectedInfoCount": {
       "min": 0,

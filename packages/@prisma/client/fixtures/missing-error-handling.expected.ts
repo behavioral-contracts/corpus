@@ -11,25 +11,14 @@ export const expected: ExpectedViolations = {
   "fixtures": "missing-error-handling.ts",
   "expectations": [
     {
-      "id": "parseAsync-error-violations",
-      "description": "ERROR violations in parseAsync",
-      "functionName": "parseAsync",
-      "minViolations": 13,
-      "expectedClauses": [
-        "parse-async-validation-error"
-      ],
-      "severity": "error",
-      "approximateLines": [
-        16,
-        112
-      ]
-    },
-    {
       "id": "create-error-violations",
       "description": "ERROR violations in create",
       "functionName": "create",
-      "minViolations": 4,
+      "minViolations": 16,
       "expectedClauses": [
+        "unique-constraint-violation",
+        "foreign-key-constraint",
+        "required-field-missing",
         "connection-error"
       ],
       "severity": "error",
@@ -42,8 +31,11 @@ export const expected: ExpectedViolations = {
       "id": "update-error-violations",
       "description": "ERROR violations in update",
       "functionName": "update",
-      "minViolations": 1,
+      "minViolations": 4,
       "expectedClauses": [
+        "record-not-found",
+        "unique-constraint-violation",
+        "foreign-key-constraint",
         "connection-error"
       ],
       "severity": "error",
@@ -56,8 +48,10 @@ export const expected: ExpectedViolations = {
       "id": "delete-error-violations",
       "description": "ERROR violations in delete",
       "functionName": "delete",
-      "minViolations": 1,
+      "minViolations": 3,
       "expectedClauses": [
+        "record-not-found",
+        "foreign-key-constraint",
         "connection-error"
       ],
       "severity": "error",
@@ -70,8 +64,9 @@ export const expected: ExpectedViolations = {
       "id": "findUnique-error-violations",
       "description": "ERROR violations in findUnique",
       "functionName": "findUnique",
-      "minViolations": 1,
+      "minViolations": 2,
       "expectedClauses": [
+        "record-not-found",
         "connection-error"
       ],
       "severity": "error",
@@ -84,8 +79,9 @@ export const expected: ExpectedViolations = {
       "id": "findUniqueOrThrow-error-violations",
       "description": "ERROR violations in findUniqueOrThrow",
       "functionName": "findUniqueOrThrow",
-      "minViolations": 1,
+      "minViolations": 2,
       "expectedClauses": [
+        "record-not-found",
         "connection-error"
       ],
       "severity": "error",
@@ -98,8 +94,9 @@ export const expected: ExpectedViolations = {
       "id": "-transaction-error-violations",
       "description": "ERROR violations in $transaction",
       "functionName": "$transaction",
-      "minViolations": 2,
+      "minViolations": 3,
       "expectedClauses": [
+        "transaction-failed",
         "deadlock-error",
         "connection-error-in-transaction"
       ],
@@ -108,12 +105,26 @@ export const expected: ExpectedViolations = {
         71,
         71
       ]
+    },
+    {
+      "id": "-connect-error-violations",
+      "description": "ERROR violations in $connect",
+      "functionName": "$connect",
+      "minViolations": 1,
+      "expectedClauses": [
+        "connection-failed"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        85,
+        85
+      ]
     }
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 23,
-      "max": 23
+      "min": 31,
+      "max": 31
     },
     "expectedWarningCount": {
       "min": 0,

@@ -14,45 +14,23 @@ export const expected: ExpectedViolations = {
       "id": "create-warning-violations",
       "description": "WARNING violations in create",
       "functionName": "create",
-      "minViolations": 12,
+      "minViolations": 2,
       "expectedClauses": [
-        "card-error",
-        "rate-limit-error",
-        "authentication-error",
-        "network-error"
+        "rate-limit-error"
       ],
       "severity": "warning",
       "approximateLines": [
-        19,
+        52,
         75
-      ]
-    },
-    {
-      "id": "confirm-warning-violations",
-      "description": "WARNING violations in confirm",
-      "functionName": "confirm",
-      "minViolations": 4,
-      "expectedClauses": [
-        "card-error",
-        "rate-limit-error",
-        "authentication-error",
-        "network-error"
-      ],
-      "severity": "warning",
-      "approximateLines": [
-        111,
-        111
       ]
     },
     {
       "id": "retrieve-warning-violations",
       "description": "WARNING violations in retrieve",
       "functionName": "retrieve",
-      "minViolations": 3,
+      "minViolations": 1,
       "expectedClauses": [
-        "rate-limit-error",
-        "authentication-error",
-        "network-error"
+        "rate-limit-error"
       ],
       "severity": "warning",
       "approximateLines": [
@@ -67,8 +45,8 @@ export const expected: ExpectedViolations = {
       "max": 0
     },
     "expectedWarningCount": {
-      "min": 19,
-      "max": 19
+      "min": 3,
+      "max": 3
     },
     "expectedInfoCount": {
       "min": 0,

@@ -14,17 +14,13 @@ export const expected: ExpectedViolations = {
       "id": "create-warning-violations",
       "description": "WARNING violations in create",
       "functionName": "create",
-      "minViolations": 25,
+      "minViolations": 4,
       "expectedClauses": [
-        "authentication-error",
-        "rate-limit-error",
-        "server-error",
-        "timeout-error",
-        "invalid-request-error"
+        "rate-limit-error"
       ],
       "severity": "warning",
       "approximateLines": [
-        19,
+        45,
         134
       ]
     },
@@ -32,11 +28,9 @@ export const expected: ExpectedViolations = {
       "id": "generate-warning-violations",
       "description": "WARNING violations in generate",
       "functionName": "generate",
-      "minViolations": 3,
+      "minViolations": 1,
       "expectedClauses": [
-        "authentication-error",
-        "rate-limit-error-images",
-        "server-error"
+        "rate-limit-error-images"
       ],
       "severity": "warning",
       "approximateLines": [
@@ -51,8 +45,8 @@ export const expected: ExpectedViolations = {
       "max": 0
     },
     "expectedWarningCount": {
-      "min": 28,
-      "max": 28
+      "min": 5,
+      "max": 5
     },
     "expectedInfoCount": {
       "min": 0,

@@ -11,20 +11,6 @@ export const expected: ExpectedViolations = {
   "fixtures": "missing-error-handling.ts",
   "expectations": [
     {
-      "id": "parseAsync-error-violations",
-      "description": "ERROR violations in parseAsync",
-      "functionName": "parseAsync",
-      "minViolations": 6,
-      "expectedClauses": [
-        "parse-async-validation-error"
-      ],
-      "severity": "error",
-      "approximateLines": [
-        53,
-        240
-      ]
-    },
-    {
       "id": "connect-error-violations",
       "description": "ERROR violations in connect",
       "functionName": "connect",
@@ -41,8 +27,8 @@ export const expected: ExpectedViolations = {
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 7,
-      "max": 7
+      "min": 1,
+      "max": 1
     },
     "expectedWarningCount": {
       "min": 0,

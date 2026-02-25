@@ -9,46 +9,15 @@ import type { ExpectedViolations } from '../../../types/index.js';
 
 export const expected: ExpectedViolations = {
   "fixtures": "proper-error-handling.ts",
-  "expectations": [
-    {
-      "id": "parse-warning-violations",
-      "description": "WARNING violations in parse",
-      "functionName": "parse",
-      "minViolations": 4,
-      "expectedClauses": [
-        "parse-validation-error",
-        "parse-type-coercion-error"
-      ],
-      "severity": "warning",
-      "approximateLines": [
-        35,
-        110
-      ]
-    },
-    {
-      "id": "parseAsync-warning-violations",
-      "description": "WARNING violations in parseAsync",
-      "functionName": "parseAsync",
-      "minViolations": 2,
-      "expectedClauses": [
-        "parse-async-validation-error",
-        "parse-async-refinement-error"
-      ],
-      "severity": "warning",
-      "approximateLines": [
-        77,
-        77
-      ]
-    }
-  ],
+  "expectations": [],
   "summary": {
     "expectedErrorCount": {
       "min": 0,
       "max": 0
     },
     "expectedWarningCount": {
-      "min": 6,
-      "max": 6
+      "min": 0,
+      "max": 0
     },
     "expectedInfoCount": {
       "min": 0,

@@ -11,52 +11,38 @@ export const expected: ExpectedViolations = {
   "fixtures": "missing-error-handling.ts",
   "expectations": [
     {
-      "id": "get-error-violations",
-      "description": "ERROR violations in get",
-      "functionName": "get",
-      "minViolations": 3,
+      "id": "send-error-violations",
+      "description": "ERROR violations in send",
+      "functionName": "send",
+      "minViolations": 5,
       "expectedClauses": [
-        "get-no-error-handling"
+        "send-no-try-catch"
       ],
       "severity": "error",
       "approximateLines": [
-        24,
-        56
-      ]
-    },
-    {
-      "id": "set-error-violations",
-      "description": "ERROR violations in set",
-      "functionName": "set",
-      "minViolations": 6,
-      "expectedClauses": [
-        "set-no-error-handling"
-      ],
-      "severity": "error",
-      "approximateLines": [
-        31,
+        18,
         107
       ]
     },
     {
-      "id": "connect-error-violations",
-      "description": "ERROR violations in connect",
-      "functionName": "connect",
+      "id": "sendMultiple-error-violations",
+      "description": "ERROR violations in sendMultiple",
+      "functionName": "sendMultiple",
       "minViolations": 1,
       "expectedClauses": [
-        "connect-no-error-handling"
+        "send-multiple-no-try-catch"
       ],
       "severity": "error",
       "approximateLines": [
-        90,
-        90
+        47,
+        47
       ]
     }
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 10,
-      "max": 10
+      "min": 6,
+      "max": 6
     },
     "expectedWarningCount": {
       "min": 0,

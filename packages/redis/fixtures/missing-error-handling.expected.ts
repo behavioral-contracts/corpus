@@ -11,6 +11,34 @@ export const expected: ExpectedViolations = {
   "fixtures": "missing-error-handling.ts",
   "expectations": [
     {
+      "id": "createClient-error-violations",
+      "description": "ERROR violations in createClient",
+      "functionName": "createClient",
+      "minViolations": 9,
+      "expectedClauses": [
+        "missing-error-listener"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        15,
+        155
+      ]
+    },
+    {
+      "id": "connect-error-violations",
+      "description": "ERROR violations in connect",
+      "functionName": "connect",
+      "minViolations": 7,
+      "expectedClauses": [
+        "connect-no-error-handling"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        34,
+        159
+      ]
+    },
+    {
       "id": "get-error-violations",
       "description": "ERROR violations in get",
       "functionName": "get",
@@ -20,43 +48,43 @@ export const expected: ExpectedViolations = {
       ],
       "severity": "error",
       "approximateLines": [
-        24,
-        56
+        48,
+        144
       ]
     },
     {
       "id": "set-error-violations",
       "description": "ERROR violations in set",
       "functionName": "set",
-      "minViolations": 6,
+      "minViolations": 2,
       "expectedClauses": [
         "set-no-error-handling"
       ],
       "severity": "error",
       "approximateLines": [
-        31,
-        107
+        64,
+        160
       ]
     },
     {
-      "id": "connect-error-violations",
-      "description": "ERROR violations in connect",
-      "functionName": "connect",
+      "id": "del-error-violations",
+      "description": "ERROR violations in del",
+      "functionName": "del",
       "minViolations": 1,
       "expectedClauses": [
-        "connect-no-error-handling"
+        "del-no-error-handling"
       ],
       "severity": "error",
       "approximateLines": [
-        90,
-        90
+        79,
+        79
       ]
     }
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 10,
-      "max": 10
+      "min": 22,
+      "max": 22
     },
     "expectedWarningCount": {
       "min": 0,

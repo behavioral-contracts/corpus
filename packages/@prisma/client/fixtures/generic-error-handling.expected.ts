@@ -11,96 +11,12 @@ export const expected: ExpectedViolations = {
   "fixtures": "generic-error-handling.ts",
   "expectations": [
     {
-      "id": "parseAsync-error-violations",
-      "description": "ERROR violations in parseAsync",
-      "functionName": "parseAsync",
-      "minViolations": 2,
-      "expectedClauses": [
-        "parse-async-validation-error"
-      ],
-      "severity": "error",
-      "approximateLines": [
-        62,
-        129
-      ]
-    },
-    {
-      "id": "create-warning-violations",
-      "description": "WARNING violations in create",
-      "functionName": "create",
-      "minViolations": 3,
-      "expectedClauses": [
-        "connection-error"
-      ],
-      "severity": "warning",
-      "approximateLines": [
-        17,
-        110
-      ]
-    },
-    {
-      "id": "update-warning-violations",
-      "description": "WARNING violations in update",
-      "functionName": "update",
-      "minViolations": 1,
-      "expectedClauses": [
-        "connection-error"
-      ],
-      "severity": "warning",
-      "approximateLines": [
-        32,
-        32
-      ]
-    },
-    {
-      "id": "delete-warning-violations",
-      "description": "WARNING violations in delete",
-      "functionName": "delete",
-      "minViolations": 1,
-      "expectedClauses": [
-        "connection-error"
-      ],
-      "severity": "warning",
-      "approximateLines": [
-        48,
-        48
-      ]
-    },
-    {
-      "id": "-transaction-warning-violations",
-      "description": "WARNING violations in $transaction",
-      "functionName": "$transaction",
-      "minViolations": 2,
-      "expectedClauses": [
-        "deadlock-error",
-        "connection-error-in-transaction"
-      ],
-      "severity": "warning",
-      "approximateLines": [
-        61,
-        61
-      ]
-    },
-    {
-      "id": "findUnique-warning-violations",
-      "description": "WARNING violations in findUnique",
-      "functionName": "findUnique",
-      "minViolations": 1,
-      "expectedClauses": [
-        "connection-error"
-      ],
-      "severity": "warning",
-      "approximateLines": [
-        78,
-        78
-      ]
-    },
-    {
       "id": "findUniqueOrThrow-error-violations",
       "description": "ERROR violations in findUniqueOrThrow",
       "functionName": "findUniqueOrThrow",
-      "minViolations": 1,
+      "minViolations": 2,
       "expectedClauses": [
+        "record-not-found",
         "connection-error"
       ],
       "severity": "error",
@@ -112,12 +28,12 @@ export const expected: ExpectedViolations = {
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 3,
-      "max": 3
+      "min": 2,
+      "max": 2
     },
     "expectedWarningCount": {
-      "min": 8,
-      "max": 8
+      "min": 0,
+      "max": 0
     },
     "expectedInfoCount": {
       "min": 0,

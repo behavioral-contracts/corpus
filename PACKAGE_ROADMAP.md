@@ -8,8 +8,9 @@
 
 ## Current Coverage
 
-- **Total Packages in Corpus:** 12
+- **Total Packages in Corpus:** 13
 - **Packages Onboarded:**
+  - ✅ @aws-sdk/client-s3
   - ✅ @octokit/rest
   - ✅ @prisma/client
   - ✅ @supabase/supabase-js
@@ -80,6 +81,26 @@
 - **Research:** [docs](https://zod.dev/)
 - **Completed:** 2026-02-24
 - **Note:** Contract complete with 4 functions (parse, parseAsync, safeParse, safeParseAsync). Analyzer enhancement needed for factory pattern detection. CVE-2023-4316 documented.
+
+#### @aws-sdk/client-s3
+- **Status:** ✅ Complete
+- **Priority:** P0 - Critical
+- **Usage:** AWS S3 cloud storage (widely used in production systems)
+- **Key Behaviors:**
+  - Object operations (GetObject, PutObject, DeleteObject, HeadObject, CopyObject)
+  - Multipart upload error handling and cleanup
+  - Bucket operations (CreateBucket, DeleteBucket, HeadBucket)
+  - List operations (ListObjectsV2, ListBuckets)
+  - Rate limiting (SlowDown 503 errors)
+- **Error Types:**
+  - NoSuchKey (404) - Object not found
+  - NoSuchBucket (404) - Bucket doesn't exist
+  - AccessDenied (403) - Permission errors
+  - BucketAlreadyExists (409) - Name collision
+  - SlowDown (503) - Rate limiting
+- **Research:** [AWS SDK v3 docs](https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/s3/)
+- **Completed:** 2026-02-25
+- **Note:** Contract complete with 2 functions (send, S3Client) and 6 postconditions. Analyzer enhanced with 177 lines of S3Client detection code. Regression tested against 6 packages with 100% backward compatibility. Pattern reusable for all AWS SDK v3 services (DynamoDB, Lambda, SNS, SQS, etc.).
 
 ---
 

@@ -11,20 +11,6 @@ export const expected: ExpectedViolations = {
   "fixtures": "instance-usage.ts",
   "expectations": [
     {
-      "id": "parseAsync-error-violations",
-      "description": "ERROR violations in parseAsync",
-      "functionName": "parseAsync",
-      "minViolations": 10,
-      "expectedClauses": [
-        "parse-async-validation-error"
-      ],
-      "severity": "error",
-      "approximateLines": [
-        27,
-        138
-      ]
-    },
-    {
       "id": "query-error-violations",
       "description": "ERROR violations in query",
       "functionName": "query",
@@ -46,8 +32,8 @@ export const expected: ExpectedViolations = {
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 22,
-      "max": 22
+      "min": 12,
+      "max": 12
     },
     "expectedWarningCount": {
       "min": 0,

@@ -11,25 +11,13 @@ export const expected: ExpectedViolations = {
   "fixtures": "missing-error-handling.ts",
   "expectations": [
     {
-      "id": "parseAsync-error-violations",
-      "description": "ERROR violations in parseAsync",
-      "functionName": "parseAsync",
-      "minViolations": 5,
-      "expectedClauses": [
-        "parse-async-validation-error"
-      ],
-      "severity": "error",
-      "approximateLines": [
-        20,
-        71
-      ]
-    },
-    {
       "id": "select-error-violations",
       "description": "ERROR violations in select",
       "functionName": "select",
-      "minViolations": 1,
+      "minViolations": 3,
       "expectedClauses": [
+        "rls-policy-violation",
+        "column-access-denied",
         "connection-error"
       ],
       "severity": "error",
@@ -39,11 +27,28 @@ export const expected: ExpectedViolations = {
       ]
     },
     {
+      "id": "from-error-violations",
+      "description": "ERROR violations in from",
+      "functionName": "from",
+      "minViolations": 4,
+      "expectedClauses": [
+        "table-not-found"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        20,
+        58
+      ]
+    },
+    {
       "id": "insert-error-violations",
       "description": "ERROR violations in insert",
       "functionName": "insert",
-      "minViolations": 1,
+      "minViolations": 4,
       "expectedClauses": [
+        "rls-policy-violation",
+        "unique-constraint-violation",
+        "foreign-key-violation",
         "connection-error"
       ],
       "severity": "error",
@@ -53,11 +58,43 @@ export const expected: ExpectedViolations = {
       ]
     },
     {
+      "id": "update-error-violations",
+      "description": "ERROR violations in update",
+      "functionName": "update",
+      "minViolations": 2,
+      "expectedClauses": [
+        "rls-policy-violation",
+        "unique-constraint-violation"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        45,
+        45
+      ]
+    },
+    {
+      "id": "delete-error-violations",
+      "description": "ERROR violations in delete",
+      "functionName": "delete",
+      "minViolations": 2,
+      "expectedClauses": [
+        "rls-policy-violation",
+        "foreign-key-violation"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        58,
+        58
+      ]
+    },
+    {
       "id": "rpc-error-violations",
       "description": "ERROR violations in rpc",
       "functionName": "rpc",
-      "minViolations": 1,
+      "minViolations": 3,
       "expectedClauses": [
+        "function-not-found",
+        "permission-denied",
         "rpc-error"
       ],
       "severity": "error",
@@ -69,8 +106,8 @@ export const expected: ExpectedViolations = {
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 8,
-      "max": 8
+      "min": 18,
+      "max": 18
     },
     "expectedWarningCount": {
       "min": 0,

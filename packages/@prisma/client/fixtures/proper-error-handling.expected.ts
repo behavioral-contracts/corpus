@@ -23,91 +23,6 @@ export const expected: ExpectedViolations = {
         155,
         155
       ]
-    },
-    {
-      "id": "create-warning-violations",
-      "description": "WARNING violations in create",
-      "functionName": "create",
-      "minViolations": 1,
-      "expectedClauses": [
-        "connection-error"
-      ],
-      "severity": "warning",
-      "approximateLines": [
-        16,
-        16
-      ]
-    },
-    {
-      "id": "update-warning-violations",
-      "description": "WARNING violations in update",
-      "functionName": "update",
-      "minViolations": 1,
-      "expectedClauses": [
-        "connection-error"
-      ],
-      "severity": "warning",
-      "approximateLines": [
-        35,
-        35
-      ]
-    },
-    {
-      "id": "delete-warning-violations",
-      "description": "WARNING violations in delete",
-      "functionName": "delete",
-      "minViolations": 1,
-      "expectedClauses": [
-        "connection-error"
-      ],
-      "severity": "warning",
-      "approximateLines": [
-        54,
-        54
-      ]
-    },
-    {
-      "id": "findUnique-warning-violations",
-      "description": "WARNING violations in findUnique",
-      "functionName": "findUnique",
-      "minViolations": 1,
-      "expectedClauses": [
-        "connection-error"
-      ],
-      "severity": "warning",
-      "approximateLines": [
-        72,
-        72
-      ]
-    },
-    {
-      "id": "-transaction-warning-violations",
-      "description": "WARNING violations in $transaction",
-      "functionName": "$transaction",
-      "minViolations": 2,
-      "expectedClauses": [
-        "deadlock-error",
-        "connection-error-in-transaction"
-      ],
-      "severity": "warning",
-      "approximateLines": [
-        91,
-        91
-      ]
-    },
-    {
-      "id": "findUniqueOrThrow-warning-violations",
-      "description": "WARNING violations in findUniqueOrThrow",
-      "functionName": "findUniqueOrThrow",
-      "minViolations": 1,
-      "expectedClauses": [
-        "connection-error"
-      ],
-      "severity": "warning",
-      "approximateLines": [
-        120,
-        120
-      ]
     }
   ],
   "summary": {
@@ -116,8 +31,8 @@ export const expected: ExpectedViolations = {
       "max": 0
     },
     "expectedWarningCount": {
-      "min": 8,
-      "max": 8
+      "min": 1,
+      "max": 1
     },
     "expectedInfoCount": {
       "min": 0,

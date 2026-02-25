@@ -11,28 +11,28 @@ export const expected: ExpectedViolations = {
   "fixtures": "instance-usage.ts",
   "expectations": [
     {
-      "id": "handleSubmit-warning-violations",
-      "description": "WARNING violations in handleSubmit",
-      "functionName": "handleSubmit",
+      "id": "send-error-violations",
+      "description": "ERROR violations in send",
+      "functionName": "send",
       "minViolations": 2,
       "expectedClauses": [
-        "empty-catch-block-silent-failure"
+        "s3-object-operation-no-try-catch"
       ],
-      "severity": "warning",
+      "severity": "error",
       "approximateLines": [
-        125,
-        141
+        45,
+        51
       ]
     }
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 0,
-      "max": 0
-    },
-    "expectedWarningCount": {
       "min": 2,
       "max": 2
+    },
+    "expectedWarningCount": {
+      "min": 0,
+      "max": 0
     },
     "expectedInfoCount": {
       "min": 0,
