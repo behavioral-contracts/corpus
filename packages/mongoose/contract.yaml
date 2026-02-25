@@ -1,134 +1,344 @@
-package_name: mongoose
-description: MongoDB object modeling tool designed to work in an asynchronous environment
-version_range: ">=5.0.0"
+package: mongoose
+semver: ">=5.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-25"
 
 functions:
-  # Model Static Methods - Query Operations
-  - name: "Model.find"
-    severity: ERROR
-    message: "mongoose Model.find() must be wrapped in try-catch or use .catch() - can fail due to connection errors, invalid queries, or type casting errors"
+  # Model.find - Query multiple documents
+  - name: find
+    import_path: "mongoose"
+    description: "Queries the database and returns an array of documents matching the filter"
 
-  - name: "Model.findOne"
-    severity: ERROR
-    message: "mongoose Model.findOne() must be wrapped in try-catch or use .catch() - can fail due to connection errors, invalid queries, or type casting errors"
+    postconditions:
+      - id: connection-error
+        condition: "Database connection failed or was interrupted"
+        throws: "MongooseError or MongoError"
+        required_handling: >
+          Caller MUST wrap in try-catch or use .catch().
+          Handle connection errors separately from query results.
+          Implement retry logic for transient connection issues.
+        source: "https://mongoosejs.com/docs/connections.html"
+        severity: error
 
-  - name: "Model.findById"
-    severity: ERROR
-    message: "mongoose Model.findById() must be wrapped in try-catch or use .catch() - can fail due to connection errors or invalid ObjectId casting"
+      - id: cast-error
+        condition: "Query parameter cannot be cast to expected type"
+        throws: "CastError"
+        required_handling: >
+          Caller MUST wrap in try-catch or use .catch().
+          Validate query parameters before passing to mongoose.
+          Handle CastError separately from other errors.
+        source: "https://mongoosejs.com/docs/schematypes.html#what-is-a-schematype"
+        severity: error
 
-  # Model Static Methods - Create Operations
-  - name: "Model.create"
-    severity: ERROR
-    message: "mongoose Model.create() must be wrapped in try-catch or use .catch() - can fail due to validation errors, duplicate key errors, or connection issues"
+  # Model.findOne - Query single document
+  - name: findOne
+    import_path: "mongoose"
+    description: "Queries the database and returns a single document matching the filter"
 
-  - name: "Model.insertMany"
-    severity: ERROR
-    message: "mongoose Model.insertMany() must be wrapped in try-catch or use .catch() - can fail due to validation errors, duplicate key errors, or connection issues"
+    postconditions:
+      - id: connection-error
+        condition: "Database connection failed"
+        throws: "MongooseError or MongoError"
+        required_handling: "Caller MUST wrap in try-catch or use .catch() to handle connection errors"
+        source: "https://mongoosejs.com/docs/connections.html"
+        severity: error
 
-  # Model Static Methods - Update Operations
-  - name: "Model.updateOne"
-    severity: ERROR
-    message: "mongoose Model.updateOne() must be wrapped in try-catch or use .catch() - can fail due to validation errors, type casting errors, or connection issues"
+      - id: cast-error
+        condition: "Query parameter casting failed"
+        throws: "CastError"
+        required_handling: "Caller MUST wrap in try-catch to handle type casting errors"
+        source: "https://mongoosejs.com/docs/schematypes.html"
+        severity: error
 
-  - name: "Model.updateMany"
-    severity: ERROR
-    message: "mongoose Model.updateMany() must be wrapped in try-catch or use .catch() - can fail due to validation errors, type casting errors, or connection issues"
+  # Model.findById - Query by ObjectId
+  - name: findById
+    import_path: "mongoose"
+    description: "Finds a single document by its _id field"
 
-  - name: "Model.findByIdAndUpdate"
-    severity: ERROR
-    message: "mongoose Model.findByIdAndUpdate() must be wrapped in try-catch or use .catch() - can fail due to validation errors, invalid ObjectId, or connection issues. NOTE: CVE-2023-3696 affects this method"
+    postconditions:
+      - id: cast-error-invalid-id
+        condition: "Provided ID is not a valid ObjectId format"
+        throws: "CastError with kind: 'ObjectId'"
+        required_handling: >
+          Caller MUST wrap in try-catch or use .catch().
+          Common when user input is passed directly as ID.
+          Validate ID format before querying.
+        source: "https://mongoosejs.com/docs/api/model.html#model_Model-findById"
+        severity: error
 
-  - name: "Model.findOneAndUpdate"
-    severity: ERROR
-    message: "mongoose Model.findOneAndUpdate() must be wrapped in try-catch or use .catch() - can fail due to validation errors, type casting, or connection issues. NOTE: CVE-2023-3696 affects this method"
+      - id: connection-error
+        condition: "Database connection failed"
+        throws: "MongooseError"
+        required_handling: "Caller MUST handle connection errors"
+        source: "https://mongoosejs.com/docs/connections.html"
+        severity: error
 
-  - name: "Model.replaceOne"
-    severity: ERROR
-    message: "mongoose Model.replaceOne() must be wrapped in try-catch or use .catch() - can fail due to validation errors or connection issues"
+  # Model.create - Create new documents
+  - name: create
+    import_path: "mongoose"
+    description: "Creates one or more documents in the database"
 
-  - name: "Model.findOneAndReplace"
-    severity: ERROR
-    message: "mongoose Model.findOneAndReplace() must be wrapped in try-catch or use .catch() - can fail due to validation errors or connection issues"
+    postconditions:
+      - id: validation-error
+        condition: "Document validation failed (missing required fields, wrong types, custom validators)"
+        throws: "ValidationError with errors object containing field-specific ValidatorErrors"
+        required_handling: >
+          Caller MUST wrap in try-catch or use .catch().
+          Check error.name === 'ValidationError' and inspect error.errors object.
+          Each field error is accessible via error.errors[fieldName].
+        source: "https://mongoosejs.com/docs/validation.html"
+        severity: error
 
-  # Model Static Methods - Delete Operations
-  - name: "Model.deleteOne"
-    severity: ERROR
-    message: "mongoose Model.deleteOne() must be wrapped in try-catch or use .catch() - can fail due to connection errors or invalid query conditions"
+      - id: duplicate-key-error
+        condition: "Unique constraint violation (E11000 error)"
+        throws: "MongoError with code: 11000"
+        required_handling: >
+          Caller MUST wrap in try-catch and check error.code === 11000.
+          This is NOT a ValidationError - it comes from MongoDB driver.
+          Extract duplicate field from error message or error.keyPattern.
+        source: "https://mongoosejs.com/docs/validation.html#unique-indexes"
+        severity: error
 
-  - name: "Model.deleteMany"
-    severity: ERROR
-    message: "mongoose Model.deleteMany() must be wrapped in try-catch or use .catch() - can fail due to connection errors or invalid query conditions"
+      - id: connection-error
+        condition: "Database connection failed"
+        throws: "MongooseError"
+        required_handling: "Caller MUST handle connection errors with retry logic"
+        source: "https://mongoosejs.com/docs/connections.html"
+        severity: error
 
-  - name: "Model.findByIdAndDelete"
-    severity: ERROR
-    message: "mongoose Model.findByIdAndDelete() must be wrapped in try-catch or use .catch() - can fail due to connection errors or invalid ObjectId"
+  # Model.insertMany - Bulk create
+  - name: insertMany
+    import_path: "mongoose"
+    description: "Inserts multiple documents into the database in a single operation"
 
-  - name: "Model.findOneAndDelete"
-    severity: ERROR
-    message: "mongoose Model.findOneAndDelete() must be wrapped in try-catch or use .catch() - can fail due to connection errors or invalid query conditions"
+    postconditions:
+      - id: validation-error
+        condition: "One or more documents fail validation"
+        throws: "ValidationError"
+        required_handling: "Caller MUST wrap in try-catch. Default behavior stops on first error; use ordered:false to continue on errors."
+        source: "https://mongoosejs.com/docs/api/model.html#model_Model-insertMany"
+        severity: error
 
-  - name: "Model.findByIdAndRemove"
-    severity: ERROR
-    message: "mongoose Model.findByIdAndRemove() must be wrapped in try-catch or use .catch() - DEPRECATED but still used. Can fail due to connection errors or invalid ObjectId"
+      - id: duplicate-key-error
+        condition: "Duplicate key constraint violation"
+        throws: "MongoError with code: 11000"
+        required_handling: "Caller MUST wrap in try-catch and handle duplicate key errors"
+        source: "https://mongoosejs.com/docs/api/model.html#model_Model-insertMany"
+        severity: error
 
-  # Model Static Methods - Aggregation and Count
-  - name: "Model.aggregate"
-    severity: ERROR
-    message: "mongoose Model.aggregate() must be wrapped in try-catch or use .catch() - can fail due to invalid pipeline stages or connection errors"
+  # Model.updateOne - Update single document
+  - name: updateOne
+    import_path: "mongoose"
+    description: "Updates a single document matching the filter"
 
-  - name: "Model.countDocuments"
-    severity: ERROR
-    message: "mongoose Model.countDocuments() must be wrapped in try-catch or use .catch() - can fail due to connection errors or invalid query conditions"
+    postconditions:
+      - id: validation-error
+        condition: "Update violates validation rules"
+        throws: "ValidationError"
+        required_handling: "Caller MUST wrap in try-catch to handle validation errors"
+        source: "https://mongoosejs.com/docs/validation.html"
+        severity: error
 
-  - name: "Model.estimatedDocumentCount"
-    severity: ERROR
-    message: "mongoose Model.estimatedDocumentCount() must be wrapped in try-catch or use .catch() - can fail due to connection errors"
+      - id: cast-error
+        condition: "Update value cannot be cast to schema type"
+        throws: "CastError"
+        required_handling: "Caller MUST wrap in try-catch to handle type errors"
+        source: "https://mongoosejs.com/docs/schematypes.html"
+        severity: error
 
-  # Document Instance Methods
-  - name: "Document.save"
-    severity: ERROR
-    message: "mongoose Document.save() must be wrapped in try-catch or use .catch() - can fail due to validation errors, duplicate key errors (E11000), or connection issues"
+      - id: connection-error
+        condition: "Database connection failed"
+        throws: "MongooseError"
+        required_handling: "Caller MUST handle connection errors"
+        source: "https://mongoosejs.com/docs/connections.html"
+        severity: error
 
-  - name: "Document.validate"
-    severity: ERROR
-    message: "mongoose Document.validate() must be wrapped in try-catch or use .catch() - will throw ValidationError if document is invalid"
+  # Model.findByIdAndUpdate - Find and update by ID
+  - name: findByIdAndUpdate
+    import_path: "mongoose"
+    description: "Finds a document by ID and updates it, returning the document"
 
-  - name: "Document.remove"
-    severity: ERROR
-    message: "mongoose Document.remove() must be wrapped in try-catch or use .catch() - DEPRECATED but still used. Can fail due to connection errors"
+    postconditions:
+      - id: prototype-pollution-cve-2023-3696
+        condition: "Malicious update payload exploits prototype pollution vulnerability"
+        throws: "May not throw - vulnerability allows arbitrary code execution"
+        required_handling: >
+          Caller MUST wrap in try-catch.
+          CRITICAL: Ensure mongoose version >= 5.13.20, 6.4.6, or 7.3.1 to patch CVE-2023-3696.
+          Validate and sanitize all update payloads from user input.
+        source: "https://security.snyk.io/vuln/SNYK-JS-MONGOOSE-5777721"
+        severity: error
 
-  - name: "Document.deleteOne"
-    severity: ERROR
-    message: "mongoose Document.deleteOne() must be wrapped in try-catch or use .catch() - can fail due to connection errors"
+      - id: validation-error
+        condition: "Update violates validation rules"
+        throws: "ValidationError"
+        required_handling: "Caller MUST wrap in try-catch"
+        source: "https://mongoosejs.com/docs/validation.html"
+        severity: error
 
-  # Query Methods
-  - name: "Query.exec"
-    severity: ERROR
-    message: "mongoose Query.exec() must be wrapped in try-catch or use .catch() - executes the query and can fail for various reasons"
+      - id: cast-error
+        condition: "Invalid ObjectId or type casting failure"
+        throws: "CastError"
+        required_handling: "Caller MUST wrap in try-catch"
+        source: "https://mongoosejs.com/docs/api/model.html#model_Model-findByIdAndUpdate"
+        severity: error
 
-  - name: "Query.orFail"
-    severity: ERROR
-    message: "mongoose Query.orFail() must be wrapped in try-catch or use .catch() - explicitly throws DocumentNotFoundError when no documents match"
+  # Model.findOneAndUpdate
+  - name: findOneAndUpdate
+    import_path: "mongoose"
+    description: "Finds a document matching filter and updates it"
 
-  # Connection Methods
-  - name: "mongoose.connect"
-    severity: ERROR
-    message: "mongoose.connect() must be wrapped in try-catch or use .catch() - can fail due to network issues, authentication errors, or invalid connection strings"
+    postconditions:
+      - id: prototype-pollution-cve-2023-3696
+        condition: "Vulnerable to prototype pollution attacks"
+        throws: "May not throw - allows RCE"
+        required_handling: "Caller MUST wrap in try-catch and validate input. Upgrade mongoose to patched version."
+        source: "https://security.snyk.io/vuln/SNYK-JS-MONGOOSE-5777721"
+        severity: error
 
-  - name: "Connection.close"
-    severity: ERROR
-    message: "mongoose Connection.close() must be wrapped in try-catch or use .catch() - can fail if connection is already closed or network issues occur"
+      - id: validation-error
+        condition: "Update violates validation"
+        throws: "ValidationError"
+        required_handling: "Caller MUST wrap in try-catch"
+        source: "https://mongoosejs.com/docs/validation.html"
+        severity: error
 
-  # Model-level Operations
-  - name: "Model.exists"
-    severity: ERROR
-    message: "mongoose Model.exists() must be wrapped in try-catch or use .catch() - can fail due to connection errors or invalid query"
+  # Model.deleteOne - Delete single document
+  - name: deleteOne
+    import_path: "mongoose"
+    description: "Deletes a single document matching the filter"
 
-  - name: "Model.distinct"
-    severity: ERROR
-    message: "mongoose Model.distinct() must be wrapped in try-catch or use .catch() - can fail due to connection errors or invalid field names"
+    postconditions:
+      - id: connection-error
+        condition: "Database connection failed"
+        throws: "MongooseError"
+        required_handling: "Caller MUST wrap in try-catch"
+        source: "https://mongoosejs.com/docs/connections.html"
+        severity: error
 
-  # Bulk Write Operations
-  - name: "Model.bulkWrite"
-    severity: ERROR
-    message: "mongoose Model.bulkWrite() must be wrapped in try-catch or use .catch() - can fail due to validation errors, duplicate keys, or connection issues"
+  # Model.findByIdAndDelete
+  - name: findByIdAndDelete
+    import_path: "mongoose"
+    description: "Finds a document by ID and deletes it"
+
+    postconditions:
+      - id: cast-error
+        condition: "Invalid ObjectId format"
+        throws: "CastError"
+        required_handling: "Caller MUST wrap in try-catch"
+        source: "https://mongoosejs.com/docs/api/model.html#model_Model-findByIdAndDelete"
+        severity: error
+
+      - id: connection-error
+        condition: "Database connection failed"
+        throws: "MongooseError"
+        required_handling: "Caller MUST wrap in try-catch"
+        source: "https://mongoosejs.com/docs/connections.html"
+        severity: error
+
+  # Document.save - Save document instance
+  - name: save
+    import_path: "mongoose"
+    description: "Saves document changes to the database"
+
+    postconditions:
+      - id: validation-error
+        condition: "Document validation failed"
+        throws: "ValidationError with errors object"
+        required_handling: >
+          Caller MUST wrap in try-catch.
+          Most common error when saving documents.
+          Inspect error.errors for field-specific validation failures.
+        source: "https://mongoosejs.com/docs/api/document.html#document_Document-save"
+        severity: error
+
+      - id: duplicate-key-error
+        condition: "Unique constraint violation"
+        throws: "MongoError with code: 11000"
+        required_handling: >
+          Caller MUST wrap in try-catch and check error.code === 11000.
+          Common when saving new documents with existing unique field values.
+        source: "https://mongoosejs.com/docs/validation.html#unique-indexes"
+        severity: error
+
+      - id: connection-error
+        condition: "Database connection failed"
+        throws: "MongooseError"
+        required_handling: "Caller MUST wrap in try-catch"
+        source: "https://mongoosejs.com/docs/connections.html"
+        severity: error
+
+  # Query.exec - Execute query
+  - name: exec
+    import_path: "mongoose"
+    description: "Executes the query and returns a promise"
+
+    postconditions:
+      - id: query-error
+        condition: "Query execution failed"
+        throws: "MongooseError, CastError, or ValidationError depending on failure type"
+        required_handling: >
+          Caller MUST wrap in try-catch or use .catch().
+          .exec() is the terminal operation for query chains.
+          All query errors surface here.
+        source: "https://mongoosejs.com/docs/api/query.html#query_Query-exec"
+        severity: error
+
+  # Query.orFail - Execute with mandatory result
+  - name: orFail
+    import_path: "mongoose"
+    description: "Executes query and throws DocumentNotFoundError if no results"
+
+    postconditions:
+      - id: document-not-found
+        condition: "No documents match the query"
+        throws: "DocumentNotFoundError"
+        required_handling: >
+          Caller MUST wrap in try-catch.
+          .orFail() is explicitly designed to throw when no results found.
+          Use this when document existence is mandatory.
+        source: "https://mongoosejs.com/docs/api/query.html#query_Query-orFail"
+        severity: error
+
+  # mongoose.connect - Connect to MongoDB
+  - name: connect
+    import_path: "mongoose"
+    description: "Establishes connection to MongoDB database"
+
+    postconditions:
+      - id: connection-failed
+        condition: "Cannot connect to MongoDB (network, auth, or invalid connection string)"
+        throws: "MongooseError or MongoError"
+        required_handling: >
+          Caller MUST wrap in try-catch.
+          Connection failures should stop application startup.
+          Log error details and exit gracefully.
+        source: "https://mongoosejs.com/docs/connections.html"
+        severity: error
+
+  # Model.aggregate - Run aggregation pipeline
+  - name: aggregate
+    import_path: "mongoose"
+    description: "Executes an aggregation pipeline on the collection"
+
+    postconditions:
+      - id: aggregation-error
+        condition: "Invalid pipeline stage or aggregation failure"
+        throws: "MongooseError or MongoError"
+        required_handling: "Caller MUST wrap in try-catch. Aggregation pipelines can fail with complex stage errors."
+        source: "https://mongoosejs.com/docs/api/model.html#model_Model-aggregate"
+        severity: error
+
+  # Model.countDocuments
+  - name: countDocuments
+    import_path: "mongoose"
+    description: "Counts documents matching the filter"
+
+    postconditions:
+      - id: connection-error
+        condition: "Database connection failed"
+        throws: "MongooseError"
+        required_handling: "Caller MUST wrap in try-catch"
+        source: "https://mongoosejs.com/docs/api/model.html#model_Model-countDocuments"
+        severity: error

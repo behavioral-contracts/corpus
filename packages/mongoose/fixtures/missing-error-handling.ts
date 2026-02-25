@@ -124,11 +124,8 @@ async function findOneAndDeleteUserMissing(email: string) {
   return user;
 }
 
-async function findAndRemoveUserMissing(id: string) {
-  // ❌ No error handling - deprecated method
-  const user = await User.findByIdAndRemove(id);
-  return user;
-}
+// NOTE: Model.findByIdAndRemove() was deprecated in mongoose >= 7.x
+// This test case has been removed to avoid TypeScript compilation errors
 
 // ❌ Query Methods WITHOUT Try-Catch
 
@@ -277,7 +274,6 @@ export {
   deleteManyUsersMissing,
   findAndDeleteUserMissing,
   findOneAndDeleteUserMissing,
-  findAndRemoveUserMissing,
   executeQueryMissing,
   executeWithOrFailMissing,
   aggregateUsersMissing,

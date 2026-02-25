@@ -91,14 +91,8 @@ async function deleteDocumentMissing(id: string) {
   }
 }
 
-async function removeDocumentMissing(id: string) {
-  // ❌ No try-catch
-  const user = await User.findById(id);
-  if (user) {
-    // ❌ Deprecated method, no try-catch
-    await user.remove();
-  }
-}
+// NOTE: Document.remove() was deprecated in mongoose >= 7.x
+// This test case has been removed to avoid TypeScript compilation errors
 
 // ❌ Multiple Document Operations in Sequence
 
@@ -339,7 +333,6 @@ export {
   saveDocumentMissing,
   validateDocumentMissing,
   deleteDocumentMissing,
-  removeDocumentMissing,
   createAndUpdateMissing,
   findAndModifyMissing,
   createAndUpdateProper,
