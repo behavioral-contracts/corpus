@@ -1,0 +1,249 @@
+package: "@slack/web-api"
+description: "Official Slack Web API client for Node.js"
+severity_default: error
+
+functions:
+  - name: "chat.postMessage"
+    signature: "WebClient.chat.postMessage(args: ChatPostMessageArguments): Promise<WebAPICallResult>"
+    description: "Posts a message to a Slack channel"
+    preconditions:
+      - id: valid-token
+        description: "Token must be valid and not revoked"
+        rationale: "Invalid tokens result in invalid_auth error"
+        sources:
+          - "https://docs.slack.dev/reference/methods/chat.postMessage/"
+          - "https://api.slack.com/methods/chat.postMessage"
+      - id: channel-exists
+        description: "Channel must exist and bot must be a member (for private channels)"
+        rationale: "Invalid channels result in channel_not_found error"
+        sources:
+          - "https://knock.app/blog/troubleshooting-channel-not-found-in-slack-incoming-webhooks"
+    postconditions:
+      - id: missing-error-handling
+        severity: error
+        description: "chat.postMessage() called without try-catch"
+        rationale: >
+          chat.postMessage() is async and can throw RequestError (network),
+          RateLimitedError (429), or HTTPError (unexpected status codes).
+          All async Slack API calls MUST be wrapped in try-catch.
+        required_handling: >
+          MUST wrap chat.postMessage() in try-catch block to handle:
+          - RequestError: Network failures
+          - RateLimitedError: Rate limiting (429), check retryAfter
+          - HTTPError: Unexpected HTTP status codes
+        detector: "Try-catch detection on async call"
+        sources:
+          - "https://tessl.io/registry/tessl/npm-slack--web-api/7.10.0/files/docs/error-handling.md"
+          - "https://docs.slack.dev/tools/node-slack-sdk/web-api/"
+      - id: response-ok-not-checked
+        severity: warning
+        description: "chat.postMessage() response.ok field not checked"
+        rationale: >
+          Slack API returns HTTP 200 even for errors. Must check response.ok === false
+          and handle response.error (e.g., invalid_auth, channel_not_found, rate_limited).
+        required_handling: >
+          SHOULD check if (response.ok === false) and handle response.error codes:
+          - invalid_auth: Token invalid/expired/revoked
+          - channel_not_found: Invalid channel or missing membership
+          - no_permission: Missing required scope
+          - rate_limited: Rate limit exceeded
+        detector: "Check if response.ok is validated after call"
+        sources:
+          - "https://api.slack.com/methods/chat.postMessage"
+          - "https://docs.slack.dev/reference/methods/chat.postMessage/"
+
+  - name: "users.list"
+    signature: "WebClient.users.list(args?: UsersListArguments): Promise<WebAPICallResult>"
+    description: "Lists all users in a Slack workspace"
+    preconditions:
+      - id: valid-token
+        description: "Token must have users:read scope"
+        rationale: "Missing scope results in no_permission error"
+        sources:
+          - "https://api.slack.com/methods/users.list"
+    postconditions:
+      - id: missing-error-handling
+        severity: error
+        description: "users.list() called without try-catch"
+        rationale: >
+          users.list() is async and can throw RequestError, RateLimitedError, or HTTPError.
+        required_handling: >
+          MUST wrap users.list() in try-catch block.
+        detector: "Try-catch detection on async call"
+        sources:
+          - "https://tessl.io/registry/tessl/npm-slack--web-api/7.10.0/files/docs/error-handling.md"
+      - id: response-ok-not-checked
+        severity: warning
+        description: "users.list() response.ok field not checked"
+        rationale: "Must check response.ok for API-level errors"
+        required_handling: "SHOULD check response.ok and handle response.error"
+        detector: "Check if response.ok is validated"
+        sources:
+          - "https://api.slack.com/methods/users.list"
+
+  - name: "users.info"
+    signature: "WebClient.users.info(args: UsersInfoArguments): Promise<WebAPICallResult>"
+    description: "Gets information about a user"
+    preconditions:
+      - id: valid-token
+        description: "Token must have users:read scope"
+        rationale: "Missing scope results in no_permission error"
+        sources:
+          - "https://api.slack.com/methods/users.info"
+    postconditions:
+      - id: missing-error-handling
+        severity: error
+        description: "users.info() called without try-catch"
+        rationale: "users.info() is async and can throw network/rate limit errors"
+        required_handling: "MUST wrap users.info() in try-catch block"
+        detector: "Try-catch detection on async call"
+        sources:
+          - "https://tessl.io/registry/tessl/npm-slack--web-api/7.10.0/files/docs/error-handling.md"
+
+  - name: "conversations.list"
+    signature: "WebClient.conversations.list(args?: ConversationsListArguments): Promise<WebAPICallResult>"
+    description: "Lists all channels in a Slack workspace"
+    preconditions:
+      - id: valid-token
+        description: "Token must have conversations:read scope"
+        sources:
+          - "https://api.slack.com/methods/conversations.list"
+    postconditions:
+      - id: missing-error-handling
+        severity: error
+        description: "conversations.list() called without try-catch"
+        rationale: "conversations.list() is async and can throw errors"
+        required_handling: "MUST wrap conversations.list() in try-catch block"
+        detector: "Try-catch detection on async call"
+
+  - name: "conversations.join"
+    signature: "WebClient.conversations.join(args: ConversationsJoinArguments): Promise<WebAPICallResult>"
+    description: "Joins an existing channel"
+    preconditions:
+      - id: channel-exists
+        description: "Channel must exist"
+        sources:
+          - "https://api.slack.com/methods/conversations.join"
+    postconditions:
+      - id: missing-error-handling
+        severity: error
+        description: "conversations.join() called without try-catch"
+        rationale: "Can fail with channel_not_found, is_archived errors"
+        required_handling: "MUST wrap conversations.join() in try-catch block"
+        detector: "Try-catch detection on async call"
+
+  - name: "conversations.invite"
+    signature: "WebClient.conversations.invite(args: ConversationsInviteArguments): Promise<WebAPICallResult>"
+    description: "Invites users to a channel"
+    preconditions:
+      - id: valid-users
+        description: "Users must exist"
+        sources:
+          - "https://api.slack.com/methods/conversations.invite"
+    postconditions:
+      - id: missing-error-handling
+        severity: error
+        description: "conversations.invite() called without try-catch"
+        rationale: "Can fail with user_not_found, not_in_channel errors"
+        required_handling: "MUST wrap conversations.invite() in try-catch block"
+        detector: "Try-catch detection on async call"
+
+  - name: "files.upload"
+    signature: "WebClient.files.upload(args: FilesUploadArguments): Promise<WebAPICallResult>"
+    description: "Uploads a file to Slack"
+    preconditions:
+      - id: valid-file
+        description: "File must exist and be within size limits"
+        sources:
+          - "https://api.slack.com/methods/files.upload"
+    postconditions:
+      - id: missing-error-handling
+        severity: error
+        description: "files.upload() called without try-catch"
+        rationale: "Can fail with file_too_large, invalid_file errors"
+        required_handling: "MUST wrap files.upload() in try-catch block"
+        detector: "Try-catch detection on async call"
+
+  - name: "auth.test"
+    signature: "WebClient.auth.test(): Promise<WebAPICallResult>"
+    description: "Tests authentication and token validity"
+    preconditions: []
+    postconditions:
+      - id: missing-error-handling
+        severity: error
+        description: "auth.test() called without try-catch"
+        rationale: "Can fail with invalid_auth if token is invalid"
+        required_handling: "MUST wrap auth.test() in try-catch block"
+        detector: "Try-catch detection on async call"
+
+error_categories:
+  - name: "Rate Limiting"
+    description: "HTTP 429 or rate_limited error"
+    handling: >
+      When RateLimitedError is thrown, check error.retryAfter property
+      for seconds to wait before retrying. WebClient has built-in retry
+      logic (up to 10 times over 30 minutes) with exponential backoff.
+    sources:
+      - "https://docs.slack.dev/apis/web-api/rate-limits/"
+      - "https://medium.com/slack-developer-blog/handling-rate-limits-with-slacks-apis-f6f8a63bdbdc"
+
+  - name: "Authentication Errors"
+    description: "HTTP 401 or invalid_auth, token_revoked, not_authed"
+    handling: >
+      Check for invalid_auth, token_revoked, account_inactive errors.
+      These indicate token is invalid, expired, or revoked. Must obtain
+      new valid token.
+    sources:
+      - "https://api.slack.com/methods/chat.postMessage"
+      - "https://docs.slack.dev/security/"
+
+  - name: "Permission Errors"
+    description: "HTTP 403 or no_permission error"
+    handling: >
+      Token lacks required OAuth scope. Check Slack app configuration
+      and ensure token has necessary permissions (e.g., chat:write,
+      users:read, conversations:read).
+    sources:
+      - "https://docs.slack.dev/security/"
+
+  - name: "Resource Not Found"
+    description: "channel_not_found, user_not_found errors"
+    handling: >
+      Verify channel/user IDs are valid. For private channels, bot must
+      be a member. Use channel IDs (not names) for reliability.
+    sources:
+      - "https://knock.app/blog/troubleshooting-channel-not-found-in-slack-incoming-webhooks"
+
+  - name: "Network Errors"
+    description: "RequestError thrown when network fails"
+    handling: >
+      Handle network connectivity issues. Check error.original property
+      for underlying error details.
+    sources:
+      - "https://tessl.io/registry/tessl/npm-slack--web-api/7.10.0/files/docs/error-handling.md"
+
+security_considerations:
+  - id: token-leakage
+    description: "Token leakage in error messages"
+    impact: "Leaked tokens can grant unauthorized access to Slack workspace"
+    recommendation: >
+      Never echo tokens in error messages or logs. Avoid hardcoding tokens
+      in source code. Store tokens in secure environment variables or secret
+      management systems.
+    sources:
+      - "https://www.gitguardian.com/remediation/slack-app-api-token"
+      - "https://docs.slack.dev/security/"
+
+references:
+  - title: "Slack Web API Documentation"
+    url: "https://docs.slack.dev/tools/node-slack-sdk/web-api/"
+  - title: "Error Handling in @slack/web-api"
+    url: "https://tessl.io/registry/tessl/npm-slack--web-api/7.10.0/files/docs/error-handling.md"
+  - title: "Rate Limits"
+    url: "https://docs.slack.dev/apis/web-api/rate-limits/"
+  - title: "chat.postMessage API"
+    url: "https://docs.slack.dev/reference/methods/chat.postMessage/"
+  - title: "Security Best Practices"
+    url: "https://docs.slack.dev/security/"
+
+version: "1.0.0"
