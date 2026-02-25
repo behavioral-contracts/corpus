@@ -1,184 +1,120 @@
-/**
- * @aws-sdk/client-s3 Fixtures: PROPER Error Handling
- * Should NOT trigger any violations.
- */
+import { S3Client, GetObjectCommand, PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command, CreateMultipartUploadCommand, UploadPartCommand, CompleteMultipartUploadCommand } from '@aws-sdk/client-s3';
 
-import {
-  S3Client,
-  GetObjectCommand,
-  PutObjectCommand,
-  DeleteObjectCommand,
-  CreateMultipartUploadCommand,
-  UploadPartCommand,
-  CompleteMultipartUploadCommand,
-  AbortMultipartUploadCommand,
-  CreateBucketCommand,
-  ListObjectsV2Command,
-  S3ServiceException
-} from '@aws-sdk/client-s3';
-
-const s3Client = new S3Client({
-  region: 'us-east-1',
-  maxAttempts: 3,
-  retryMode: 'adaptive'
-});
+const s3Client = new S3Client({ region: 'us-east-1' });
 
 /**
- * ✅ GOOD: GetObject with proper error handling
+ * Proper: GetObject with error handling
  */
-async function getObjectWithErrorHandling() {
+async function getObjectWithErrorHandling(bucket: string, key: string) {
   try {
-    const command = new GetObjectCommand({
-      Bucket: 'my-bucket',
-      Key: 'file.txt'
-    });
-    const response = await s3Client.send(command);
+    const response = await s3Client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
     return response.Body;
-  } catch (error) {
-    if (error instanceof S3ServiceException) {
-      if (error.name === 'NoSuchKey') {
-        console.error('Object not found');
-      }
+  } catch (error: any) {
+    if (error.name === 'NoSuchKey') {
+      console.error(`Object ${key} not found in bucket ${bucket}`);
     }
     throw error;
   }
 }
 
 /**
- * ✅ GOOD: PutObject with proper error handling
+ * Proper: PutObject with error handling
  */
-async function putObjectWithErrorHandling(data: Buffer) {
+async function putObjectWithErrorHandling(bucket: string, key: string, body: Buffer) {
   try {
-    const response = await s3Client.send(
-      new PutObjectCommand({
-        Bucket: 'my-bucket',
-        Key: 'upload.txt',
-        Body: data
-      })
-    );
-    return response.ETag;
-  } catch (error) {
-    if (error instanceof S3ServiceException) {
-      if (error.name === 'NoSuchBucket') {
-        console.error('Bucket does not exist');
-      }
+    await s3Client.send(new PutObjectCommand({ Bucket: bucket, Key: key, Body: body }));
+    console.log('Object uploaded successfully');
+  } catch (error: any) {
+    if (error.name === 'AccessDenied') {
+      console.error('Insufficient permissions to upload object');
     }
     throw error;
   }
 }
 
 /**
- * ✅ GOOD: DeleteObject with proper error handling
+ * Proper: DeleteObject with error handling
  */
-async function deleteObjectWithErrorHandling() {
+async function deleteObjectWithErrorHandling(bucket: string, key: string) {
   try {
-    await s3Client.send(
-      new DeleteObjectCommand({
-        Bucket: 'my-bucket',
-        Key: 'file-to-delete.txt'
-      })
-    );
-  } catch (error) {
-    console.error('Delete failed:', error);
+    await s3Client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
+  } catch (error: any) {
+    console.error('Failed to delete object:', error.message);
     throw error;
   }
 }
 
 /**
- * ✅ GOOD: Multipart upload with proper error handling and cleanup
+ * Proper: ListObjectsV2 with error handling
  */
-async function multipartUploadWithErrorHandling(parts: Buffer[]): Promise<string> {
+async function listObjectsWithErrorHandling(bucket: string, prefix?: string) {
+  try {
+    const response = await s3Client.send(new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix }));
+    return response.Contents || [];
+  } catch (error: any) {
+    console.error('Failed to list objects:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * Proper: Multipart upload with error handling and cleanup
+ */
+async function multipartUploadWithErrorHandling(bucket: string, key: string, parts: Buffer[]) {
   let uploadId: string | undefined;
-
+  
   try {
-    const createResponse = await s3Client.send(
-      new CreateMultipartUploadCommand({
-        Bucket: 'my-bucket',
-        Key: 'large-file.zip'
-      })
-    );
+    const createResponse = await s3Client.send(new CreateMultipartUploadCommand({ Bucket: bucket, Key: key }));
     uploadId = createResponse.UploadId;
 
-    const uploadedParts = [];
-    for (let i = 0; i < parts.length; i++) {
-      const partResponse = await s3Client.send(
-        new UploadPartCommand({
-          Bucket: 'my-bucket',
-          Key: 'large-file.zip',
-          UploadId: uploadId,
-          PartNumber: i + 1,
-          Body: parts[i]
-        })
-      );
-      uploadedParts.push({
-        ETag: partResponse.ETag,
-        PartNumber: i + 1
-      });
-    }
-
-    const completeResponse = await s3Client.send(
-      new CompleteMultipartUploadCommand({
-        Bucket: 'my-bucket',
-        Key: 'large-file.zip',
+    const uploadPromises = parts.map((part, index) =>
+      s3Client.send(new UploadPartCommand({
+        Bucket: bucket,
+        Key: key,
         UploadId: uploadId,
-        MultipartUpload: { Parts: uploadedParts }
-      })
+        PartNumber: index + 1,
+        Body: part
+      }))
     );
 
-    return completeResponse.Location!;
-  } catch (error) {
+    const uploadResults = await Promise.all(uploadPromises);
+    
+    await s3Client.send(new CompleteMultipartUploadCommand({
+      Bucket: bucket,
+      Key: key,
+      UploadId: uploadId,
+      MultipartUpload: {
+        Parts: uploadResults.map((result, index) => ({
+          ETag: result.ETag,
+          PartNumber: index + 1
+        }))
+      }
+    }));
+
+    console.log('Multipart upload completed');
+  } catch (error: any) {
+    console.error('Multipart upload failed:', error.message);
+    // Cleanup: abort multipart upload
     if (uploadId) {
-      try {
-        await s3Client.send(
-          new AbortMultipartUploadCommand({
-            Bucket: 'my-bucket',
-            Key: 'large-file.zip',
-            UploadId: uploadId
-          })
-        );
-      } catch (abortError) {
-        console.error('Failed to abort:', abortError);
-      }
+      await s3Client.send(new AbortMultipartUploadCommand({ Bucket: bucket, Key: key, UploadId: uploadId }));
     }
     throw error;
   }
 }
 
 /**
- * ✅ GOOD: CreateBucket with proper error handling
+ * Proper: Nested operations with error handling
  */
-async function createBucketWithErrorHandling(bucketName: string) {
+async function copyObjectWithErrorHandling(sourceBucket: string, sourceKey: string, destBucket: string, destKey: string) {
   try {
-    await s3Client.send(new CreateBucketCommand({ Bucket: bucketName }));
-  } catch (error) {
-    if (error instanceof S3ServiceException) {
-      if (error.name === 'BucketAlreadyExists') {
-        console.log('Bucket already exists');
-        return;
-      }
+    const getResponse = await s3Client.send(new GetObjectCommand({ Bucket: sourceBucket, Key: sourceKey }));
+    const body = await getResponse.Body?.transformToByteArray();
+    
+    if (body) {
+      await s3Client.send(new PutObjectCommand({ Bucket: destBucket, Key: destKey, Body: body }));
     }
-    throw error;
-  }
-}
-
-/**
- * ✅ GOOD: ListObjects with proper error handling
- */
-async function listObjectsWithErrorHandling() {
-  try {
-    const response = await s3Client.send(
-      new ListObjectsV2Command({
-        Bucket: 'my-bucket',
-        MaxKeys: 100
-      })
-    );
-    return response.Contents || [];
-  } catch (error) {
-    if (error instanceof S3ServiceException) {
-      if (error.name === 'NoSuchBucket') {
-        return [];
-      }
-    }
+  } catch (error: any) {
+    console.error('Copy operation failed:', error.message);
     throw error;
   }
 }

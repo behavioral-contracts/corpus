@@ -1,279 +1,63 @@
-package_name: "@aws-sdk/client-s3"
-description: "AWS SDK for JavaScript S3 Client for Node.js, Browser and React Native"
-semver_range: "^3.0.0"
-documentation_url: "https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/s3/"
-source_repository: "https://github.com/aws/aws-sdk-js-v3"
+package:
+  name: "@aws-sdk/client-s3"
+  semver: "^3.0.0"
 
 behaviors:
-  - id: object-operations-error-handling
-    name: "Object Operations Require Error Handling"
-    description: >
-      All S3 object operations (GetObject, PutObject, DeleteObject, etc.) can fail with various
-      errors like NoSuchKey, AccessDenied, or network issues. Operations must be wrapped in try-catch
-      to handle S3ServiceException and specific error types.
-
-    rationale: >
-      S3 operations are network-based and can fail for numerous reasons: missing objects (NoSuchKey),
-      insufficient permissions (AccessDenied), bucket doesn't exist (NoSuchBucket), rate limiting
-      (SlowDown), or network failures. Without error handling, applications crash or expose sensitive
-      error details to users.
-
-    severity: error
-
-    preconditions:
-      - id: s3-object-operation-called
-        detector: >
-          Detects calls to S3 object operations including:
+  - id: s3-object-operations-error-handling
+    description: "S3 object operations (GetObject, PutObject, DeleteObject, HeadObject, CopyObject) must be wrapped in try-catch"
+    severity: ERROR
+    patterns:
+      - type: call_expression
+        object: S3Client
+        methods:
+          - send
+        args_contain:
           - GetObjectCommand
           - PutObjectCommand
           - DeleteObjectCommand
           - HeadObjectCommand
           - CopyObjectCommand
-          - GetObjectAttributesCommand
+    mitigation: "Wrap S3 object operations in try-catch to handle NoSuchKey, AccessDenied, and network errors"
 
-        pattern_type: function_call
-        patterns:
-          - "new GetObjectCommand"
-          - "new PutObjectCommand"
-          - "new DeleteObjectCommand"
-          - "new HeadObjectCommand"
-          - "new CopyObjectCommand"
-          - "new GetObjectAttributesCommand"
-
-    postconditions:
-      - id: missing-s3-error-handling
-        detector: >
-          If S3 object operation command is sent via s3Client.send()
-          but not wrapped in try-catch block
-        severity: error
-        required_handling: >
-          MUST wrap s3Client.send() in try-catch block to handle S3ServiceException
-        example_violation: |
-          // ❌ BAD: No error handling
-          const command = new GetObjectCommand({ Bucket: 'my-bucket', Key: 'file.txt' });
-          const response = await s3Client.send(command);
-
-        example_fix: |
-          // ✅ GOOD: Wrapped in try-catch
-          import { S3ServiceException } from '@aws-sdk/client-s3';
-
-          try {
-            const command = new GetObjectCommand({ Bucket: 'my-bucket', Key: 'file.txt' });
-            const response = await s3Client.send(command);
-          } catch (error) {
-            if (error instanceof S3ServiceException) {
-              if (error.name === 'NoSuchKey') {
-                console.error('Object not found');
-              } else if (error.name === 'AccessDenied') {
-                console.error('Permission denied');
-              }
-            }
-            throw error;
-          }
-
-  - id: multipart-upload-error-handling
-    name: "Multipart Upload Operations Require Error Handling"
-    description: >
-      Multipart uploads have specific error scenarios: parts too small (EntityTooSmall),
-      invalid parts (InvalidPart), upload doesn't exist (NoSuchUpload). Each stage of
-      multipart upload must handle errors appropriately.
-
-    rationale: >
-      Multipart uploads are complex multi-step operations. Failures can occur during
-      CreateMultipartUpload, UploadPart, or CompleteMultipartUpload. Without proper error
-      handling, orphaned parts consume storage and incur costs.
-
-    severity: error
-
-    preconditions:
-      - id: multipart-operation-called
-        detector: >
-          Detects multipart upload operations including:
+  - id: s3-multipart-upload-error-handling
+    description: "S3 multipart upload operations must be wrapped in try-catch"
+    severity: ERROR
+    patterns:
+      - type: call_expression
+        object: S3Client
+        methods:
+          - send
+        args_contain:
           - CreateMultipartUploadCommand
           - UploadPartCommand
           - CompleteMultipartUploadCommand
           - AbortMultipartUploadCommand
-          - ListPartsCommand
+    mitigation: "Wrap multipart upload operations in try-catch to handle upload failures and ensure proper cleanup"
 
-        pattern_type: function_call
-        patterns:
-          - "new CreateMultipartUploadCommand"
-          - "new UploadPartCommand"
-          - "new CompleteMultipartUploadCommand"
-          - "new AbortMultipartUploadCommand"
-          - "new ListPartsCommand"
-
-    postconditions:
-      - id: missing-multipart-error-handling
-        detector: >
-          If multipart upload command is sent via s3Client.send()
-          but not wrapped in try-catch block
-        severity: error
-        required_handling: >
-          MUST wrap multipart operations in try-catch and call AbortMultipartUpload on failure
-        example_violation: |
-          // ❌ BAD: No error handling, orphaned parts on failure
-          const createResponse = await s3Client.send(new CreateMultipartUploadCommand({
-            Bucket: 'my-bucket',
-            Key: 'large-file.zip'
-          }));
-          const uploadId = createResponse.UploadId;
-
-          const partResponse = await s3Client.send(new UploadPartCommand({
-            Bucket: 'my-bucket',
-            Key: 'large-file.zip',
-            UploadId: uploadId,
-            PartNumber: 1,
-            Body: buffer
-          }));
-
-        example_fix: |
-          // ✅ GOOD: Error handling with cleanup
-          let uploadId;
-          try {
-            const createResponse = await s3Client.send(new CreateMultipartUploadCommand({
-              Bucket: 'my-bucket',
-              Key: 'large-file.zip'
-            }));
-            uploadId = createResponse.UploadId;
-
-            const partResponse = await s3Client.send(new UploadPartCommand({
-              Bucket: 'my-bucket',
-              Key: 'large-file.zip',
-              UploadId: uploadId,
-              PartNumber: 1,
-              Body: buffer
-            }));
-          } catch (error) {
-            if (uploadId) {
-              await s3Client.send(new AbortMultipartUploadCommand({
-                Bucket: 'my-bucket',
-                Key: 'large-file.zip',
-                UploadId: uploadId
-              }));
-            }
-            throw error;
-          }
-
-  - id: bucket-operations-error-handling
-    name: "Bucket Operations Require Error Handling"
-    description: >
-      Bucket operations can fail with BucketAlreadyExists, NoSuchBucket, BucketNotEmpty,
-      or AccessDenied errors. Operations must handle these specific error types.
-
-    rationale: >
-      Bucket names are globally unique across AWS. Creating buckets can fail if name is taken,
-      deleting can fail if bucket not empty, and access can fail due to permissions.
-
-    severity: error
-
-    preconditions:
-      - id: bucket-operation-called
-        detector: >
-          Detects bucket management operations including:
+  - id: s3-bucket-operations-error-handling
+    description: "S3 bucket operations (CreateBucket, DeleteBucket, HeadBucket) must be wrapped in try-catch"
+    severity: ERROR
+    patterns:
+      - type: call_expression
+        object: S3Client
+        methods:
+          - send
+        args_contain:
           - CreateBucketCommand
           - DeleteBucketCommand
           - HeadBucketCommand
-          - ListBucketsCommand
+          - PutBucketPolicyCommand
+    mitigation: "Wrap bucket operations in try-catch to handle BucketAlreadyExists, NoSuchBucket, and permission errors"
 
-        pattern_type: function_call
-        patterns:
-          - "new CreateBucketCommand"
-          - "new DeleteBucketCommand"
-          - "new HeadBucketCommand"
-          - "new ListBucketsCommand"
-
-    postconditions:
-      - id: missing-bucket-error-handling
-        detector: >
-          If bucket operation command is sent via s3Client.send()
-          but not wrapped in try-catch block
-        severity: error
-        required_handling: >
-          MUST wrap bucket operations in try-catch to handle specific errors
-        example_violation: |
-          // ❌ BAD: No error handling
-          await s3Client.send(new CreateBucketCommand({ Bucket: 'my-unique-bucket' }));
-
-        example_fix: |
-          // ✅ GOOD: Handle BucketAlreadyExists
-          try {
-            await s3Client.send(new CreateBucketCommand({ Bucket: 'my-unique-bucket' }));
-          } catch (error) {
-            if (error.name === 'BucketAlreadyExists' || error.name === 'BucketAlreadyOwnedByYou') {
-              console.log('Bucket already exists, continuing...');
-            } else {
-              throw error;
-            }
-          }
-
-  - id: list-operations-error-handling
-    name: "List Operations Require Error Handling"
-    description: >
-      List operations (ListObjectsV2, ListObjects, ListParts) can fail with NoSuchBucket,
-      AccessDenied, or InvalidArgument errors.
-
-    rationale: >
-      Listing operations can fail if bucket doesn't exist, permissions are insufficient,
-      or pagination parameters are invalid.
-
-    severity: warning
-
-    preconditions:
-      - id: list-operation-called
-        detector: >
-          Detects list operations including:
+  - id: s3-list-operations-error-handling
+    description: "S3 list operations should be wrapped in try-catch"
+    severity: WARNING
+    patterns:
+      - type: call_expression
+        object: S3Client
+        methods:
+          - send
+        args_contain:
           - ListObjectsV2Command
-          - ListObjectsCommand
-          - ListObjectVersionsCommand
-          - ListPartsCommand
-          - ListMultipartUploadsCommand
-
-        pattern_type: function_call
-        patterns:
-          - "new ListObjectsV2Command"
-          - "new ListObjectsCommand"
-          - "new ListObjectVersionsCommand"
-          - "new ListPartsCommand"
-          - "new ListMultipartUploadsCommand"
-
-    postconditions:
-      - id: missing-list-error-handling
-        detector: >
-          If list operation command is sent via s3Client.send()
-          but not wrapped in try-catch block
-        severity: warning
-        required_handling: >
-          SHOULD wrap list operations in try-catch for robustness
-        example_violation: |
-          // ⚠️ RISKY: No error handling
-          const response = await s3Client.send(new ListObjectsV2Command({
-            Bucket: 'my-bucket'
-          }));
-
-        example_fix: |
-          // ✅ GOOD: Handle potential errors
-          try {
-            const response = await s3Client.send(new ListObjectsV2Command({
-              Bucket: 'my-bucket'
-            }));
-          } catch (error) {
-            if (error.name === 'NoSuchBucket') {
-              console.error('Bucket does not exist');
-            }
-            throw error;
-          }
-
-tags:
-  - aws
-  - cloud-storage
-  - s3
-  - object-storage
-  - error-handling
-  - network
-  - sdk
-
-related_packages:
-  - "@aws-sdk/client-dynamodb"
-  - "@aws-sdk/client-lambda"
-  - "@aws-sdk/lib-storage"
+          - ListBucketsCommand
+    mitigation: "Wrap list operations in try-catch to handle pagination and access errors"

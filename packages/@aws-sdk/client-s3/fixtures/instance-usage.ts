@@ -1,154 +1,87 @@
-/**
- * @aws-sdk/client-s3 Fixtures: Instance Usage Patterns
- * Tests detection of S3Client usage via class instances
- */
-
-import {
-  S3Client,
-  GetObjectCommand,
-  PutObjectCommand,
-  DeleteObjectCommand,
-  ListObjectsV2Command
-} from '@aws-sdk/client-s3';
+import { S3Client, GetObjectCommand, PutObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
 
 /**
- * Pattern 1: Class with S3Client instance property
+ * Pattern 1: Class with S3Client instance - proper error handling
  */
-class S3Service {
+class S3ServiceProper {
   private client: S3Client;
 
-  constructor(region: string = 'us-east-1') {
-    this.client = new S3Client({ region, maxAttempts: 3, retryMode: 'adaptive' });
+  constructor(region: string) {
+    this.client = new S3Client({ region });
   }
 
-  /**
-   * ❌ BAD: Instance method without error handling
-   */
   async getObject(bucket: string, key: string) {
-    const response = await this.client.send(
-      new GetObjectCommand({ Bucket: bucket, Key: key })
-    );
+    try {
+      const response = await this.client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+      return response.Body;
+    } catch (error: any) {
+      console.error('Failed to get object:', error.message);
+      throw error;
+    }
+  }
+
+  async putObject(bucket: string, key: string, body: Buffer) {
+    try {
+      await this.client.send(new PutObjectCommand({ Bucket: bucket, Key: key, Body: body }));
+    } catch (error: any) {
+      console.error('Failed to put object:', error.message);
+      throw error;
+    }
+  }
+}
+
+/**
+ * Pattern 2: Class with S3Client instance - MISSING error handling
+ */
+class S3ServiceMissing {
+  private client: S3Client;
+
+  constructor(region: string) {
+    this.client = new S3Client({ region });
+  }
+
+  async getObject(bucket: string, key: string) {
+    // VIOLATION: No try-catch
+    const response = await this.client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
     return response.Body;
   }
 
-  /**
-   * ✅ GOOD: Instance method with error handling
-   */
-  async getObjectSafe(bucket: string, key: string) {
-    try {
-      const response = await this.client.send(
-        new GetObjectCommand({ Bucket: bucket, Key: key })
-      );
-      return response.Body;
-    } catch (error) {
-      console.error('Failed to get object:', error);
-      throw error;
-    }
+  async putObject(bucket: string, key: string, body: Buffer) {
+    // VIOLATION: No try-catch
+    await this.client.send(new PutObjectCommand({ Bucket: bucket, Key: key, Body: body }));
   }
 
-  /**
-   * ❌ BAD: Multiple operations without error handling
-   */
-  async copyObject(sourceBucket: string, sourceKey: string, destBucket: string, destKey: string) {
-    const getResponse = await this.client.send(
-      new GetObjectCommand({ Bucket: sourceBucket, Key: sourceKey })
-    );
-
-    await this.client.send(
-      new PutObjectCommand({
-        Bucket: destBucket,
-        Key: destKey,
-        Body: getResponse.Body
-      })
-    );
+  async listObjects(bucket: string) {
+    // VIOLATION: No try-catch (WARNING level)
+    const response = await this.client.send(new ListObjectsV2Command({ Bucket: bucket }));
+    return response.Contents || [];
   }
 }
 
 /**
- * Pattern 2: Dependency injection
+ * Pattern 3: Repository pattern with dependency injection
  */
-class StorageRepository {
+class S3Repository {
   constructor(private s3Client: S3Client) {}
 
-  /**
-   * ❌ BAD: Repository method without error handling
-   */
-  async upload(bucket: string, key: string, data: Buffer) {
-    const response = await this.s3Client.send(
-      new PutObjectCommand({ Bucket: bucket, Key: key, Body: data })
-    );
-    return response.ETag;
+  async uploadFile(bucket: string, key: string, content: Buffer) {
+    // VIOLATION: No try-catch
+    await this.s3Client.send(new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: content
+    }));
   }
 
-  /**
-   * ✅ GOOD: Repository method with error handling
-   */
-  async uploadSafe(bucket: string, key: string, data: Buffer) {
-    try {
-      const response = await this.s3Client.send(
-        new PutObjectCommand({ Bucket: bucket, Key: key, Body: data })
-      );
-      return response.ETag;
-    } catch (error) {
-      console.error('Upload failed:', error);
-      throw error;
-    }
+  async downloadFile(bucket: string, key: string) {
+    // VIOLATION: No try-catch
+    const response = await this.s3Client.send(new GetObjectCommand({
+      Bucket: bucket,
+      Key: key
+    }));
+    return response.Body;
   }
 }
 
-/**
- * Pattern 3: Wrapper class with helper methods
- */
-class S3Helper {
-  constructor(private client: S3Client) {}
-
-  /**
-   * ❌ BAD: Helper without error handling
-   */
-  async listAllObjects(bucket: string) {
-    let allObjects: any[] = [];
-    let continuationToken: string | undefined;
-
-    do {
-      const response = await this.client.send(
-        new ListObjectsV2Command({
-          Bucket: bucket,
-          ContinuationToken: continuationToken
-        })
-      );
-      allObjects = allObjects.concat(response.Contents || []);
-      continuationToken = response.NextContinuationToken;
-    } while (continuationToken);
-
-    return allObjects;
-  }
-
-  /**
-   * ❌ BAD: Batch delete without error handling
-   */
-  async deleteMultipleObjects(bucket: string, keys: string[]) {
-    for (const key of keys) {
-      await this.client.send(
-        new DeleteObjectCommand({ Bucket: bucket, Key: key })
-      );
-    }
-  }
-}
-
-/**
- * Usage examples
- */
-async function testInstancePatterns() {
-  const service = new S3Service();
-  await service.getObject('bucket', 'key'); // Should trigger violation
-  await service.getObjectSafe('bucket', 'key'); // Should NOT trigger
-  await service.copyObject('b1', 'k1', 'b2', 'k2'); // Multiple violations
-
-  const repo = new StorageRepository(new S3Client({ region: 'us-east-1' }));
-  await repo.upload('bucket', 'key', Buffer.from('data')); // Should trigger
-  await repo.uploadSafe('bucket', 'key', Buffer.from('data')); // Should NOT trigger
-
-  const helper = new S3Helper(new S3Client({ region: 'us-east-1' }));
-  await helper.listAllObjects('bucket'); // Should trigger
-  await helper.deleteMultipleObjects('bucket', ['k1', 'k2']); // Multiple violations
-}
+// Usage example
+const repository = new S3Repository(new S3Client({ region: 'us-west-2' }));

@@ -1,55 +1,55 @@
 # Sources for @aws-sdk/client-s3 Behavioral Contract
 
-**Package:** @aws-sdk/client-s3
-**Contract Version:** 1.0.0
-**Research Date:** 2026-02-25
-**Semver Range:** ^3.0.0
-
----
-
 ## Official Documentation
 
-### AWS SDK for JavaScript v3 Documentation
+### AWS SDK for JavaScript v3 - S3 Client
 - **URL:** https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/s3/
-- **Key Information:** S3Client operations, command patterns, error types
+- **Relevance:** Primary API reference for S3Client and command patterns
+- **Key Points:**
+  - All S3 operations use command pattern: `client.send(new Command(params))`
+  - Common errors: NoSuchKey, AccessDenied, NoSuchBucket
+  - Multipart uploads require cleanup on failure
 
-### AWS S3 API Error Responses
-- **URL:** https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html
-- **Key Information:** Complete error code catalog (NoSuchKey, AccessDenied, SlowDown, etc.)
+### Error Handling Best Practices
+- **URL:** https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/error-handling.html
+- **Relevance:** SDK error handling patterns
+- **Key Points:**
+  - Service errors are thrown exceptions
+  - Check `error.$metadata` for request details
+  - Retry logic for transient failures
 
-###AWS SDK v3 Error Handling Guide
-- **URL:** https://github.com/aws/aws-sdk-js-v3/blob/main/supplemental-docs/ERROR_HANDLING.md
-- **Key Information:** TypeScript error handling patterns, S3ServiceException usage
+### S3 Multipart Upload
+- **URL:** https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpuoverview.html
+- **Relevance:** Multipart upload lifecycle and cleanup requirements
+- **Key Points:**
+  - Must abort incomplete uploads to avoid storage charges
+  - UploadPart failures should trigger AbortMultipartUpload
 
-## Error Types Reference
+## Common Error Scenarios
 
-### Critical Errors (ERROR severity)
-- `NoSuchKey` (404): Object doesn't exist
-- `NoSuchBucket` (404): Bucket doesn't exist
-- `AccessDenied` (403): Insufficient permissions
-- `NoSuchUpload` (404): Invalid multipart upload ID
-- `EntityTooSmall` (400): Part too small in multipart upload
-- `BucketNotEmpty` (409): Cannot delete non-empty bucket
+### NoSuchKey (404)
+- Occurs when object doesn't exist
+- Should be handled explicitly in application logic
 
-### Warning Errors (WARNING severity)
-- `InvalidArgument` (400): Invalid request parameters
-- `BucketAlreadyExists` (409): Bucket name taken
+### NoSuchBucket (404)
+- Bucket doesn't exist or incorrect region
+- Critical error requiring bucket creation
 
-### Info Errors (INFO severity)
-- `SlowDown` (503): Rate limiting
-- `ServiceUnavailable` (503): Temporary AWS issue
+### AccessDenied (403)
+- Insufficient IAM permissions
+- Should be logged and surfaced to user
 
----
+### Network Errors
+- Connection timeouts, DNS failures
+- Should implement retry logic with exponential backoff
 
-## Sources
+## Severity Rationale
 
-- [Error Handling in Modular AWS SDK for JavaScript (v3)](https://aws.amazon.com/blogs/developer/service-error-handling-modular-aws-sdk-js/)
-- [Best Practices for Error Handling and Retries with AWS S3 SDK](https://reintech.io/blog/best-practices-error-handling-retries-aws-s3-sdk)
-- [aws-sdk/client-s3 npm package](https://www.npmjs.com/package/@aws-sdk/client-s3)
-- [AWS SDK JS v3 Error Handling Guide](https://github.com/aws/aws-sdk-js-v3/blob/main/supplemental-docs/ERROR_HANDLING.md)
+### ERROR Level
+- **Object Operations:** Data loss or corruption if errors not handled
+- **Multipart Uploads:** Resource leaks without proper cleanup
+- **Bucket Operations:** Infrastructure state inconsistencies
 
----
-
-**Contract Author:** Claude Sonnet 4.5
-**Verification Status:** Phase 3 Complete (Implementation)
-**Next Phase:** Phase 4 (Analyzer Check)
+### WARNING Level
+- **List Operations:** Less critical, pagination handles most edge cases
+- Generally safe to fail without corrupting state
