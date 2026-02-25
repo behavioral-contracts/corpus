@@ -1,0 +1,227 @@
+name: mongodb
+version: 1.0.0
+description: MongoDB Node.js driver behavioral contract for error handling
+semver: ">=3.0.0"
+repository: https://github.com/mongodb/node-mongodb-native
+documentation: https://www.mongodb.com/docs/drivers/node/current/
+
+contracts:
+  # Connection operations
+  - function: MongoClient.connect
+    mustHandle:
+      - scenario: connection_failure
+        description: Database connection failures (network, auth, timeout)
+        severity: ERROR
+        exceptionTypes:
+          - MongoNetworkError
+          - MongoServerSelectionError
+          - MongoNetworkTimeoutError
+          - MongoError
+        errorCodes:
+          - ENOTFOUND
+          - ECONNREFUSED
+          - ETIMEDOUT
+        sources:
+          - https://www.mongodb.com/docs/drivers/node/current/connection-troubleshooting/
+          - https://mongodb.github.io/node-mongodb-native/4.2/classes/MongoServerError.html
+
+  # Read operations
+  - function: Collection.find
+    mustHandle:
+      - scenario: query_failure
+        description: Query execution failures (network, timeout, invalid query)
+        severity: ERROR
+        exceptionTypes:
+          - MongoServerError
+          - MongoNetworkError
+          - MongoError
+        sources:
+          - https://www.mongodb.com/docs/drivers/node/current/
+
+  - function: Collection.findOne
+    mustHandle:
+      - scenario: query_failure
+        description: Single document query failures
+        severity: ERROR
+        exceptionTypes:
+          - MongoServerError
+          - MongoNetworkError
+          - MongoError
+        sources:
+          - https://www.mongodb.com/docs/drivers/node/current/
+
+  - function: Collection.aggregate
+    mustHandle:
+      - scenario: aggregation_failure
+        description: Aggregation pipeline execution failures
+        severity: ERROR
+        exceptionTypes:
+          - MongoServerError
+          - MongoNetworkError
+          - MongoError
+        sources:
+          - https://www.mongodb.com/docs/drivers/node/current/
+
+  - function: Collection.countDocuments
+    mustHandle:
+      - scenario: count_failure
+        description: Document count operation failures
+        severity: ERROR
+        exceptionTypes:
+          - MongoServerError
+          - MongoNetworkError
+          - MongoError
+        sources:
+          - https://www.mongodb.com/docs/drivers/node/current/
+
+  # Write operations
+  - function: Collection.insertOne
+    mustHandle:
+      - scenario: insert_failure
+        description: Document insertion failures (duplicate key, validation)
+        severity: ERROR
+        exceptionTypes:
+          - MongoServerError
+          - MongoWriteConcernError
+          - MongoError
+        errorCodes:
+          - 11000  # Duplicate key error
+        sources:
+          - https://www.mongodb.com/docs/drivers/node/current/
+
+  - function: Collection.insertMany
+    mustHandle:
+      - scenario: bulk_insert_failure
+        description: Bulk document insertion failures
+        severity: ERROR
+        exceptionTypes:
+          - MongoServerError
+          - MongoBulkWriteError
+          - MongoError
+        sources:
+          - https://www.mongodb.com/docs/drivers/node/current/
+
+  - function: Collection.updateOne
+    mustHandle:
+      - scenario: update_failure
+        description: Single document update failures
+        severity: ERROR
+        exceptionTypes:
+          - MongoServerError
+          - MongoWriteConcernError
+          - MongoError
+        sources:
+          - https://www.mongodb.com/docs/drivers/node/current/
+
+  - function: Collection.updateMany
+    mustHandle:
+      - scenario: bulk_update_failure
+        description: Multiple document update failures
+        severity: ERROR
+        exceptionTypes:
+          - MongoServerError
+          - MongoWriteConcernError
+          - MongoError
+        sources:
+          - https://www.mongodb.com/docs/drivers/node/current/
+
+  - function: Collection.deleteOne
+    mustHandle:
+      - scenario: delete_failure
+        description: Single document deletion failures
+        severity: ERROR
+        exceptionTypes:
+          - MongoServerError
+          - MongoWriteConcernError
+          - MongoError
+        sources:
+          - https://www.mongodb.com/docs/drivers/node/current/
+
+  - function: Collection.deleteMany
+    mustHandle:
+      - scenario: bulk_delete_failure
+        description: Multiple document deletion failures
+        severity: ERROR
+        exceptionTypes:
+          - MongoServerError
+          - MongoWriteConcernError
+          - MongoError
+        sources:
+          - https://www.mongodb.com/docs/drivers/node/current/
+
+  # Admin operations
+  - function: Collection.createIndex
+    mustHandle:
+      - scenario: index_creation_failure
+        description: Index creation failures (invalid options, duplicate index)
+        severity: ERROR
+        exceptionTypes:
+          - MongoServerError
+          - MongoError
+        sources:
+          - https://www.mongodb.com/docs/drivers/node/current/
+
+  - function: Collection.drop
+    mustHandle:
+      - scenario: drop_failure
+        description: Collection drop operation failures
+        severity: ERROR
+        exceptionTypes:
+          - MongoServerError
+          - MongoError
+        sources:
+          - https://www.mongodb.com/docs/drivers/node/current/
+
+  - function: Db.collection
+    mustHandle:
+      - scenario: collection_access_failure
+        description: Collection access failures (permissions, invalid name)
+        severity: ERROR
+        exceptionTypes:
+          - MongoServerError
+          - MongoError
+        sources:
+          - https://www.mongodb.com/docs/drivers/node/current/
+
+vulnerabilities:
+  - id: CVE-2025-14847
+    name: MongoBleed
+    description: Critical memory leak vulnerability via zlib compression allowing unauthenticated attackers to extract sensitive server memory
+    severity: CRITICAL
+    cvss: 8.7
+    affectedVersions: ">=3.6.0 <4.4.30 || >=5.0.0 <5.0.32 || >=6.0.0 <6.0.27 || >=7.0.0 <7.0.28 || >=8.0.0 <8.0.17 || >=8.2.0 <8.2.3"
+    fixedVersions: "4.4.30, 5.0.32, 6.0.27, 7.0.28, 8.0.17, 8.2.3"
+    sources:
+      - https://www.wiz.io/blog/mongobleed-cve-2025-14847-exploited-in-the-wild-mongodb
+      - https://snyk.io/node-js/mongodb
+    notes: "Affects instances with zlib compression enabled (default). Disable zlib or upgrade immediately."
+
+  - id: CVE-2021-32050
+    name: Authentication Data Exposure
+    description: MongoDB drivers may publish authentication-related data to command listeners
+    severity: MEDIUM
+    cvss: 5.5
+    affectedVersions: "<3.6.10 || >=4.0.0 <4.0.5"
+    fixedVersions: "3.6.10, 4.0.5"
+    sources:
+      - https://www.acunetix.com/vulnerabilities/sca/cve-2021-32050-vulnerability-in-npm-package-mongodb/
+      - https://snyk.io/node-js/mongodb
+    notes: "Sensitive authentication data may be exposed to command listeners."
+
+metadata:
+  analyzed_repos:
+    - parse-server
+    - typeorm
+  best_practices:
+    - "Always wrap MongoDB operations in try-catch blocks"
+    - "Handle transient errors (network, timeout) with retry logic"
+    - "Check error codes for specific error types (e.g., 11000 for duplicate key)"
+    - "Use MongoError.hasErrorLabel() to detect transient transaction errors"
+    - "Validate connection strings and credentials before connecting"
+  common_error_codes:
+    - code: 11000
+      description: Duplicate key error
+    - code: 13
+      description: Unauthorized
+    - code: 17007
+      description: Missing geo index
