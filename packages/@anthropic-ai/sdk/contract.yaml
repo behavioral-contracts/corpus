@@ -1,0 +1,122 @@
+package: "@anthropic-ai/sdk"
+semver: ">=0.18.0 <1.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-24"
+
+functions:
+  # Main message creation function
+  - name: create
+    import_path: "@anthropic-ai/sdk"
+    description: "Creates a message completion using Claude models"
+
+    postconditions:
+      - id: messages-create-no-try-catch
+        condition: "messages.create() called without try-catch or .catch() handler"
+        throws: "APIError with error.status and error.message"
+        severity: error
+        description: >
+          messages.create() is called without try-catch block. This function makes HTTP requests
+          to Anthropic's API and can fail with various errors (401 auth, 429 rate limit, 500 server,
+          529 overload, 413 request too large). Unhandled promise rejections will crash the application.
+        detector: >
+          If client.messages.create() or anthropic.messages.create() is called in an async context
+          without try-catch wrapping the await, or without .catch() in promise chain
+        required_handling: >
+          MUST wrap await client.messages.create() in try-catch block. Catch block should check
+          error instanceof Anthropic.APIError and handle specific error types (RateLimitError,
+          AuthenticationError, etc.) appropriately.
+        source: https://platform.claude.com/docs/en/api/errors
+
+      - id: messages-create-generic-catch
+        condition: "messages.create() in try-catch but doesn't check error types"
+        severity: warning
+        description: >
+          Catch block uses generic error handling without checking error.status or error types.
+          Anthropic SDK provides specific error classes (RateLimitError, AuthenticationError)
+          that should be differentiated for proper error recovery. Rate limit errors need retry
+          logic, auth errors need API key fixes, and server errors need different handling.
+        detector: >
+          If try-catch block wraps messages.create() but catch block does not check
+          'error instanceof Anthropic.APIError' or 'error instanceof Anthropic.RateLimitError'
+        required_handling: >
+          SHOULD check error type using instanceof or error.status code. Handle RateLimitError
+          with retry logic (using retry-after header), AuthenticationError by validating API key,
+          and server errors (500/529) with appropriate backoff.
+        source: https://github.com/anthropics/anthropic-sdk-typescript
+
+  # Streaming message function
+  - name: stream
+    import_path: "@anthropic-ai/sdk"
+    description: "Creates a streaming message completion using Claude models"
+
+    postconditions:
+      - id: messages-stream-no-try-catch
+        condition: "messages.stream() called without try-catch or .catch() handler"
+        throws: "APIError, can occur mid-stream after initial 200 response"
+        severity: error
+        description: >
+          messages.stream() is called without try-catch block. Streaming responses can fail
+          mid-response even after receiving initial 200 status. Errors can occur during stream
+          parsing, network issues, or API errors. Unhandled errors will crash the application.
+        detector: >
+          If client.messages.stream() is called in an async context without try-catch
+          wrapping the await, or without .catch() in promise chain
+        required_handling: >
+          MUST wrap await client.messages.stream() in try-catch block. Should also wrap
+          stream iteration in try-catch to handle mid-stream errors. Check error types
+          for proper recovery.
+        source: https://platform.claude.com/docs/en/api/errors
+
+      - id: stream-abort-not-handled
+        condition: "Stream created but no abort/cleanup handling"
+        severity: info
+        description: >
+          Stream is created but code doesn't handle cancellation or cleanup. Long-running
+          streams should support cancellation via stream.controller.abort() and proper
+          cleanup in finally blocks to avoid resource leaks.
+        detector: >
+          If messages.stream() is called but no stream.controller.abort() or break
+          statement exists for cancellation handling
+        required_handling: >
+          SHOULD implement cancellation handling with stream.controller.abort() or break
+          from stream iteration. Use finally blocks for cleanup.
+        source: https://github.com/anthropics/anthropic-sdk-typescript
+
+  # API client initialization
+  - name: Anthropic
+    import_path: "@anthropic-ai/sdk"
+    description: "Initializes Anthropic API client"
+
+    postconditions:
+      - id: api-key-not-validated
+        condition: "Anthropic client created without validating API key exists"
+        severity: warning
+        description: >
+          Anthropic client is instantiated without validating that API key exists. Missing
+          or invalid API keys cause AuthenticationError (401) at request time rather than
+          initialization time. Early validation provides better error messages.
+        detector: >
+          If 'new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })' is called
+          without checking if ANTHROPIC_API_KEY exists or has value
+        required_handling: >
+          SHOULD validate API key exists before client creation:
+          if (!process.env.ANTHROPIC_API_KEY) throw new Error('Missing ANTHROPIC_API_KEY').
+          Consider using default apiKey validation from SDK.
+        source: https://platform.claude.com/docs/en/api/errors
+
+      - id: rate-limit-no-retry-logic
+        condition: "API calls made without retry logic for 429 errors"
+        severity: info
+        description: >
+          Code makes API calls without implementing retry logic for rate limit errors (429).
+          Anthropic API includes retry-after header indicating when to retry. Proper retry
+          logic with exponential backoff prevents cascading failures and improves reliability.
+        detector: >
+          If messages.create() or messages.stream() is called with try-catch, but catch
+          block doesn't check for error.status === 429 or RateLimitError for retry logic
+        required_handling: >
+          SHOULD implement retry logic for 429 errors. Check retry-after header value
+          and implement exponential backoff. Example: if (error instanceof RateLimitError)
+          wait for error.headers['retry-after'] seconds before retry.
+        source: https://platform.claude.com/docs/en/api/errors
