@@ -1,0 +1,436 @@
+package: firebase-admin
+semver: ">=11.0.0 <14.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-25"
+
+functions:
+  # Authentication Service
+  - name: verifyIdToken
+    import_path: "firebase-admin"
+    description: "Verifies a Firebase ID token (JWT)"
+
+    postconditions:
+      - id: token-expired
+        condition: "ID token has expired"
+        throws: "FirebaseAuthError with code 'auth/id-token-expired'"
+        required_handling: >
+          Caller MUST catch and handle expired token errors.
+          Return 401 Unauthorized to client and require re-authentication.
+          DO NOT retry with same token - it's permanently expired.
+        source: "https://firebase.google.com/docs/auth/admin/errors"
+        severity: error
+
+      - id: token-invalid
+        condition: "ID token is invalid (malformed, wrong project, revoked)"
+        throws: "FirebaseAuthError with code 'auth/argument-error' or 'auth/id-token-revoked'"
+        required_handling: >
+          Caller MUST validate token format and handle invalid tokens.
+          Check error.code to distinguish between format errors and revoked tokens.
+          Return 401 Unauthorized to client.
+        source: "https://firebase.google.com/docs/auth/admin/verify-id-tokens"
+        severity: error
+
+      - id: network-error
+        condition: "Network request to Firebase Auth service failed"
+        throws: "FirebaseAuthError or generic Error"
+        required_handling: >
+          Caller SHOULD implement retry with exponential backoff for transient failures.
+          Check if Firebase Auth service is available.
+        source: "https://firebase.google.com/docs/reference/admin/error-handling"
+        severity: error
+
+    edge_cases:
+      - id: custom-token-vs-id-token
+        description: "verifyIdToken() only works with ID tokens, not custom tokens"
+        source: "https://firebase.google.com/docs/auth/admin/verify-id-tokens"
+        severity: warning
+
+  - name: createUser
+    import_path: "firebase-admin"
+    description: "Creates a new Firebase user account"
+
+    postconditions:
+      - id: email-already-exists
+        condition: "Email address is already in use"
+        throws: "FirebaseAuthError with code 'auth/email-already-exists'"
+        required_handling: >
+          Caller MUST check if error.code === 'auth/email-already-exists'.
+          Return user-friendly error message.
+          Consider suggesting password reset if user forgot they have an account.
+          DO NOT retry with same email.
+        source: "https://firebase.google.com/docs/auth/admin/errors"
+        severity: error
+
+      - id: invalid-email
+        condition: "Email format is invalid"
+        throws: "FirebaseAuthError with code 'auth/invalid-email'"
+        required_handling: >
+          Caller SHOULD validate email format before calling createUser.
+          Use email validation library to prevent this error.
+        source: "https://firebase.google.com/docs/auth/admin/errors"
+        severity: error
+
+      - id: uid-already-exists
+        condition: "Provided UID is already in use (when specifying custom UID)"
+        throws: "FirebaseAuthError with code 'auth/uid-already-exists'"
+        required_handling: >
+          If using custom UIDs, generate unique values.
+          Catch this error and either generate new UID or handle collision.
+        source: "https://firebase.google.com/docs/auth/admin/errors"
+        severity: error
+
+      - id: invalid-password
+        condition: "Password is too weak or doesn't meet requirements"
+        throws: "FirebaseAuthError with code 'auth/invalid-password'"
+        required_handling: >
+          Validate password strength on client side.
+          Firebase requires minimum 6 characters.
+          Return helpful error to user about password requirements.
+        source: "https://firebase.google.com/docs/auth/admin/manage-users"
+        severity: error
+
+  - name: getUser
+    import_path: "firebase-admin"
+    description: "Fetches user data by UID"
+
+    postconditions:
+      - id: user-not-found
+        condition: "No user record found for the given UID"
+        throws: "FirebaseAuthError with code 'auth/user-not-found'"
+        required_handling: >
+          Caller MUST handle user-not-found errors.
+          DO NOT assume user exists - always catch this error.
+          Consider if this indicates deleted account or invalid UID.
+        source: "https://firebase.google.com/docs/auth/admin/errors"
+        severity: error
+
+      - id: invalid-uid
+        condition: "UID format is invalid"
+        throws: "FirebaseAuthError with code 'auth/invalid-uid'"
+        required_handling: >
+          Validate UID format before calling getUser.
+          Firebase UIDs are typically 28-character strings.
+        source: "https://firebase.google.com/docs/auth/admin/errors"
+        severity: error
+
+  - name: updateUser
+    import_path: "firebase-admin"
+    description: "Updates an existing user's data"
+
+    postconditions:
+      - id: user-not-found
+        condition: "No user record found for the given UID"
+        throws: "FirebaseAuthError with code 'auth/user-not-found'"
+        required_handling: >
+          Caller MUST handle user-not-found errors.
+          Decide whether to create user or return error.
+        source: "https://firebase.google.com/docs/auth/admin/errors"
+        severity: error
+
+      - id: email-already-exists
+        condition: "New email address is already in use by another user"
+        throws: "FirebaseAuthError with code 'auth/email-already-exists'"
+        required_handling: >
+          Check if new email is available before updating.
+          Return user-friendly error if email is taken.
+        source: "https://firebase.google.com/docs/auth/admin/errors"
+        severity: error
+
+  - name: deleteUser
+    import_path: "firebase-admin"
+    description: "Deletes a user account"
+
+    postconditions:
+      - id: user-not-found
+        condition: "No user record found for the given UID"
+        throws: "FirebaseAuthError with code 'auth/user-not-found'"
+        required_handling: >
+          Caller SHOULD handle user-not-found errors gracefully.
+          Consider if idempotent delete is acceptable (user already deleted).
+        source: "https://firebase.google.com/docs/auth/admin/errors"
+        severity: error
+
+  - name: getUserByEmail
+    import_path: "firebase-admin"
+    description: "Fetches user data by email address"
+
+    postconditions:
+      - id: user-not-found
+        condition: "No user record with the given email"
+        throws: "FirebaseAuthError with code 'auth/user-not-found'"
+        required_handling: >
+          Caller MUST handle user-not-found errors.
+          This is common when checking if email is registered.
+        source: "https://firebase.google.com/docs/auth/admin/errors"
+        severity: error
+
+  - name: setCustomUserClaims
+    import_path: "firebase-admin"
+    description: "Sets custom claims for user tokens"
+
+    postconditions:
+      - id: user-not-found
+        condition: "No user record found"
+        throws: "FirebaseAuthError with code 'auth/user-not-found'"
+        required_handling: >
+          Verify user exists before setting claims.
+        source: "https://firebase.google.com/docs/auth/admin/errors"
+        severity: error
+
+      - id: invalid-claims
+        condition: "Claims object exceeds 1000 bytes or uses reserved keys"
+        throws: "FirebaseAuthError with code 'auth/invalid-claims'"
+        required_handling: >
+          Validate claims size and avoid reserved keys.
+          Reserved keys: iss, sub, aud, exp, iat, auth_time, nonce, etc.
+        source: "https://firebase.google.com/docs/auth/admin/custom-claims"
+        severity: error
+
+  # Firestore Service
+  - name: get
+    import_path: "firebase-admin"
+    description: "Reads Firestore document or collection data"
+
+    postconditions:
+      - id: permission-denied
+        condition: "Security rules deny read access"
+        throws: "Error with code 'PERMISSION_DENIED' (gRPC code 7)"
+        required_handling: >
+          Caller MUST handle permission errors.
+          Check Firestore security rules.
+          Admin SDK bypasses rules by default - if seeing this, check service account permissions.
+        source: "https://cloud.google.com/firestore/docs/understand-error-codes"
+        severity: error
+
+      - id: not-found
+        condition: "Document does not exist"
+        returns: "DocumentSnapshot with exists: false"
+        required_handling: >
+          Caller MUST check snapshot.exists before accessing data.
+          Use snapshot.exists or check if snapshot.data() is undefined.
+        source: "https://firebase.google.com/docs/firestore/query-data/get-data"
+        severity: error
+
+      - id: deadline-exceeded
+        condition: "Operation timed out"
+        throws: "Error with code 'DEADLINE_EXCEEDED' (gRPC code 4)"
+        required_handling: >
+          Caller SHOULD implement retry with exponential backoff.
+          Check network connectivity and Firestore status.
+          Consider if query is too complex (missing indexes).
+        source: "https://cloud.google.com/firestore/docs/understand-error-codes"
+        severity: error
+
+  - name: add
+    import_path: "firebase-admin"
+    description: "Adds a new document to Firestore collection with auto-generated ID"
+
+    postconditions:
+      - id: permission-denied
+        condition: "Security rules deny write access"
+        throws: "Error with code 'PERMISSION_DENIED' (gRPC code 7)"
+        required_handling: >
+          Check Firestore security rules and service account permissions.
+        source: "https://cloud.google.com/firestore/docs/understand-error-codes"
+        severity: error
+
+      - id: resource-exhausted
+        condition: "Write quota exceeded or rate limit hit"
+        throws: "Error with code 'RESOURCE_EXHAUSTED' (gRPC code 8)"
+        required_handling: >
+          Caller MUST handle quota errors.
+          Check if billing is enabled (free tier limits).
+          Implement backoff and reduce write rate.
+          Avoid writing to lexicographically close documents (hot spots).
+        source: "https://firebase.google.com/docs/firestore/best-practices"
+        severity: error
+
+  - name: set
+    import_path: "firebase-admin"
+    description: "Writes or overwrites a Firestore document"
+
+    postconditions:
+      - id: aborted
+        condition: "Transaction aborted due to contention"
+        throws: "Error with code 'ABORTED' (gRPC code 10)"
+        required_handling: >
+          Caller SHOULD retry with exponential backoff and jitter.
+          Occurs when multiple transactions access same data.
+          Consider redesigning to reduce contention.
+        source: "https://cloud.google.com/firestore/docs/understand-error-codes"
+        severity: error
+
+      - id: resource-exhausted
+        condition: "Write quota exceeded"
+        throws: "Error with code 'RESOURCE_EXHAUSTED'"
+        required_handling: >
+          Implement rate limiting and backoff.
+          Check daily write quota and billing status.
+        source: "https://firebase.google.com/docs/firestore/best-practices"
+        severity: error
+
+  - name: update
+    import_path: "firebase-admin"
+    description: "Updates fields in existing Firestore document"
+
+    postconditions:
+      - id: not-found
+        condition: "Document to update does not exist"
+        throws: "Error with code 'NOT_FOUND' (gRPC code 5)"
+        required_handling: >
+          Caller MUST handle not-found errors.
+          Use set() with merge: true if you want to create-or-update.
+          update() requires document to exist.
+        source: "https://firebase.google.com/docs/firestore/manage-data/add-data"
+        severity: error
+
+      - id: aborted
+        condition: "Transaction contention"
+        throws: "Error with code 'ABORTED'"
+        required_handling: "Retry with exponential backoff."
+        source: "https://cloud.google.com/firestore/docs/understand-error-codes"
+        severity: error
+
+  - name: delete
+    import_path: "firebase-admin"
+    description: "Deletes a Firestore document"
+
+    postconditions:
+      - id: permission-denied
+        condition: "Security rules deny delete access"
+        throws: "Error with code 'PERMISSION_DENIED'"
+        required_handling: "Check security rules and permissions."
+        source: "https://cloud.google.com/firestore/docs/understand-error-codes"
+        severity: error
+
+  # Cloud Messaging Service
+  - name: send
+    import_path: "firebase-admin"
+    description: "Sends a message to a device via Firebase Cloud Messaging"
+
+    postconditions:
+      - id: invalid-recipient
+        condition: "Device token is invalid, expired, or unregistered"
+        throws: "FirebaseMessagingError with code 'messaging/invalid-recipient'"
+        required_handling: >
+          Caller MUST remove invalid tokens from database.
+          Check error code and error.code === 'messaging/invalid-recipient'.
+          Tokens can expire if user uninstalls app or revokes permissions.
+        source: "https://firebase.google.com/docs/cloud-messaging/error-codes"
+        severity: error
+
+      - id: invalid-argument
+        condition: "Message payload is malformed or exceeds size limits"
+        throws: "FirebaseMessagingError with code 'messaging/invalid-argument'"
+        required_handling: >
+          Validate message structure before sending.
+          Check payload size limits (4KB for data messages).
+          Verify required fields are present.
+        source: "https://firebase.google.com/docs/cloud-messaging/error-codes"
+        severity: error
+
+      - id: quota-exceeded
+        condition: "FCM rate limit exceeded"
+        throws: "FirebaseMessagingError with code 'messaging/quota-exceeded'"
+        required_handling: >
+          Implement exponential backoff retry.
+          Reduce message send rate.
+          Check if quota limit is reasonable for use case.
+        source: "https://firebase.google.com/docs/cloud-messaging/error-codes"
+        severity: error
+
+  - name: sendMulticast
+    import_path: "firebase-admin"
+    description: "Sends a message to multiple devices (up to 500)"
+
+    postconditions:
+      - id: partial-failure
+        condition: "Some tokens succeeded, some failed"
+        returns: "BatchResponse with failureCount > 0"
+        required_handling: >
+          Caller MUST check response.failureCount and response.responses array.
+          Each response contains success boolean and optional error.
+          Remove invalid tokens from database based on specific error codes.
+        source: "https://firebase.google.com/docs/cloud-messaging/send-message"
+        severity: error
+
+      - id: invalid-argument
+        condition: "Invalid tokens or payload"
+        throws: "FirebaseMessagingError"
+        required_handling: "Validate all tokens and payload before sending."
+        source: "https://firebase.google.com/docs/cloud-messaging/error-codes"
+        severity: error
+
+  - name: sendToTopic
+    import_path: "firebase-admin"
+    description: "Sends a message to all devices subscribed to a topic"
+
+    postconditions:
+      - id: invalid-topic
+        condition: "Topic name is invalid or doesn't exist"
+        throws: "FirebaseMessagingError with code 'messaging/invalid-argument'"
+        required_handling: >
+          Validate topic name format.
+          Topic names must match /topics/[a-zA-Z0-9-_.~%]+
+        source: "https://firebase.google.com/docs/cloud-messaging/send-message#send-messages-to-topics"
+        severity: error
+
+  # Realtime Database Service
+  - name: once
+    import_path: "firebase-admin"
+    description: "Reads Realtime Database data once (non-listening)"
+
+    postconditions:
+      - id: permission-denied
+        condition: "Database rules deny read access"
+        throws: "Error with code 'PERMISSION_DENIED'"
+        required_handling: >
+          Check Realtime Database rules.
+          Admin SDK bypasses rules by default - if seeing this, check databaseAuthVariableOverride.
+        source: "https://firebase.google.com/docs/database/admin/start"
+        severity: error
+
+      - id: network-error
+        condition: "Network connection failed"
+        throws: "Error"
+        required_handling: >
+          Implement retry with exponential backoff for transient failures.
+        source: "https://firebase.google.com/docs/reference/admin/error-handling"
+        severity: error
+
+  - name: set
+    import_path: "firebase-admin"
+    description: "Writes data to Realtime Database path (overwrites)"
+
+    postconditions:
+      - id: permission-denied
+        condition: "Database rules deny write access"
+        throws: "Error with code 'PERMISSION_DENIED'"
+        required_handling: "Check database rules and authentication."
+        source: "https://firebase.google.com/docs/database/admin/save-data"
+        severity: error
+
+  - name: update
+    import_path: "firebase-admin"
+    description: "Updates specific fields in Realtime Database"
+
+    postconditions:
+      - id: permission-denied
+        condition: "Database rules deny write access"
+        throws: "Error with code 'PERMISSION_DENIED'"
+        required_handling: "Check database rules."
+        source: "https://firebase.google.com/docs/database/admin/save-data"
+        severity: error
+
+  - name: remove
+    import_path: "firebase-admin"
+    description: "Deletes data from Realtime Database path"
+
+    postconditions:
+      - id: permission-denied
+        condition: "Database rules deny delete access"
+        throws: "Error with code 'PERMISSION_DENIED'"
+        required_handling: "Check database rules."
+        source: "https://firebase.google.com/docs/database/admin/save-data"
+        severity: error
