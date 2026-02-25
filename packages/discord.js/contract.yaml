@@ -45,6 +45,8 @@ detection:
     - .startThread(
     - .fetchReference(
     - .fetchOwner(
+    - .createInvite(  # Channel/Guild operations
+    - .fetchInvite(
 
 functions:
   # ============================================================================
