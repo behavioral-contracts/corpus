@@ -4,6 +4,63 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-25"
 
+# Detection rules for analyzer integration
+detection:
+  # Mongoose doesn't use constructors like "new Mongoose()"
+  class_names: []
+
+  # Type declarations (e.g., private client: Model<User>)
+  type_names: ["Model", "Document"]
+
+  # Factory methods for creating Models
+  factory_methods: ["model"]  # mongoose.model('User', schema)
+
+  # Patterns to identify mongoose operations in await expressions
+  # These patterns match method calls on Model classes and Document instances
+  await_patterns:
+    # Query operations (Model static methods)
+    - ".find"
+    - ".findone"
+    - ".findbyid"
+    - ".exists"
+    - ".distinct"
+
+    # Create operations (Model static methods)
+    - ".create"
+    - ".insertmany"
+
+    # Update operations (Model static methods)
+    - ".updateone"
+    - ".updatemany"
+    - ".findbyidandupdate"
+    - ".findoneandupdate"
+    - ".replaceone"
+    - ".findoneandreplace"
+
+    # Delete operations (Model static methods)
+    - ".deleteone"
+    - ".deletemany"
+    - ".findbyidanddelete"
+    - ".findoneanddelete"
+
+    # Aggregation operations
+    - ".aggregate"
+    - ".countdocuments"
+    - ".estimateddocumentcount"
+    - ".bulkwrite"
+
+    # Document instance methods
+    - ".save"
+    - ".validate"
+
+    # Query methods
+    - ".exec"
+    - ".orfail"
+
+    # Connection methods
+    - "mongoose.connect"
+    - ".connection.close"
+
 functions:
   # Model.find - Query multiple documents
   - name: find
@@ -11,7 +68,7 @@ functions:
     description: "Queries the database and returns an array of documents matching the filter"
 
     postconditions:
-      - id: connection-error
+      - id: connection-error-no-try-catch
         condition: "Database connection failed or was interrupted"
         throws: "MongooseError or MongoError"
         required_handling: >
@@ -21,7 +78,7 @@ functions:
         source: "https://mongoosejs.com/docs/connections.html"
         severity: error
 
-      - id: cast-error
+      - id: cast-error-no-try-catch
         condition: "Query parameter cannot be cast to expected type"
         throws: "CastError"
         required_handling: >
@@ -37,14 +94,14 @@ functions:
     description: "Queries the database and returns a single document matching the filter"
 
     postconditions:
-      - id: connection-error
+      - id: connection-error-no-try-catch
         condition: "Database connection failed"
         throws: "MongooseError or MongoError"
         required_handling: "Caller MUST wrap in try-catch or use .catch() to handle connection errors"
         source: "https://mongoosejs.com/docs/connections.html"
         severity: error
 
-      - id: cast-error
+      - id: cast-error-no-try-catch
         condition: "Query parameter casting failed"
         throws: "CastError"
         required_handling: "Caller MUST wrap in try-catch to handle type casting errors"
@@ -57,7 +114,7 @@ functions:
     description: "Finds a single document by its _id field"
 
     postconditions:
-      - id: cast-error-invalid-id
+      - id: cast-error-no-try-catch-invalid-id
         condition: "Provided ID is not a valid ObjectId format"
         throws: "CastError with kind: 'ObjectId'"
         required_handling: >
@@ -67,7 +124,7 @@ functions:
         source: "https://mongoosejs.com/docs/api/model.html#model_Model-findById"
         severity: error
 
-      - id: connection-error
+      - id: connection-error-no-try-catch
         condition: "Database connection failed"
         throws: "MongooseError"
         required_handling: "Caller MUST handle connection errors"
@@ -80,7 +137,7 @@ functions:
     description: "Creates one or more documents in the database"
 
     postconditions:
-      - id: validation-error
+      - id: validation-error-no-try-catch
         condition: "Document validation failed (missing required fields, wrong types, custom validators)"
         throws: "ValidationError with errors object containing field-specific ValidatorErrors"
         required_handling: >
@@ -90,7 +147,7 @@ functions:
         source: "https://mongoosejs.com/docs/validation.html"
         severity: error
 
-      - id: duplicate-key-error
+      - id: duplicate-key-error-no-try-catch
         condition: "Unique constraint violation (E11000 error)"
         throws: "MongoError with code: 11000"
         required_handling: >
@@ -100,7 +157,7 @@ functions:
         source: "https://mongoosejs.com/docs/validation.html#unique-indexes"
         severity: error
 
-      - id: connection-error
+      - id: connection-error-no-try-catch
         condition: "Database connection failed"
         throws: "MongooseError"
         required_handling: "Caller MUST handle connection errors with retry logic"
@@ -113,14 +170,14 @@ functions:
     description: "Inserts multiple documents into the database in a single operation"
 
     postconditions:
-      - id: validation-error
+      - id: validation-error-no-try-catch
         condition: "One or more documents fail validation"
         throws: "ValidationError"
         required_handling: "Caller MUST wrap in try-catch. Default behavior stops on first error; use ordered:false to continue on errors."
         source: "https://mongoosejs.com/docs/api/model.html#model_Model-insertMany"
         severity: error
 
-      - id: duplicate-key-error
+      - id: duplicate-key-error-no-try-catch
         condition: "Duplicate key constraint violation"
         throws: "MongoError with code: 11000"
         required_handling: "Caller MUST wrap in try-catch and handle duplicate key errors"
@@ -133,21 +190,21 @@ functions:
     description: "Updates a single document matching the filter"
 
     postconditions:
-      - id: validation-error
+      - id: validation-error-no-try-catch
         condition: "Update violates validation rules"
         throws: "ValidationError"
         required_handling: "Caller MUST wrap in try-catch to handle validation errors"
         source: "https://mongoosejs.com/docs/validation.html"
         severity: error
 
-      - id: cast-error
+      - id: cast-error-no-try-catch
         condition: "Update value cannot be cast to schema type"
         throws: "CastError"
         required_handling: "Caller MUST wrap in try-catch to handle type errors"
         source: "https://mongoosejs.com/docs/schematypes.html"
         severity: error
 
-      - id: connection-error
+      - id: connection-error-no-try-catch
         condition: "Database connection failed"
         throws: "MongooseError"
         required_handling: "Caller MUST handle connection errors"
@@ -160,7 +217,7 @@ functions:
     description: "Finds a document by ID and updates it, returning the document"
 
     postconditions:
-      - id: prototype-pollution-cve-2023-3696
+      - id: prototype-pollution-cve-2023-3696-no-try-catch
         condition: "Malicious update payload exploits prototype pollution vulnerability"
         throws: "May not throw - vulnerability allows arbitrary code execution"
         required_handling: >
@@ -170,14 +227,14 @@ functions:
         source: "https://security.snyk.io/vuln/SNYK-JS-MONGOOSE-5777721"
         severity: error
 
-      - id: validation-error
+      - id: validation-error-no-try-catch
         condition: "Update violates validation rules"
         throws: "ValidationError"
         required_handling: "Caller MUST wrap in try-catch"
         source: "https://mongoosejs.com/docs/validation.html"
         severity: error
 
-      - id: cast-error
+      - id: cast-error-no-try-catch
         condition: "Invalid ObjectId or type casting failure"
         throws: "CastError"
         required_handling: "Caller MUST wrap in try-catch"
@@ -190,14 +247,14 @@ functions:
     description: "Finds a document matching filter and updates it"
 
     postconditions:
-      - id: prototype-pollution-cve-2023-3696
+      - id: prototype-pollution-cve-2023-3696-no-try-catch
         condition: "Vulnerable to prototype pollution attacks"
         throws: "May not throw - allows RCE"
         required_handling: "Caller MUST wrap in try-catch and validate input. Upgrade mongoose to patched version."
         source: "https://security.snyk.io/vuln/SNYK-JS-MONGOOSE-5777721"
         severity: error
 
-      - id: validation-error
+      - id: validation-error-no-try-catch
         condition: "Update violates validation"
         throws: "ValidationError"
         required_handling: "Caller MUST wrap in try-catch"
@@ -210,7 +267,7 @@ functions:
     description: "Deletes a single document matching the filter"
 
     postconditions:
-      - id: connection-error
+      - id: connection-error-no-try-catch
         condition: "Database connection failed"
         throws: "MongooseError"
         required_handling: "Caller MUST wrap in try-catch"
@@ -223,14 +280,14 @@ functions:
     description: "Finds a document by ID and deletes it"
 
     postconditions:
-      - id: cast-error
+      - id: cast-error-no-try-catch
         condition: "Invalid ObjectId format"
         throws: "CastError"
         required_handling: "Caller MUST wrap in try-catch"
         source: "https://mongoosejs.com/docs/api/model.html#model_Model-findByIdAndDelete"
         severity: error
 
-      - id: connection-error
+      - id: connection-error-no-try-catch
         condition: "Database connection failed"
         throws: "MongooseError"
         required_handling: "Caller MUST wrap in try-catch"
@@ -243,7 +300,7 @@ functions:
     description: "Saves document changes to the database"
 
     postconditions:
-      - id: validation-error
+      - id: validation-error-no-try-catch
         condition: "Document validation failed"
         throws: "ValidationError with errors object"
         required_handling: >
@@ -253,7 +310,7 @@ functions:
         source: "https://mongoosejs.com/docs/api/document.html#document_Document-save"
         severity: error
 
-      - id: duplicate-key-error
+      - id: duplicate-key-error-no-try-catch
         condition: "Unique constraint violation"
         throws: "MongoError with code: 11000"
         required_handling: >
@@ -262,7 +319,7 @@ functions:
         source: "https://mongoosejs.com/docs/validation.html#unique-indexes"
         severity: error
 
-      - id: connection-error
+      - id: connection-error-no-try-catch
         condition: "Database connection failed"
         throws: "MongooseError"
         required_handling: "Caller MUST wrap in try-catch"
@@ -275,7 +332,7 @@ functions:
     description: "Executes the query and returns a promise"
 
     postconditions:
-      - id: query-error
+      - id: query-error-no-try-catch
         condition: "Query execution failed"
         throws: "MongooseError, CastError, or ValidationError depending on failure type"
         required_handling: >
@@ -291,7 +348,7 @@ functions:
     description: "Executes query and throws DocumentNotFoundError if no results"
 
     postconditions:
-      - id: document-not-found
+      - id: document-not-found-no-try-catch
         condition: "No documents match the query"
         throws: "DocumentNotFoundError"
         required_handling: >
@@ -307,7 +364,7 @@ functions:
     description: "Establishes connection to MongoDB database"
 
     postconditions:
-      - id: connection-failed
+      - id: connection-failed-no-try-catch
         condition: "Cannot connect to MongoDB (network, auth, or invalid connection string)"
         throws: "MongooseError or MongoError"
         required_handling: >
@@ -323,7 +380,7 @@ functions:
     description: "Executes an aggregation pipeline on the collection"
 
     postconditions:
-      - id: aggregation-error
+      - id: aggregation-error-no-try-catch
         condition: "Invalid pipeline stage or aggregation failure"
         throws: "MongooseError or MongoError"
         required_handling: "Caller MUST wrap in try-catch. Aggregation pipelines can fail with complex stage errors."
@@ -336,7 +393,7 @@ functions:
     description: "Counts documents matching the filter"
 
     postconditions:
-      - id: connection-error
+      - id: connection-error-no-try-catch
         condition: "Database connection failed"
         throws: "MongooseError"
         required_handling: "Caller MUST wrap in try-catch"
