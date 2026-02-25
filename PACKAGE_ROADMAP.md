@@ -2,13 +2,13 @@
 
 **Purpose:** Track priority packages for contract creation and their status.
 
-**Last Updated:** 2026-02-24
+**Last Updated:** 2026-02-25
 
 ---
 
 ## Current Coverage
 
-- **Total Packages in Corpus:** 9
+- **Total Packages in Corpus:** 10
 - **Packages Onboarded:**
   - ✅ @prisma/client
   - ✅ @supabase/supabase-js
@@ -17,6 +17,7 @@
   - ✅ express
   - ✅ openai
   - ✅ pg
+  - ✅ square
   - ✅ stripe
   - ✅ zod
 
@@ -397,6 +398,12 @@ To nominate a package for the roadmap:
 - **Contract Version:** 1.0.0
 - **Key Findings:** parse() throws ZodError, safeParse() returns result object, factory pattern creates schema instances
 - **Note:** Analyzer requires factory pattern tracking enhancement. Contract validated against jake-tennis usage patterns. CVE-2023-4316 ReDoS in email validation (fixed in v3.22.3+).
+
+### square
+- **Completed:** 2026-02-25
+- **Contract Version:** 1.0.0
+- **Key Findings:** Payments/Orders/Customers/Locations APIs, SquareError handling, rate limiting (429), idempotency conflicts (409), payment declines (422)
+- **Note:** 19 postconditions across 8 functions. Analyzer detected 75 errors correctly. No CVEs found. Phase 6 regression testing blocked by invalid contracts in corpus (unrelated issue).
 
 ---
 
