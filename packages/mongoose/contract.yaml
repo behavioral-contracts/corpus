@@ -1,0 +1,134 @@
+package_name: mongoose
+description: MongoDB object modeling tool designed to work in an asynchronous environment
+version_range: ">=5.0.0"
+
+functions:
+  # Model Static Methods - Query Operations
+  - name: "Model.find"
+    severity: ERROR
+    message: "mongoose Model.find() must be wrapped in try-catch or use .catch() - can fail due to connection errors, invalid queries, or type casting errors"
+
+  - name: "Model.findOne"
+    severity: ERROR
+    message: "mongoose Model.findOne() must be wrapped in try-catch or use .catch() - can fail due to connection errors, invalid queries, or type casting errors"
+
+  - name: "Model.findById"
+    severity: ERROR
+    message: "mongoose Model.findById() must be wrapped in try-catch or use .catch() - can fail due to connection errors or invalid ObjectId casting"
+
+  # Model Static Methods - Create Operations
+  - name: "Model.create"
+    severity: ERROR
+    message: "mongoose Model.create() must be wrapped in try-catch or use .catch() - can fail due to validation errors, duplicate key errors, or connection issues"
+
+  - name: "Model.insertMany"
+    severity: ERROR
+    message: "mongoose Model.insertMany() must be wrapped in try-catch or use .catch() - can fail due to validation errors, duplicate key errors, or connection issues"
+
+  # Model Static Methods - Update Operations
+  - name: "Model.updateOne"
+    severity: ERROR
+    message: "mongoose Model.updateOne() must be wrapped in try-catch or use .catch() - can fail due to validation errors, type casting errors, or connection issues"
+
+  - name: "Model.updateMany"
+    severity: ERROR
+    message: "mongoose Model.updateMany() must be wrapped in try-catch or use .catch() - can fail due to validation errors, type casting errors, or connection issues"
+
+  - name: "Model.findByIdAndUpdate"
+    severity: ERROR
+    message: "mongoose Model.findByIdAndUpdate() must be wrapped in try-catch or use .catch() - can fail due to validation errors, invalid ObjectId, or connection issues. NOTE: CVE-2023-3696 affects this method"
+
+  - name: "Model.findOneAndUpdate"
+    severity: ERROR
+    message: "mongoose Model.findOneAndUpdate() must be wrapped in try-catch or use .catch() - can fail due to validation errors, type casting, or connection issues. NOTE: CVE-2023-3696 affects this method"
+
+  - name: "Model.replaceOne"
+    severity: ERROR
+    message: "mongoose Model.replaceOne() must be wrapped in try-catch or use .catch() - can fail due to validation errors or connection issues"
+
+  - name: "Model.findOneAndReplace"
+    severity: ERROR
+    message: "mongoose Model.findOneAndReplace() must be wrapped in try-catch or use .catch() - can fail due to validation errors or connection issues"
+
+  # Model Static Methods - Delete Operations
+  - name: "Model.deleteOne"
+    severity: ERROR
+    message: "mongoose Model.deleteOne() must be wrapped in try-catch or use .catch() - can fail due to connection errors or invalid query conditions"
+
+  - name: "Model.deleteMany"
+    severity: ERROR
+    message: "mongoose Model.deleteMany() must be wrapped in try-catch or use .catch() - can fail due to connection errors or invalid query conditions"
+
+  - name: "Model.findByIdAndDelete"
+    severity: ERROR
+    message: "mongoose Model.findByIdAndDelete() must be wrapped in try-catch or use .catch() - can fail due to connection errors or invalid ObjectId"
+
+  - name: "Model.findOneAndDelete"
+    severity: ERROR
+    message: "mongoose Model.findOneAndDelete() must be wrapped in try-catch or use .catch() - can fail due to connection errors or invalid query conditions"
+
+  - name: "Model.findByIdAndRemove"
+    severity: ERROR
+    message: "mongoose Model.findByIdAndRemove() must be wrapped in try-catch or use .catch() - DEPRECATED but still used. Can fail due to connection errors or invalid ObjectId"
+
+  # Model Static Methods - Aggregation and Count
+  - name: "Model.aggregate"
+    severity: ERROR
+    message: "mongoose Model.aggregate() must be wrapped in try-catch or use .catch() - can fail due to invalid pipeline stages or connection errors"
+
+  - name: "Model.countDocuments"
+    severity: ERROR
+    message: "mongoose Model.countDocuments() must be wrapped in try-catch or use .catch() - can fail due to connection errors or invalid query conditions"
+
+  - name: "Model.estimatedDocumentCount"
+    severity: ERROR
+    message: "mongoose Model.estimatedDocumentCount() must be wrapped in try-catch or use .catch() - can fail due to connection errors"
+
+  # Document Instance Methods
+  - name: "Document.save"
+    severity: ERROR
+    message: "mongoose Document.save() must be wrapped in try-catch or use .catch() - can fail due to validation errors, duplicate key errors (E11000), or connection issues"
+
+  - name: "Document.validate"
+    severity: ERROR
+    message: "mongoose Document.validate() must be wrapped in try-catch or use .catch() - will throw ValidationError if document is invalid"
+
+  - name: "Document.remove"
+    severity: ERROR
+    message: "mongoose Document.remove() must be wrapped in try-catch or use .catch() - DEPRECATED but still used. Can fail due to connection errors"
+
+  - name: "Document.deleteOne"
+    severity: ERROR
+    message: "mongoose Document.deleteOne() must be wrapped in try-catch or use .catch() - can fail due to connection errors"
+
+  # Query Methods
+  - name: "Query.exec"
+    severity: ERROR
+    message: "mongoose Query.exec() must be wrapped in try-catch or use .catch() - executes the query and can fail for various reasons"
+
+  - name: "Query.orFail"
+    severity: ERROR
+    message: "mongoose Query.orFail() must be wrapped in try-catch or use .catch() - explicitly throws DocumentNotFoundError when no documents match"
+
+  # Connection Methods
+  - name: "mongoose.connect"
+    severity: ERROR
+    message: "mongoose.connect() must be wrapped in try-catch or use .catch() - can fail due to network issues, authentication errors, or invalid connection strings"
+
+  - name: "Connection.close"
+    severity: ERROR
+    message: "mongoose Connection.close() must be wrapped in try-catch or use .catch() - can fail if connection is already closed or network issues occur"
+
+  # Model-level Operations
+  - name: "Model.exists"
+    severity: ERROR
+    message: "mongoose Model.exists() must be wrapped in try-catch or use .catch() - can fail due to connection errors or invalid query"
+
+  - name: "Model.distinct"
+    severity: ERROR
+    message: "mongoose Model.distinct() must be wrapped in try-catch or use .catch() - can fail due to connection errors or invalid field names"
+
+  # Bulk Write Operations
+  - name: "Model.bulkWrite"
+    severity: ERROR
+    message: "mongoose Model.bulkWrite() must be wrapped in try-catch or use .catch() - can fail due to validation errors, duplicate keys, or connection issues"
