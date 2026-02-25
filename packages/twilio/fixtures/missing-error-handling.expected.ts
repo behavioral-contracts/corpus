@@ -11,6 +11,21 @@ export const expected: ExpectedViolations = {
   "fixtures": "missing-error-handling.ts",
   "expectations": [
     {
+      "id": "create-error-violations",
+      "description": "ERROR violations in create",
+      "functionName": "create",
+      "minViolations": 8,
+      "expectedClauses": [
+        "messages-create-no-try-catch",
+        "calls-create-no-try-catch"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        21,
+        155
+      ]
+    },
+    {
       "id": "twilio-error-violations",
       "description": "ERROR violations in twilio",
       "functionName": "twilio",
@@ -23,27 +38,12 @@ export const expected: ExpectedViolations = {
         11,
         11
       ]
-    },
-    {
-      "id": "create-error-violations",
-      "description": "ERROR violations in create",
-      "functionName": "create",
-      "minViolations": 4,
-      "expectedClauses": [
-        "messages-create-no-try-catch",
-        "calls-create-no-try-catch"
-      ],
-      "severity": "error",
-      "approximateLines": [
-        21,
-        155
-      ]
     }
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 5,
-      "max": 5
+      "min": 9,
+      "max": 9
     },
     "expectedWarningCount": {
       "min": 0,

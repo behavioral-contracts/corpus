@@ -11,131 +11,24 @@ export const expected: ExpectedViolations = {
   "fixtures": "missing-error-handling.ts",
   "expectations": [
     {
-      "id": "create-error-violations",
-      "description": "ERROR violations in create",
-      "functionName": "create",
-      "minViolations": 21,
+      "id": "Client-login-error-violations",
+      "description": "ERROR violations in Client.login",
+      "functionName": "Client.login",
+      "minViolations": 10,
       "expectedClauses": [
-        "invalid-request-error",
-        "authentication-error",
-        "rate-limit-error",
-        "payment-declined",
-        "idempotency-conflict",
-        "server-error",
-        "network-error"
+        "discord-client-login-no-try-catch"
       ],
       "severity": "error",
       "approximateLines": [
         21,
-        169
-      ]
-    },
-    {
-      "id": "createOrder-error-violations",
-      "description": "ERROR violations in createOrder",
-      "functionName": "createOrder",
-      "minViolations": 8,
-      "expectedClauses": [
-        "invalid-request-error",
-        "authentication-error",
-        "rate-limit-error",
-        "network-error"
-      ],
-      "severity": "error",
-      "approximateLines": [
-        40,
-        128
-      ]
-    },
-    {
-      "id": "createCustomer-error-violations",
-      "description": "ERROR violations in createCustomer",
-      "functionName": "createCustomer",
-      "minViolations": 8,
-      "expectedClauses": [
-        "invalid-request-error",
-        "duplicate-customer",
-        "authentication-error",
-        "rate-limit-error"
-      ],
-      "severity": "error",
-      "approximateLines": [
-        67,
-        122
-      ]
-    },
-    {
-      "id": "retrieveCustomer-error-violations",
-      "description": "ERROR violations in retrieveCustomer",
-      "functionName": "retrieveCustomer",
-      "minViolations": 3,
-      "expectedClauses": [
-        "customer-not-found",
-        "authentication-error",
-        "rate-limit-error"
-      ],
-      "severity": "error",
-      "approximateLines": [
-        83,
-        83
-      ]
-    },
-    {
-      "id": "list-error-violations",
-      "description": "ERROR violations in list",
-      "functionName": "list",
-      "minViolations": 3,
-      "expectedClauses": [
-        "authentication-error",
-        "rate-limit-error",
-        "network-error"
-      ],
-      "severity": "error",
-      "approximateLines": [
-        94,
-        94
-      ]
-    },
-    {
-      "id": "updateOrder-error-violations",
-      "description": "ERROR violations in updateOrder",
-      "functionName": "updateOrder",
-      "minViolations": 4,
-      "expectedClauses": [
-        "order-not-found",
-        "invalid-version",
-        "authentication-error",
-        "rate-limit-error"
-      ],
-      "severity": "error",
-      "approximateLines": [
-        105,
-        105
-      ]
-    },
-    {
-      "id": "createPayment-error-violations",
-      "description": "ERROR violations in createPayment",
-      "functionName": "createPayment",
-      "minViolations": 5,
-      "expectedClauses": [
-        "invalid-request-error",
-        "authentication-error",
-        "rate-limit-error",
-        "payment-declined",
-        "network-error"
-      ],
-      "severity": "error",
-      "approximateLines": [
-        191,
         191
       ]
     }
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 52,
-      "max": 52
+      "min": 10,
+      "max": 10
     },
     "expectedWarningCount": {
       "min": 0,

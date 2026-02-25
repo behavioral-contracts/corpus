@@ -14,7 +14,7 @@ export const expected: ExpectedViolations = {
       "id": "repos-get-error-violations",
       "description": "ERROR violations in repos.get",
       "functionName": "repos.get",
-      "minViolations": 14,
+      "minViolations": 21,
       "expectedClauses": [
         "github-repo-get-no-try-catch"
       ],
@@ -27,8 +27,8 @@ export const expected: ExpectedViolations = {
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 14,
-      "max": 14
+      "min": 21,
+      "max": 21
     },
     "expectedWarningCount": {
       "min": 0,

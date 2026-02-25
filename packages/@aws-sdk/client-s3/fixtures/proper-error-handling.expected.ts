@@ -14,8 +14,9 @@ export const expected: ExpectedViolations = {
       "id": "send-error-violations",
       "description": "ERROR violations in send",
       "functionName": "send",
-      "minViolations": 2,
+      "minViolations": 3,
       "expectedClauses": [
+        "s3-object-operation-no-try-catch",
         "s3-multipart-no-try-catch"
       ],
       "severity": "error",
@@ -27,8 +28,8 @@ export const expected: ExpectedViolations = {
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 2,
-      "max": 2
+      "min": 3,
+      "max": 3
     },
     "expectedWarningCount": {
       "min": 0,

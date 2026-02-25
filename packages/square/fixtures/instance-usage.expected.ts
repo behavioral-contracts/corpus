@@ -11,78 +11,28 @@ export const expected: ExpectedViolations = {
   "fixtures": "instance-usage.ts",
   "expectations": [
     {
-      "id": "create-error-violations",
-      "description": "ERROR violations in create",
-      "functionName": "create",
-      "minViolations": 7,
+      "id": "Client-login-error-violations",
+      "description": "ERROR violations in Client.login",
+      "functionName": "Client.login",
+      "minViolations": 6,
       "expectedClauses": [
-        "invalid-request-error",
-        "authentication-error",
-        "rate-limit-error",
-        "payment-declined",
-        "idempotency-conflict",
-        "server-error",
-        "network-error"
+        "discord-client-login-no-try-catch"
       ],
       "severity": "error",
       "approximateLines": [
-        198,
-        198
-      ]
-    },
-    {
-      "id": "create-warning-violations",
-      "description": "WARNING violations in create",
-      "functionName": "create",
-      "minViolations": 1,
-      "expectedClauses": [
-        "rate-limit-error"
-      ],
-      "severity": "warning",
-      "approximateLines": [
-        221,
-        221
-      ]
-    },
-    {
-      "id": "list-error-violations",
-      "description": "ERROR violations in list",
-      "functionName": "list",
-      "minViolations": 3,
-      "expectedClauses": [
-        "authentication-error",
-        "rate-limit-error",
-        "network-error"
-      ],
-      "severity": "error",
-      "approximateLines": [
-        250,
+        53,
         250
-      ]
-    },
-    {
-      "id": "list-warning-violations",
-      "description": "WARNING violations in list",
-      "functionName": "list",
-      "minViolations": 1,
-      "expectedClauses": [
-        "rate-limit-error"
-      ],
-      "severity": "warning",
-      "approximateLines": [
-        259,
-        259
       ]
     }
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 10,
-      "max": 10
+      "min": 6,
+      "max": 6
     },
     "expectedWarningCount": {
-      "min": 2,
-      "max": 2
+      "min": 0,
+      "max": 0
     },
     "expectedInfoCount": {
       "min": 0,

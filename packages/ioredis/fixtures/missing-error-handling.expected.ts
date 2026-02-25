@@ -14,14 +14,15 @@ export const expected: ExpectedViolations = {
       "id": "get-error-violations",
       "description": "ERROR violations in get",
       "functionName": "get",
-      "minViolations": 3,
+      "minViolations": 14,
       "expectedClauses": [
+        "unhandled-promise-rejection",
         "get-no-error-handling"
       ],
       "severity": "error",
       "approximateLines": [
         24,
-        56
+        90
       ]
     },
     {
@@ -55,8 +56,8 @@ export const expected: ExpectedViolations = {
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 10,
-      "max": 10
+      "min": 21,
+      "max": 21
     },
     "expectedWarningCount": {
       "min": 0,

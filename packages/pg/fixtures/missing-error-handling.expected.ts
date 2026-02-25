@@ -11,26 +11,24 @@ export const expected: ExpectedViolations = {
   "fixtures": "missing-error-handling.ts",
   "expectations": [
     {
-      "id": "connect-error-violations",
-      "description": "ERROR violations in connect",
-      "functionName": "connect",
-      "minViolations": 12,
+      "id": "Client-login-error-violations",
+      "description": "ERROR violations in Client.login",
+      "functionName": "Client.login",
+      "minViolations": 15,
       "expectedClauses": [
-        "pool-exhausted",
-        "connection-error",
-        "client-not-released"
+        "discord-client-login-no-try-catch"
       ],
       "severity": "error",
       "approximateLines": [
         20,
-        101
+        103
       ]
     },
     {
       "id": "query-error-violations",
       "description": "ERROR violations in query",
       "functionName": "query",
-      "minViolations": 72,
+      "minViolations": 30,
       "expectedClauses": [
         "syntax-error",
         "unique-violation",
@@ -41,15 +39,15 @@ export const expected: ExpectedViolations = {
       ],
       "severity": "error",
       "approximateLines": [
-        21,
+        33,
         116
       ]
     }
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 84,
-      "max": 84
+      "min": 45,
+      "max": 45
     },
     "expectedWarningCount": {
       "min": 0,

@@ -14,7 +14,7 @@ export const expected: ExpectedViolations = {
       "id": "create-error-violations",
       "description": "ERROR violations in create",
       "functionName": "create",
-      "minViolations": 6,
+      "minViolations": 16,
       "expectedClauses": [
         "messages-create-no-try-catch"
       ],
@@ -41,8 +41,8 @@ export const expected: ExpectedViolations = {
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 8,
-      "max": 8
+      "min": 18,
+      "max": 18
     },
     "expectedWarningCount": {
       "min": 0,

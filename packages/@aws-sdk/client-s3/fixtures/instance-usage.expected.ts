@@ -14,21 +14,21 @@ export const expected: ExpectedViolations = {
       "id": "send-error-violations",
       "description": "ERROR violations in send",
       "functionName": "send",
-      "minViolations": 2,
+      "minViolations": 5,
       "expectedClauses": [
         "s3-object-operation-no-try-catch"
       ],
       "severity": "error",
       "approximateLines": [
         45,
-        51
+        56
       ]
     }
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 2,
-      "max": 2
+      "min": 5,
+      "max": 5
     },
     "expectedWarningCount": {
       "min": 0,

@@ -9,11 +9,26 @@ import type { ExpectedViolations } from '../../../types/index.js';
 
 export const expected: ExpectedViolations = {
   "fixtures": "proper-error-handling.ts",
-  "expectations": [],
+  "expectations": [
+    {
+      "id": "get-error-violations",
+      "description": "ERROR violations in get",
+      "functionName": "get",
+      "minViolations": 1,
+      "expectedClauses": [
+        "unhandled-promise-rejection"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        38,
+        38
+      ]
+    }
+  ],
   "summary": {
     "expectedErrorCount": {
-      "min": 0,
-      "max": 0
+      "min": 1,
+      "max": 1
     },
     "expectedWarningCount": {
       "min": 0,

@@ -14,7 +14,7 @@ export const expected: ExpectedViolations = {
       "id": "useQuery-error-violations",
       "description": "ERROR violations in useQuery",
       "functionName": "useQuery",
-      "minViolations": 2,
+      "minViolations": 3,
       "expectedClauses": [
         "query-error-unhandled"
       ],
@@ -56,8 +56,8 @@ export const expected: ExpectedViolations = {
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 9,
-      "max": 9
+      "min": 10,
+      "max": 10
     },
     "expectedWarningCount": {
       "min": 0,

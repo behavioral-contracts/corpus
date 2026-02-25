@@ -11,6 +11,20 @@ export const expected: ExpectedViolations = {
   "fixtures": "proper-error-handling.ts",
   "expectations": [
     {
+      "id": "Client-login-error-violations",
+      "description": "ERROR violations in Client.login",
+      "functionName": "Client.login",
+      "minViolations": 3,
+      "expectedClauses": [
+        "discord-client-login-no-try-catch"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        341,
+        346
+      ]
+    },
+    {
       "id": "handleSubmit-warning-violations",
       "description": "WARNING violations in handleSubmit",
       "functionName": "handleSubmit",
@@ -27,8 +41,8 @@ export const expected: ExpectedViolations = {
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 0,
-      "max": 0
+      "min": 3,
+      "max": 3
     },
     "expectedWarningCount": {
       "min": 9,

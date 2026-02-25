@@ -9,11 +9,26 @@ import type { ExpectedViolations } from '../../../types/index.js';
 
 export const expected: ExpectedViolations = {
   "fixtures": "proper-error-handling.ts",
-  "expectations": [],
+  "expectations": [
+    {
+      "id": "Client-login-error-violations",
+      "description": "ERROR violations in Client.login",
+      "functionName": "Client.login",
+      "minViolations": 4,
+      "expectedClauses": [
+        "discord-client-login-no-try-catch"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        30,
+        111
+      ]
+    }
+  ],
   "summary": {
     "expectedErrorCount": {
-      "min": 0,
-      "max": 0
+      "min": 4,
+      "max": 4
     },
     "expectedWarningCount": {
       "min": 0,

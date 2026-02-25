@@ -11,6 +11,20 @@ export const expected: ExpectedViolations = {
   "fixtures": "instance-usage.ts",
   "expectations": [
     {
+      "id": "useQuery-error-violations",
+      "description": "ERROR violations in useQuery",
+      "functionName": "useQuery",
+      "minViolations": 1,
+      "expectedClauses": [
+        "query-error-unhandled"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        276,
+        276
+      ]
+    },
+    {
       "id": "handleSubmit-warning-violations",
       "description": "WARNING violations in handleSubmit",
       "functionName": "handleSubmit",
@@ -27,8 +41,8 @@ export const expected: ExpectedViolations = {
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 0,
-      "max": 0
+      "min": 1,
+      "max": 1
     },
     "expectedWarningCount": {
       "min": 2,

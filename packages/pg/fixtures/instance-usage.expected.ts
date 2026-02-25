@@ -11,6 +11,20 @@ export const expected: ExpectedViolations = {
   "fixtures": "instance-usage.ts",
   "expectations": [
     {
+      "id": "Client-login-error-violations",
+      "description": "ERROR violations in Client.login",
+      "functionName": "Client.login",
+      "minViolations": 5,
+      "expectedClauses": [
+        "discord-client-login-no-try-catch"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        77,
+        113
+      ]
+    },
+    {
       "id": "query-error-violations",
       "description": "ERROR violations in query",
       "functionName": "query",
@@ -32,8 +46,8 @@ export const expected: ExpectedViolations = {
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 12,
-      "max": 12
+      "min": 17,
+      "max": 17
     },
     "expectedWarningCount": {
       "min": 0,

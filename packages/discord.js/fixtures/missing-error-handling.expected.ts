@@ -9,11 +9,26 @@ import type { ExpectedViolations } from '../../../types/index.js';
 
 export const expected: ExpectedViolations = {
   "fixtures": "missing-error-handling.ts",
-  "expectations": [],
+  "expectations": [
+    {
+      "id": "Client-login-error-violations",
+      "description": "ERROR violations in Client.login",
+      "functionName": "Client.login",
+      "minViolations": 51,
+      "expectedClauses": [
+        "discord-client-login-no-try-catch"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        22,
+        386
+      ]
+    }
+  ],
   "summary": {
     "expectedErrorCount": {
-      "min": 0,
-      "max": 0
+      "min": 51,
+      "max": 51
     },
     "expectedWarningCount": {
       "min": 0,
