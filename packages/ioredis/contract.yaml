@@ -1,0 +1,170 @@
+package: ioredis
+semver: ">=4.0.0 <6.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-24"
+
+functions:
+  - name: Redis
+    import_path: "ioredis"
+    description: "Redis client constructor - Creates a Redis connection instance"
+
+    postconditions:
+      - id: missing-error-listener
+        condition: "Redis instance created without error event listener"
+        throws: "Errors emitted as events, not exceptions - silent failures"
+        required_handling: >
+          Caller MUST attach an error listener immediately after creating Redis instance:
+          `redis.on('error', (err) => logger.error(err))`.
+          Without this listener, connection errors are silently logged to console and may crash the application.
+        source: "https://github.com/redis/ioredis#error-handling"
+        severity: error
+
+      - id: connection-errors-not-handled
+        condition: "Connection fails (ECONNREFUSED, ETIMEDOUT, ECONNRESET, ENOTFOUND, EPIPE, EAI_AGAIN)"
+        throws: "Error event emitted with connection error"
+        required_handling: >
+          Caller MUST handle connection errors in the error event listener.
+          Common errors: ECONNREFUSED (Redis not running), ETIMEDOUT (network timeout),
+          ECONNRESET (connection dropped), ENOTFOUND (DNS failure).
+        source: "https://github.com/redis/ioredis/issues/321"
+        severity: error
+
+    edge_cases:
+      - id: lazy-connection
+        description: "Connection is lazy by default - errors may occur after constructor returns"
+        source: "https://github.com/redis/ioredis#connect-to-redis"
+        severity: info
+
+  - name: get
+    import_path: "ioredis"
+    description: "Get value of key from Redis"
+
+    postconditions:
+      - id: unhandled-promise-rejection
+        condition: "Command promise rejected without catch handler"
+        throws: "UnhandledPromiseRejectionWarning - will crash in future Node.js versions"
+        required_handling: >
+          Caller MUST use try-catch (async/await) or .catch() on all Redis commands.
+          Commands return promises that may reject due to: connection errors, WRONGTYPE,
+          timeout, or serialization failures.
+        source: "https://github.com/redis/ioredis/issues/433"
+        severity: error
+
+      - id: command-timeout
+        condition: "Command exceeds timeout (default: no timeout)"
+        throws: "MaxRetriesPerRequestError or CommandTimeoutError"
+        required_handling: >
+          Caller SHOULD set commandTimeout option to prevent hanging operations.
+          Without timeout, commands may hang indefinitely on network issues.
+        source: "https://github.com/redis/ioredis#command-timeout"
+        severity: warning
+
+  - name: set
+    import_path: "ioredis"
+    description: "Set key to value in Redis"
+
+    postconditions:
+      - id: unhandled-promise-rejection
+        condition: "Command promise rejected without catch handler"
+        throws: "UnhandledPromiseRejectionWarning"
+        required_handling: >
+          Caller MUST use try-catch or .catch() on all Redis commands.
+        source: "https://github.com/redis/ioredis/issues/433"
+        severity: error
+
+  - name: pipeline
+    import_path: "ioredis"
+    description: "Create pipeline for batch command execution"
+
+    postconditions:
+      - id: pipeline-results-not-checked
+        condition: "Pipeline exec() results not checked for errors"
+        throws: "Individual command errors silently included in results array"
+        required_handling: >
+          Caller MUST check each result in pipeline.exec() return value.
+          Format: [[null, 'OK'], [Error, undefined], ...].
+          Pipeline does NOT reject on individual command failures.
+        source: "https://github.com/redis/ioredis#pipelines"
+        severity: error
+
+      - id: pipeline-exec-unhandled
+        condition: "Pipeline exec() promise rejected without catch"
+        throws: "UnhandledPromiseRejectionWarning"
+        required_handling: >
+          Caller MUST use try-catch or .catch() on pipeline.exec().
+        source: "https://github.com/redis/ioredis/issues/753"
+        severity: error
+
+  - name: multi
+    import_path: "ioredis"
+    description: "Create transaction (MULTI/EXEC block)"
+
+    postconditions:
+      - id: watch-null-not-checked
+        condition: "WATCH violation causes exec() to return null, not checked"
+        throws: "null return value indicates transaction was aborted"
+        required_handling: >
+          Caller MUST check if exec() returns null after using WATCH.
+          Null indicates a watched key was modified, transaction aborted.
+          This is NOT an error/rejection - it's a null return value.
+        source: "https://github.com/redis/ioredis/issues/883"
+        severity: error
+
+      - id: exec-abort-not-handled
+        condition: "EXECABORT error in transaction not handled"
+        throws: "EXECABORT error if queued command fails validation"
+        required_handling: >
+          Caller MUST check exec() results for EXECABORT errors.
+          Happens when queued commands fail validation (WRONGTYPE, etc.).
+        source: "https://github.com/redis/ioredis#transactions"
+        severity: error
+
+  - name: subscribe
+    import_path: "ioredis"
+    description: "Subscribe to Redis pub/sub channel"
+
+    postconditions:
+      - id: subscriber-mode-violation
+        condition: "Non-pub/sub commands used on subscriber connection"
+        throws: "Error: Connection in subscriber mode, only subscriber commands allowed"
+        required_handling: >
+          Caller MUST use separate Redis connection for pub/sub.
+          After subscribe(), only subscribe/unsubscribe/psubscribe/punsubscribe/quit/ping allowed.
+          Use redis.duplicate() to create separate connection for normal commands.
+        source: "https://github.com/redis/ioredis#pub/sub"
+        severity: error
+
+    edge_cases:
+      - id: duplicate-for-commands
+        description: "Must use redis.duplicate() to create separate connection for normal commands while subscribed"
+        source: "https://github.com/redis/ioredis/issues/944"
+        severity: info
+
+  - name: brpop
+    import_path: "ioredis"
+    description: "Blocking pop from list (right side)"
+
+    postconditions:
+      - id: blocking-without-timeout
+        condition: "Blocking command without timeout parameter"
+        throws: "Command may block indefinitely, causing resource leak"
+        required_handling: >
+          Caller SHOULD provide timeout parameter to blocking commands (BRPOP, BLPOP, BZPOPMIN, BZPOPMAX).
+          Without timeout (or timeout=0), command blocks until data available, potentially forever.
+          Recommended: Set reasonable timeout (e.g., 5-30 seconds).
+        source: "https://redis.io/commands/brpop/"
+        severity: warning
+
+  - name: connect
+    import_path: "ioredis"
+    description: "Explicitly connect to Redis (usually automatic)"
+
+    postconditions:
+      - id: connect-promise-unhandled
+        condition: "connect() promise rejected without catch"
+        throws: "UnhandledPromiseRejectionWarning on connection failure"
+        required_handling: >
+          Caller MUST use try-catch or .catch() on explicit connect() calls.
+        source: "https://github.com/redis/ioredis#connect-to-redis"
+        severity: error
