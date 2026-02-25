@@ -1,0 +1,76 @@
+package: bullmq
+semver: ^5.0.0
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-25"
+
+detection:
+  type_names:
+    - Queue
+    - Worker
+    - QueueEvents
+
+functions:
+  - name: add
+    import_path: "bullmq"
+    description: "Adds a job to the queue with a payload"
+    postconditions:
+      - id: queue-add-no-error-handling
+        description: "Must wrap Queue.add() in try-catch to handle Redis connection errors"
+        severity: error
+        rationale: "Queue.add() can fail if Redis is down or connection is lost"
+        source: "https://docs.bullmq.io/guide/queues"
+
+  - name: addBulk
+    import_path: "bullmq"
+    description: "Adds multiple jobs to the queue in bulk"
+    postconditions:
+      - id: queue-addbulk-no-error-handling
+        description: "Must wrap Queue.addBulk() in try-catch to handle Redis errors"
+        severity: error
+        rationale: "Bulk operations can fail if Redis connection is lost"
+        source: "https://docs.bullmq.io/guide/queues"
+
+  - name: process
+    import_path: "bullmq"
+    description: "Worker method that processes jobs from the queue"
+    postconditions:
+      - id: worker-process-no-error-handling
+        description: "Worker processor should handle job errors gracefully"
+        severity: warning
+        rationale: "Unhandled errors in processor can cause worker to stop processing jobs"
+        source: "https://docs.bullmq.io/guide/workers"
+
+  - name: close
+    import_path: "bullmq"
+    description: "Closes queue or worker Redis connection"
+    postconditions:
+      - id: close-no-error-handling
+        description: "Should handle errors when closing connections"
+        severity: warning
+        rationale: "Connection cleanup can fail and should be handled gracefully"
+        source: "https://docs.bullmq.io/guide/connections"
+
+# Common postconditions for all bullmq operations
+postconditions:
+  error-handling:
+    description: "Must wrap BullMQ operations in try-catch blocks to handle Redis connection errors"
+    severity: error
+    rationale: "BullMQ operations can fail if Redis is down or connection is lost, causing application crashes"
+    source: "https://docs.bullmq.io/patterns/failing-fast-when-redis-is-down"
+
+  connection-management:
+    description: "Should properly manage Redis connections and handle disconnections"
+    severity: warning
+    rationale: "Prevents connection leaks and ensures graceful degradation during Redis outages"
+    source: "https://docs.bullmq.io/guide/connections"
+
+  job-error-handling:
+    description: "Worker processors should handle job processing errors to prevent queue blocking"
+    severity: warning
+    rationale: "Unhandled errors in job processing can cause workers to stop, blocking the entire queue"
+    source: "https://docs.bullmq.io/guide/retrying-failing-jobs"
+
+# Category: cache
+# Latest version: 5.70.1
+# Generated: 2026-02-25
