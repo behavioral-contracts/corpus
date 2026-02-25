@@ -1,0 +1,196 @@
+# Redis Behavioral Contract
+#
+# Package: redis
+# Version Range: ^5.0.0
+# Target: node-redis v5 (Promise-based API)
+#
+# Focus: Connection management and basic command error handling
+
+package: redis
+version_range: ^5.0.0
+
+functions:
+  - name: createClient
+    signature: createClient(options?: RedisClientOptions)
+    description: >
+      Creates a Redis client instance. The client MUST have an error event listener
+      registered, or uncaught errors will crash the Node.js process.
+
+    postconditions:
+      - id: missing-error-listener
+        severity: error
+        description: >
+          Client created without error event listener will crash process on errors.
+          MUST call client.on('error', handler) immediately after createClient.
+
+        detector: >
+          If createClient() is called and the returned client does not have
+          .on('error', ...) registered within the same function scope, flag as violation.
+
+        examples:
+          - |
+            // ❌ BAD - No error listener
+            const client = createClient();
+            await client.connect(); // Process will crash on connection error
+
+          - |
+            // ✅ GOOD - Error listener registered
+            const client = createClient();
+            client.on('error', (err) => console.error('Redis error:', err));
+            await client.connect();
+
+        references:
+          - https://redis.io/docs/latest/develop/clients/nodejs/error-handling/
+          - https://github.com/redis/node-redis#usage
+
+  - name: client.connect
+    signature: client.connect()
+    description: >
+      Establishes connection to Redis server. Returns a Promise that can reject
+      with connection errors (ECONNREFUSED, ETIMEDOUT, ECONNRESET, EAI_AGAIN).
+
+    postconditions:
+      - id: connect-no-error-handling
+        severity: error
+        description: >
+          client.connect() without try-catch can throw connection errors causing
+          unhandled promise rejection.
+
+        detector: >
+          If await client.connect() or client.connect().then() is not wrapped in
+          try-catch or .catch(), flag as violation.
+
+        examples:
+          - |
+            // ❌ BAD - No error handling
+            await client.connect(); // Unhandled rejection on ECONNREFUSED
+
+          - |
+            // ✅ GOOD - Try-catch wrapper
+            try {
+              await client.connect();
+            } catch (err) {
+              console.error('Failed to connect:', err);
+            }
+
+        references:
+          - https://redis.io/docs/latest/develop/clients/nodejs/error-handling/
+
+  - name: client.get
+    signature: client.get(key: string)
+    description: >
+      Retrieves value for a key. Returns Promise<string | null>. Can throw
+      connection errors, timeout errors, or WRONGTYPE errors.
+
+    postconditions:
+      - id: get-no-error-handling
+        severity: error
+        description: >
+          client.get() without try-catch can throw connection/command errors causing
+          unhandled promise rejection or application crash.
+
+        detector: >
+          If await client.get() is not wrapped in try-catch or .catch(), flag as violation.
+
+        examples:
+          - |
+            // ❌ BAD - No error handling
+            const value = await client.get('key'); // Crashes on ECONNREFUSED/ETIMEDOUT
+
+          - |
+            // ✅ GOOD - Try-catch wrapper
+            try {
+              const value = await client.get('key');
+              return value;
+            } catch (err) {
+              console.error('Get failed:', err);
+              return null;
+            }
+
+        references:
+          - https://redis.io/docs/latest/develop/clients/nodejs/error-handling/
+
+  - name: client.set
+    signature: client.set(key: string, value: string, options?: SetOptions)
+    description: >
+      Sets a key-value pair. Returns Promise<string | null>. Can throw connection
+      errors, timeout errors, or command errors.
+
+    postconditions:
+      - id: set-no-error-handling
+        severity: error
+        description: >
+          client.set() without try-catch can throw connection/command errors causing
+          unhandled promise rejection or data loss.
+
+        detector: >
+          If await client.set() is not wrapped in try-catch or .catch(), flag as violation.
+
+        examples:
+          - |
+            // ❌ BAD - No error handling
+            await client.set('key', 'value'); // Silent failure on connection error
+
+          - |
+            // ✅ GOOD - Try-catch wrapper
+            try {
+              await client.set('key', 'value');
+            } catch (err) {
+              console.error('Set failed:', err);
+              throw err; // Re-throw or handle appropriately
+            }
+
+        references:
+          - https://redis.io/docs/latest/develop/clients/nodejs/error-handling/
+
+  - name: client.del
+    signature: client.del(key: string | string[])
+    description: >
+      Deletes one or more keys. Returns Promise<number> (count of deleted keys).
+      Can throw connection errors or timeout errors.
+
+    postconditions:
+      - id: del-no-error-handling
+        severity: error
+        description: >
+          client.del() without try-catch can throw connection errors causing
+          unhandled promise rejection.
+
+        detector: >
+          If await client.del() is not wrapped in try-catch or .catch(), flag as violation.
+
+        examples:
+          - |
+            // ❌ BAD - No error handling
+            await client.del('key'); // Crashes on connection error
+
+          - |
+            // ✅ GOOD - Try-catch wrapper
+            try {
+              const count = await client.del('key');
+              console.log(`Deleted ${count} keys`);
+            } catch (err) {
+              console.error('Delete failed:', err);
+            }
+
+        references:
+          - https://redis.io/docs/latest/develop/clients/nodejs/error-handling/
+
+metadata:
+  analyzed_repos:
+    - parse-server (v5.10.0)
+    - nestjs (v5.11.0)
+    - typeorm (v5.11.0)
+
+  common_patterns:
+    - Error listener on createClient
+    - Try-catch around connect()
+    - Try-catch around commands (get/set/del)
+    - Graceful degradation (fallback to DB on cache errors)
+
+  migration_notes:
+    v4_to_v5:
+      - client.quit() → client.close()
+      - client.disconnect() → client.destroy()
+      - Pipeline behavior: v5 discards unwritten commands on disconnect
+      - Return types: Many commands return number instead of boolean
