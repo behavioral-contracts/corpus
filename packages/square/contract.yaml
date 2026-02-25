@@ -276,3 +276,102 @@ functions:
         required_handling: "Retry with exponential backoff"
         source: "https://developer.squareup.com/docs/sdks/nodejs"
         severity: error
+
+  - name: retrieveOrder
+    import_path: "square"
+    description: "Retrieves an existing order by ID"
+
+    postconditions:
+      - id: order-not-found
+        condition: "Order ID does not exist"
+        throws: "SquareError with statusCode 404"
+        required_handling: "Handle missing order gracefully. DO NOT retry."
+        source: "https://developer.squareup.com/docs/orders-api/error-scenarios"
+        severity: error
+
+      - id: authentication-error
+        condition: "Invalid credentials"
+        throws: "SquareError with statusCode 401"
+        required_handling: "DO NOT retry. Check credentials."
+        source: "https://developer.squareup.com/docs/sdks/nodejs"
+        severity: error
+
+      - id: rate-limit-error
+        condition: "Rate limit exceeded"
+        throws: "SquareError with statusCode 429"
+        required_handling: "Implement exponential backoff"
+        source: "https://developer.squareup.com/docs/build-basics/common-api-patterns/rate-limiting"
+        severity: error
+
+      - id: network-error
+        condition: "Network error"
+        throws: "SquareError"
+        required_handling: "Retry with exponential backoff"
+        source: "https://developer.squareup.com/docs/sdks/nodejs"
+        severity: error
+
+  - name: getPayment
+    import_path: "square"
+    description: "Retrieves a payment by ID via Payments API"
+
+    postconditions:
+      - id: payment-not-found
+        condition: "Payment ID does not exist"
+        throws: "SquareError with statusCode 404"
+        required_handling: "Handle missing payment gracefully. DO NOT retry."
+        source: "https://developer.squareup.com/docs/payments-api/error-handling"
+        severity: error
+
+      - id: authentication-error
+        condition: "Invalid credentials"
+        throws: "SquareError with statusCode 401"
+        required_handling: "DO NOT retry. Check credentials."
+        source: "https://developer.squareup.com/docs/sdks/nodejs"
+        severity: error
+
+      - id: rate-limit-error
+        condition: "Rate limit exceeded"
+        throws: "SquareError with statusCode 429"
+        required_handling: "Implement exponential backoff"
+        source: "https://developer.squareup.com/docs/build-basics/common-api-patterns/rate-limiting"
+        severity: error
+
+      - id: network-error
+        condition: "Network error"
+        throws: "SquareError"
+        required_handling: "Retry with exponential backoff"
+        source: "https://developer.squareup.com/docs/sdks/nodejs"
+        severity: error
+
+  - name: createPaymentLink
+    import_path: "square"
+    description: "Creates a payment link via Checkout API"
+
+    postconditions:
+      - id: invalid-request-error
+        condition: "Invalid request parameters"
+        throws: "SquareError with 4xx statusCode"
+        required_handling: "Validate request parameters. DO NOT retry without fixing issues."
+        source: "https://developer.squareup.com/docs/checkout-api/error-handling"
+        severity: error
+
+      - id: authentication-error
+        condition: "Invalid credentials"
+        throws: "SquareError with statusCode 401"
+        required_handling: "DO NOT retry. Check credentials."
+        source: "https://developer.squareup.com/docs/sdks/nodejs"
+        severity: error
+
+      - id: rate-limit-error
+        condition: "Rate limit exceeded"
+        throws: "SquareError with statusCode 429"
+        required_handling: "Implement exponential backoff"
+        source: "https://developer.squareup.com/docs/build-basics/common-api-patterns/rate-limiting"
+        severity: error
+
+      - id: network-error
+        condition: "Network error"
+        throws: "SquareError"
+        required_handling: "Retry with idempotency key"
+        source: "https://developer.squareup.com/docs/sdks/nodejs"
+        severity: error
