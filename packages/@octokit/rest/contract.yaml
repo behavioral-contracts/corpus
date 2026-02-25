@@ -4,6 +4,21 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-25"
 
+# Detection rules for analyzer integration
+detection:
+  # How this package is instantiated
+  class_names: ["Octokit"]           # new Octokit({ auth: token })
+  type_names: ["Octokit"]            # private client: Octokit
+  factory_methods: []                # No factory methods for this package
+
+  # Patterns to identify usage in await expressions
+  await_patterns:
+    - ".repos."                      # octokit.repos.get()
+    - ".pulls."                      # octokit.pulls.create()
+    - ".issues."                     # octokit.issues.update()
+    - ".git.getref"                  # octokit.git.getRef()
+    - ".git.createref"               # octokit.git.createRef()
+
 functions:
   # Repository Operations
   - name: repos.get
