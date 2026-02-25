@@ -1,0 +1,160 @@
+# Behavioral Contract for cloudinary
+# Package: cloudinary
+# Description: Image and video upload/transformation API
+# Last Updated: 2026-02-25
+
+package:
+  name: cloudinary
+  version: ">=1.0.0 <3.0.0"
+  description: "Cloud-based image and video management platform with upload, transformation, and delivery capabilities"
+
+functions:
+  # Upload Methods
+  - name: "cloudinary.v2.uploader.upload"
+    description: "Upload image or video files to Cloudinary"
+    patterns:
+      - "cloudinary.v2.uploader.upload"
+      - "uploader.upload"
+    postconditions:
+      - id: upload-missing-error-handling
+        severity: error
+        message: "uploader.upload() can fail with network errors, validation errors, or authentication failures. Wrap in try-catch (for promises) or check error parameter (for callbacks)."
+        detector: >
+          If cloudinary.v2.uploader.upload() or uploader.upload() is called without:
+          1. Being wrapped in a try-catch block (for async/await), OR
+          2. Having error handling in the callback: (error, result) => {}
+        rationale: >
+          Upload operations are network-dependent and can fail for multiple reasons:
+          - Network timeouts or connection failures
+          - Invalid file format or corrupted files
+          - Missing or invalid API credentials
+          - Exceeded storage quota
+          Unhandled errors can cause application crashes or silent failures.
+        required_handling: >
+          MUST wrap upload() in try-catch when using async/await, OR check error parameter when using callbacks
+
+  - name: "cloudinary.v2.uploader.upload_large"
+    description: "Upload large files (>100MB) in chunks"
+    patterns:
+      - "cloudinary.v2.uploader.upload_large"
+      - "uploader.upload_large"
+    postconditions:
+      - id: upload-large-missing-error-handling
+        severity: error
+        message: "uploader.upload_large() can fail with 413 Request Entity Too Large errors, network interruptions, or authentication failures. Must handle errors properly."
+        detector: >
+          If cloudinary.v2.uploader.upload_large() or uploader.upload_large() is called without:
+          1. Being wrapped in a try-catch block (for async/await), OR
+          2. Having error handling in the callback: (error, result) => {}
+        rationale: >
+          Large file uploads are particularly prone to failures:
+          - Network interruptions during long uploads
+          - 413 Request Entity Too Large (if file >100MB without this method)
+          - Chunk upload failures requiring retry logic
+          - Authentication or quota errors
+          Without proper error handling, partial uploads may occur without notification.
+        required_handling: >
+          MUST wrap upload_large() in try-catch or handle error in callback
+
+  - name: "cloudinary.v2.uploader.upload_stream"
+    description: "Stream-based upload for processing files on-the-fly"
+    patterns:
+      - "cloudinary.v2.uploader.upload_stream"
+      - "uploader.upload_stream"
+    postconditions:
+      - id: upload-stream-missing-error-handling
+        severity: error
+        message: "uploader.upload_stream() requires error handling in the callback signature: (error, result) => {}. Stream errors and network failures must be caught."
+        detector: >
+          If cloudinary.v2.uploader.upload_stream() or uploader.upload_stream() is called without:
+          1. A callback function with error parameter: (error, result) => {}
+        rationale: >
+          Stream uploads have additional failure modes:
+          - Stream read errors from source
+          - Network interruptions during streaming
+          - Memory issues with large streams
+          - Authentication failures
+          The callback-based pattern (error, result) => {} is the recommended approach for stream error handling.
+        required_handling: >
+          MUST provide callback with error parameter: cloudinary.v2.uploader.upload_stream((error, result) => {})
+
+  # Asset Management
+  - name: "cloudinary.v2.uploader.destroy"
+    description: "Delete an asset from Cloudinary by public_id"
+    patterns:
+      - "cloudinary.v2.uploader.destroy"
+      - "uploader.destroy"
+    postconditions:
+      - id: destroy-missing-error-handling
+        severity: error
+        message: "uploader.destroy() can fail if the asset doesn't exist, authentication fails, or network errors occur. Must handle errors."
+        detector: >
+          If cloudinary.v2.uploader.destroy() or uploader.destroy() is called without:
+          1. Being wrapped in a try-catch block (for async/await), OR
+          2. Having error handling in the callback: (error, result) => {}
+        rationale: >
+          Delete operations can fail for several reasons:
+          - Asset not found (invalid or already deleted public_id)
+          - Authentication errors (invalid API key/secret)
+          - Network failures
+          - Permission errors (trying to delete protected assets)
+          Without error handling, the application may assume deletion succeeded when it actually failed.
+        required_handling: >
+          MUST wrap destroy() in try-catch or handle error in callback
+
+metadata:
+  cves:
+    - id: CVE-2025-12613
+      severity: high
+      description: "Arbitrary Argument Injection via ampersand in parameters"
+      fixed_in: "2.7.0"
+      impact: "Parameter injection allowing bypassing security checks or manipulating behavior"
+
+  sources:
+    - url: "https://cloudinary.com/documentation/node_integration"
+      type: official_docs
+      description: "Node.js SDK Integration Guide"
+
+    - url: "https://cloudinary.com/documentation/image_upload_api_reference"
+      type: official_docs
+      description: "Upload API Reference"
+
+    - url: "https://github.com/cloudinary/cloudinary_npm"
+      type: repository
+      description: "Official Cloudinary Node.js SDK Repository"
+
+    - url: "https://support.cloudinary.com/hc/en-us/community/posts/360026620212-stream-upload-catching-errors-NODE-JS-"
+      type: community
+      description: "Stream Upload Error Handling Discussion"
+
+    - url: "https://security.snyk.io/vuln/SNYK-JS-CLOUDINARY-10495740"
+      type: security
+      description: "CVE-2025-12613 Advisory"
+
+  common_errors:
+    - error: "Network timeout"
+      cause: "Slow connection or large file upload"
+      solution: "Use upload_large() for files >100MB, implement retry logic"
+
+    - error: "413 Request Entity Too Large"
+      cause: "File larger than 100MB using regular upload()"
+      solution: "Use upload_large() method with chunk_size option"
+
+    - error: "Authentication failed"
+      cause: "Invalid or missing API key/secret"
+      solution: "Verify cloudinary.config() is called with valid credentials"
+
+    - error: "Invalid public_id"
+      cause: "Attempting to destroy non-existent asset"
+      solution: "Check asset exists before deletion or handle error gracefully"
+
+    - error: "Invalid file format"
+      cause: "Unsupported file type or corrupted file"
+      solution: "Validate file format before upload, handle error and inform user"
+
+  notes:
+    - "Cloudinary v2 API uses cloudinary.v2.uploader for all upload operations"
+    - "Supports both callback-based and promise-based (async/await) patterns"
+    - "Stream uploads should use callback pattern: (error, result) => {}"
+    - "For files >100MB, upload_large() is required to avoid 413 errors"
+    - "All upload methods require network access and proper error handling"
