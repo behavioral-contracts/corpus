@@ -5,7 +5,7 @@ maintainer: "corpus-team"
 last_verified: "2026-02-24"
 
 functions:
-  - name: sys.readFile
+  - name: readFile
     import_path: "typescript"
     namespace: "sys"
     description: "Reads a file from the file system synchronously and returns its contents as a string"
@@ -44,7 +44,7 @@ functions:
         source: "https://github.com/microsoft/TypeScript-wiki/blob/main/Using-the-Compiler-API.md"
         severity: info
 
-  - name: sys.readDirectory
+  - name: readDirectory
     import_path: "typescript"
     namespace: "sys"
     description: "Reads a directory and returns an array of file paths matching the specified extensions"
@@ -83,7 +83,7 @@ functions:
         source: "https://github.com/microsoft/TypeScript-wiki/blob/main/Using-the-Compiler-API.md"
         severity: info
 
-  - name: sys.writeFile
+  - name: writeFile
     import_path: "typescript"
     namespace: "sys"
     description: "Writes content to a file synchronously"
