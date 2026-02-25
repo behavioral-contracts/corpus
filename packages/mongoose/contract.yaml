@@ -15,8 +15,16 @@ detection:
   # Factory methods for creating Models
   factory_methods: ["model"]  # mongoose.model('User', schema)
 
+  # CRITICAL: Require instance tracking to avoid false positives
+  # Mongoose method names (.find, .save, .create, .validate) are too generic
+  # Pattern-based detection matches non-mongoose code (validators, arrays, etc.)
+  # Instance tracking ensures we only flag tracked Model/Document instances
+  require_instance_tracking: true
+
   # Patterns to identify mongoose operations in await expressions
   # These patterns match method calls on Model classes and Document instances
+  # NOTE: These patterns are only used as hints; require_instance_tracking=true
+  # means violations are ONLY created for tracked instances
   await_patterns:
     # Query operations (Model static methods)
     - ".find"
