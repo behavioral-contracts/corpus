@@ -8,8 +8,9 @@
 
 ## Current Coverage
 
-- **Total Packages in Corpus:** 10
+- **Total Packages in Corpus:** 11
 - **Packages Onboarded:**
+  - ✅ @octokit/rest
   - ✅ @prisma/client
   - ✅ @supabase/supabase-js
   - ✅ @tanstack/react-query
@@ -188,6 +189,28 @@
 ---
 
 ### Tier 4: Utilities & Services (P3)
+
+#### @octokit/rest
+- **Status:** ✅ Complete
+- **Priority:** P3 - Low
+- **Usage:** GitHub REST API client (backstage, prisma, typescript-compiler)
+- **Key Behaviors:**
+  - API request failures (404, 403, 401, 422)
+  - Rate limiting (403 with rate limit headers)
+  - Network errors and timeouts
+  - Authentication failures
+- **Contract Coverage:**
+  - 16 GitHub API methods (repos, git, pulls, issues, files)
+  - Instance-based detection (new Octokit())
+  - 2-level property chains (octokit.repos.get())
+  - RequestError with status property
+- **Metrics:**
+  - True Positive Rate: 100% (26/26 violations in backstage)
+  - False Positive Rate: 0%
+  - Regression Tests: 3/3 passed
+- **Research:** [GitHub Discussions](https://github.com/octokit/octokit.js/discussions/2039)
+- **Completed:** 2026-02-25
+- **Note:** Full data-driven detection with detection rules in contract.yaml. First package to use new analyzer architecture.
 
 #### puppeteer
 - **Status:** 🔴 Not Started
