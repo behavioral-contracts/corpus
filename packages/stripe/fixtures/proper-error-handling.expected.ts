@@ -11,8 +11,8 @@ export const expected: ExpectedViolations = {
   "fixtures": "proper-error-handling.ts",
   "expectations": [
     {
-      "id": "create-violations",
-      "description": "Violations in create",
+      "id": "create-warning-violations",
+      "description": "WARNING violations in create",
       "functionName": "create",
       "minViolations": 12,
       "expectedClauses": [
@@ -28,8 +28,8 @@ export const expected: ExpectedViolations = {
       ]
     },
     {
-      "id": "confirm-violations",
-      "description": "Violations in confirm",
+      "id": "confirm-warning-violations",
+      "description": "WARNING violations in confirm",
       "functionName": "confirm",
       "minViolations": 4,
       "expectedClauses": [
@@ -45,8 +45,8 @@ export const expected: ExpectedViolations = {
       ]
     },
     {
-      "id": "retrieve-violations",
-      "description": "Violations in retrieve",
+      "id": "retrieve-warning-violations",
+      "description": "WARNING violations in retrieve",
       "functionName": "retrieve",
       "minViolations": 3,
       "expectedClauses": [

@@ -11,59 +11,55 @@ export const expected: ExpectedViolations = {
   "fixtures": "missing-error-handling.ts",
   "expectations": [
     {
-      "id": "parseAsync-error-violations",
-      "description": "ERROR violations in parseAsync",
-      "functionName": "parseAsync",
-      "minViolations": 7,
+      "id": "readFile-error-violations",
+      "description": "ERROR violations in readFile",
+      "functionName": "readFile",
+      "minViolations": 10,
       "expectedClauses": [
-        "parse-async-validation-error"
+        "file-not-found",
+        "permission-denied"
       ],
       "severity": "error",
       "approximateLines": [
-        19,
-        107
+        17,
+        182
       ]
     },
     {
-      "id": "create-error-violations",
-      "description": "ERROR violations in create",
-      "functionName": "create",
-      "minViolations": 35,
+      "id": "readDirectory-error-violations",
+      "description": "ERROR violations in readDirectory",
+      "functionName": "readDirectory",
+      "minViolations": 10,
       "expectedClauses": [
-        "authentication-error",
-        "rate-limit-error",
-        "server-error",
-        "timeout-error",
-        "invalid-request-error"
+        "directory-not-found",
+        "permission-denied"
       ],
       "severity": "error",
       "approximateLines": [
-        19,
-        107
+        28,
+        172
       ]
     },
     {
-      "id": "generate-error-violations",
-      "description": "ERROR violations in generate",
-      "functionName": "generate",
+      "id": "writeFile-error-violations",
+      "description": "ERROR violations in writeFile",
+      "functionName": "writeFile",
       "minViolations": 4,
       "expectedClauses": [
-        "authentication-error",
-        "rate-limit-error-images",
-        "content-policy-violation",
-        "server-error"
+        "permission-denied",
+        "directory-not-found"
       ],
       "severity": "error",
       "approximateLines": [
-        67,
-        67
+        44,
+        62
       ]
     }
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 46,
-      "max": 46
+      "min": 24,
+      "max": 24
     },
     "expectedWarningCount": {
       "min": 0,

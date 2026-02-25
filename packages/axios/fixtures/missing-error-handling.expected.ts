@@ -11,10 +11,24 @@ export const expected: ExpectedViolations = {
   "fixtures": "missing-error-handling.ts",
   "expectations": [
     {
-      "id": "get-violations",
-      "description": "Violations in get",
+      "id": "parseAsync-error-violations",
+      "description": "ERROR violations in parseAsync",
+      "functionName": "parseAsync",
+      "minViolations": 4,
+      "expectedClauses": [
+        "parse-async-validation-error"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        13,
+        103
+      ]
+    },
+    {
+      "id": "get-error-violations",
+      "description": "ERROR violations in get",
       "functionName": "get",
-      "minViolations": 20,
+      "minViolations": 9,
       "expectedClauses": [
         "error-4xx-5xx",
         "rate-limited-429",
@@ -23,30 +37,61 @@ export const expected: ExpectedViolations = {
       "severity": "error",
       "approximateLines": [
         13,
+        103
+      ]
+    },
+    {
+      "id": "get-warning-violations",
+      "description": "WARNING violations in get",
+      "functionName": "get",
+      "minViolations": 11,
+      "expectedClauses": [
+        "rate-limited-429",
+        "network-failure",
+        "error-4xx-5xx"
+      ],
+      "severity": "warning",
+      "approximateLines": [
+        21,
         112
       ]
     },
     {
-      "id": "post-violations",
-      "description": "Violations in post",
+      "id": "post-warning-violations",
+      "description": "WARNING violations in post",
       "functionName": "post",
-      "minViolations": 5,
+      "minViolations": 2,
       "expectedClauses": [
         "error-4xx-5xx",
-        "network-failure",
-        "rate-limited-429"
+        "network-failure"
       ],
       "severity": "warning",
       "approximateLines": [
         69,
+        69
+      ]
+    },
+    {
+      "id": "post-error-violations",
+      "description": "ERROR violations in post",
+      "functionName": "post",
+      "minViolations": 3,
+      "expectedClauses": [
+        "error-4xx-5xx",
+        "rate-limited-429",
+        "network-failure"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        102,
         102
       ]
     }
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 12,
-      "max": 12
+      "min": 16,
+      "max": 16
     },
     "expectedWarningCount": {
       "min": 13,

@@ -11,12 +11,28 @@ export const expected: ExpectedViolations = {
   "fixtures": "missing-error-handling.ts",
   "expectations": [
     {
-      "id": "connect-violations",
-      "description": "Violations in connect",
-      "functionName": "connect",
-      "minViolations": 4,
+      "id": "parseAsync-error-violations",
+      "description": "ERROR violations in parseAsync",
+      "functionName": "parseAsync",
+      "minViolations": 12,
       "expectedClauses": [
-        "connection-error"
+        "parse-async-validation-error"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        21,
+        116
+      ]
+    },
+    {
+      "id": "connect-error-violations",
+      "description": "ERROR violations in connect",
+      "functionName": "connect",
+      "minViolations": 12,
+      "expectedClauses": [
+        "pool-exhausted",
+        "connection-error",
+        "client-not-released"
       ],
       "severity": "error",
       "approximateLines": [
@@ -25,13 +41,17 @@ export const expected: ExpectedViolations = {
       ]
     },
     {
-      "id": "query-violations",
-      "description": "Violations in query",
+      "id": "query-error-violations",
+      "description": "ERROR violations in query",
       "functionName": "query",
-      "minViolations": 24,
+      "minViolations": 72,
       "expectedClauses": [
         "syntax-error",
-        "connection-error"
+        "unique-violation",
+        "foreign-key-violation",
+        "not-null-violation",
+        "connection-error",
+        "undefined-table"
       ],
       "severity": "error",
       "approximateLines": [
@@ -42,8 +62,8 @@ export const expected: ExpectedViolations = {
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 28,
-      "max": 28
+      "min": 96,
+      "max": 96
     },
     "expectedWarningCount": {
       "min": 0,

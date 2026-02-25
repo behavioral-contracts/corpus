@@ -11,8 +11,22 @@ export const expected: ExpectedViolations = {
   "fixtures": "missing-error-handling.ts",
   "expectations": [
     {
-      "id": "create-violations",
-      "description": "Violations in create",
+      "id": "parseAsync-error-violations",
+      "description": "ERROR violations in parseAsync",
+      "functionName": "parseAsync",
+      "minViolations": 7,
+      "expectedClauses": [
+        "parse-async-validation-error"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        19,
+        93
+      ]
+    },
+    {
+      "id": "create-error-violations",
+      "description": "ERROR violations in create",
       "functionName": "create",
       "minViolations": 20,
       "expectedClauses": [
@@ -28,8 +42,23 @@ export const expected: ExpectedViolations = {
       ]
     },
     {
-      "id": "confirm-violations",
-      "description": "Violations in confirm",
+      "id": "constructEvent-error-violations",
+      "description": "ERROR violations in constructEvent",
+      "functionName": "constructEvent",
+      "minViolations": 2,
+      "expectedClauses": [
+        "signature-verification-failed",
+        "timestamp-too-old"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        66,
+        66
+      ]
+    },
+    {
+      "id": "confirm-error-violations",
+      "description": "ERROR violations in confirm",
       "functionName": "confirm",
       "minViolations": 4,
       "expectedClauses": [
@@ -45,11 +74,12 @@ export const expected: ExpectedViolations = {
       ]
     },
     {
-      "id": "retrieve-violations",
-      "description": "Violations in retrieve",
+      "id": "retrieve-error-violations",
+      "description": "ERROR violations in retrieve",
       "functionName": "retrieve",
-      "minViolations": 3,
+      "minViolations": 4,
       "expectedClauses": [
+        "resource-not-found",
         "rate-limit-error",
         "authentication-error",
         "network-error"
@@ -63,8 +93,8 @@ export const expected: ExpectedViolations = {
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 27,
-      "max": 27
+      "min": 37,
+      "max": 37
     },
     "expectedWarningCount": {
       "min": 0,

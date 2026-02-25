@@ -11,10 +11,24 @@ export const expected: ExpectedViolations = {
   "fixtures": "instance-usage.ts",
   "expectations": [
     {
-      "id": "get-violations",
-      "description": "Violations in get",
+      "id": "parseAsync-error-violations",
+      "description": "ERROR violations in parseAsync",
+      "functionName": "parseAsync",
+      "minViolations": 7,
+      "expectedClauses": [
+        "parse-async-validation-error"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        22,
+        140
+      ]
+    },
+    {
+      "id": "get-error-violations",
+      "description": "ERROR violations in get",
       "functionName": "get",
-      "minViolations": 9,
+      "minViolations": 6,
       "expectedClauses": [
         "error-4xx-5xx",
         "rate-limited-429",
@@ -23,14 +37,30 @@ export const expected: ExpectedViolations = {
       "severity": "error",
       "approximateLines": [
         22,
+        140
+      ]
+    },
+    {
+      "id": "get-warning-violations",
+      "description": "WARNING violations in get",
+      "functionName": "get",
+      "minViolations": 3,
+      "expectedClauses": [
+        "error-4xx-5xx",
+        "rate-limited-429",
+        "network-failure"
+      ],
+      "severity": "warning",
+      "approximateLines": [
+        150,
         150
       ]
     }
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 6,
-      "max": 6
+      "min": 13,
+      "max": 13
     },
     "expectedWarningCount": {
       "min": 3,
