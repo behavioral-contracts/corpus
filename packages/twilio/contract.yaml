@@ -1,0 +1,318 @@
+package: twilio
+version: 1.0.0
+description: Twilio REST API client for SMS, voice, and verification services
+
+# Twilio client initialization and API operations require careful error handling
+# due to network failures, authentication issues, rate limiting, and validation errors.
+
+functions:
+  # SMS/MMS Operations
+  - name: messages.create
+    type: method
+    severity: error
+    postconditions:
+      - id: missing-error-handling
+        description: >
+          messages.create() must be wrapped in try-catch or .catch() handler.
+          API calls can fail due to authentication (401), rate limiting (429),
+          invalid phone numbers (400), or network errors.
+        severity: error
+        detector: >
+          If call to messages.create() is not wrapped in try-catch block or
+          followed by .catch() handler
+        required_handling: >
+          MUST wrap in try-catch or use .catch() handler
+        example_violation: |
+          // ❌ BAD: No error handling
+          const message = await client.messages.create({
+            body: 'Hello',
+            to: '+1234567890',
+            from: '+0987654321'
+          });
+        example_fix: |
+          // ✅ GOOD: Try-catch for error handling
+          try {
+            const message = await client.messages.create({
+              body: 'Hello',
+              to: '+1234567890',
+              from: '+0987654321'
+            });
+          } catch (error) {
+            if (error instanceof RestException) {
+              console.error(`Twilio error ${error.code}: ${error.message}`);
+            }
+            throw error;
+          }
+
+      - id: missing-rest-exception-check
+        description: >
+          Catch blocks should check for RestException to access specific error
+          details like error.code, error.status, and error.moreInfo.
+        severity: warning
+        detector: >
+          If try-catch block exists but catch handler doesn't check
+          instanceof RestException or access error.code
+        required_handling: >
+          SHOULD check instanceof RestException for detailed error information
+        example_violation: |
+          // ⚠️ INCOMPLETE: Generic error handling
+          try {
+            await client.messages.create({...});
+          } catch (error) {
+            console.error('Failed to send message');
+          }
+        example_fix: |
+          // ✅ GOOD: RestException check
+          try {
+            await client.messages.create({...});
+          } catch (error) {
+            if (error instanceof RestException) {
+              if (error.code === 14107) {
+                // Handle rate limiting
+              } else if (error.code === 21211) {
+                // Handle invalid phone number
+              }
+            }
+            throw error;
+          }
+
+      - id: missing-rate-limit-handling
+        description: >
+          Bulk SMS operations should handle rate limiting errors (14107).
+          Twilio free tier has 40k emails/day limit.
+        severity: warning
+        detector: >
+          If messages.create() is called in a loop or batch operation
+          without checking for error.code === 14107 in catch block
+        required_handling: >
+          SHOULD check for error code 14107 and implement retry logic
+        example_violation: |
+          // ⚠️ NO RATE LIMIT HANDLING
+          for (const user of users) {
+            try {
+              await client.messages.create({
+                body: message,
+                to: user.phone,
+                from: twilioNumber
+              });
+            } catch (error) {
+              console.error(error);
+            }
+          }
+        example_fix: |
+          // ✅ GOOD: Rate limit handling with retry
+          for (const user of users) {
+            try {
+              await client.messages.create({
+                body: message,
+                to: user.phone,
+                from: twilioNumber
+              });
+            } catch (error) {
+              if (error instanceof RestException && error.code === 14107) {
+                // Rate limited - wait and retry
+                await sleep(60000);
+                retry();
+              }
+              throw error;
+            }
+          }
+
+  # Voice Call Operations
+  - name: calls.create
+    type: method
+    severity: error
+    postconditions:
+      - id: missing-error-handling
+        description: >
+          calls.create() must be wrapped in try-catch or .catch() handler.
+          Calls can fail due to invalid numbers, account issues, or network errors.
+        severity: error
+        detector: >
+          If call to calls.create() is not wrapped in try-catch block or
+          followed by .catch() handler
+        required_handling: >
+          MUST wrap in try-catch or use .catch() handler
+        example_violation: |
+          // ❌ BAD: No error handling
+          const call = await client.calls.create({
+            url: 'http://demo.twilio.com/docs/voice.xml',
+            to: '+1234567890',
+            from: '+0987654321'
+          });
+        example_fix: |
+          // ✅ GOOD: Try-catch for error handling
+          try {
+            const call = await client.calls.create({
+              url: 'http://demo.twilio.com/docs/voice.xml',
+              to: '+1234567890',
+              from: '+0987654321'
+            });
+          } catch (error) {
+            if (error instanceof RestException) {
+              console.error(`Call failed: ${error.message}`);
+            }
+            throw error;
+          }
+
+  # Verification Services (2FA)
+  - name: verify.services.verifications.create
+    type: method
+    severity: error
+    postconditions:
+      - id: missing-error-handling
+        description: >
+          verifications.create() must be wrapped in try-catch.
+          Verification requests can fail due to invalid phone numbers,
+          service configuration issues, or rate limiting.
+        severity: error
+        detector: >
+          If call to verify.services().verifications.create() is not wrapped
+          in try-catch block
+        required_handling: >
+          MUST wrap in try-catch
+        example_violation: |
+          // ❌ BAD: No error handling
+          const verification = await client.verify
+            .services(serviceSid)
+            .verifications
+            .create({ to: '+1234567890', channel: 'sms' });
+        example_fix: |
+          // ✅ GOOD: Try-catch for verification
+          try {
+            const verification = await client.verify
+              .services(serviceSid)
+              .verifications
+              .create({ to: '+1234567890', channel: 'sms' });
+          } catch (error) {
+            if (error instanceof RestException) {
+              console.error(`Verification failed: ${error.code}`);
+            }
+            throw error;
+          }
+
+  # Client Initialization
+  - name: twilio
+    type: function
+    severity: error
+    postconditions:
+      - id: hardcoded-credentials
+        description: >
+          Twilio credentials (accountSid, authToken) must never be hardcoded.
+          Always use environment variables to prevent credential exposure.
+        severity: error
+        detector: >
+          If twilio() is called with string literals instead of
+          process.env.TWILIO_ACCOUNT_SID and process.env.TWILIO_AUTH_TOKEN
+        required_handling: >
+          MUST use environment variables for credentials
+        example_violation: |
+          // ❌ BAD: Hardcoded credentials
+          const client = require('twilio')(
+            'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+            'your_auth_token_here'
+          );
+        example_fix: |
+          // ✅ GOOD: Environment variables
+          const accountSid = process.env.TWILIO_ACCOUNT_SID;
+          const authToken = process.env.TWILIO_AUTH_TOKEN;
+          const client = require('twilio')(accountSid, authToken);
+
+      - id: missing-auth-error-handling
+        description: >
+          Initial API calls should handle authentication errors (20003, 20005)
+          to fail fast and provide clear feedback about credential issues.
+        severity: warning
+        detector: >
+          If first API call after client initialization doesn't check for
+          auth-related error codes
+        required_handling: >
+          SHOULD check for error codes 20003 (invalid credentials) and
+          20005 (account suspended)
+        example_violation: |
+          // ⚠️ NO AUTH ERROR CHECK
+          const client = twilio(accountSid, authToken);
+          try {
+            await client.messages.create({...});
+          } catch (error) {
+            console.error('Failed');
+          }
+        example_fix: |
+          // ✅ GOOD: Auth error handling
+          const client = twilio(accountSid, authToken);
+          try {
+            await client.messages.create({...});
+          } catch (error) {
+            if (error instanceof RestException) {
+              if (error.code === 20003) {
+                throw new Error('Invalid Twilio credentials');
+              } else if (error.code === 20005) {
+                throw new Error('Twilio account suspended');
+              }
+            }
+            throw error;
+          }
+
+  # Webhook Security
+  - name: validateRequest
+    type: function
+    severity: error
+    postconditions:
+      - id: missing-webhook-signature-verification
+        description: >
+          Twilio webhook endpoints must validate request signatures using
+          twilio.validateRequest() to prevent spoofing attacks.
+        severity: error
+        detector: >
+          If Express/Next.js route handler receives Twilio webhooks without
+          calling validateRequest() or validateExpressRequest()
+        required_handling: >
+          MUST validate webhook signatures before processing
+        example_violation: |
+          // ❌ BAD: No signature verification
+          app.post('/twilio/webhook', async (req, res) => {
+            const { Body, From } = req.body;
+            // Process webhook without validation
+            await processMessage(Body, From);
+            res.send('<Response></Response>');
+          });
+        example_fix: |
+          // ✅ GOOD: Signature verification
+          const twilio = require('twilio');
+
+          app.post('/twilio/webhook', (req, res) => {
+            const signature = req.headers['x-twilio-signature'];
+            const url = `https://example.com/twilio/webhook`;
+
+            const isValid = twilio.validateRequest(
+              authToken,
+              signature,
+              url,
+              req.body
+            );
+
+            if (!isValid) {
+              return res.status(403).send('Forbidden');
+            }
+
+            // Process verified webhook
+            res.send('<Response></Response>');
+          });
+
+metadata:
+  behavioral_contracts_version: 1.0.0
+  created_date: 2026-02-25
+  last_updated: 2026-02-25
+  coverage:
+    - SMS/MMS messaging
+    - Voice calls
+    - Verification services (2FA)
+    - Webhook security
+  related_packages:
+    - "@sendgrid/mail"
+    - "vonage"
+    - "plivo"
+  severity_distribution:
+    error: 5
+    warning: 3
+    info: 0
