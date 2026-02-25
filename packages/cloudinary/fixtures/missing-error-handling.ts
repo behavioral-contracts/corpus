@@ -1,63 +1,29 @@
-/**
- * Cloudinary Fixtures: Missing Error Handling
- *
- * This file demonstrates INCORRECT patterns (missing error handling).
- * Should produce 4 ERROR violations when analyzed.
- */
-
 import { v2 as cloudinary } from 'cloudinary';
 
-cloudinary.config({
-  cloud_name: 'demo',
-  api_key: 'demo-key',
-  api_secret: 'demo-secret'
-});
+cloudinary.config({ cloud_name: 'demo', api_key: 'key', api_secret: 'secret' });
 
-/**
- * ❌ VIOLATION: upload-missing-error-handling
- * Missing try-catch around upload()
- */
-async function uploadWithoutErrorHandling(filePath: string) {
-  const result = await cloudinary.uploader.upload(filePath);
-  console.log('Upload result:', result.secure_url);
+// ❌ VIOLATION: upload-missing-error-handling
+async function uploadWithoutTryCatch(file: string) {
+  const result = await cloudinary.uploader.upload(file);
   return result;
 }
 
-/**
- * ❌ VIOLATION: upload-large-missing-error-handling
- * Missing error handling for large file upload
- */
-async function uploadLargeWithoutErrorHandling(filePath: string) {
-  const result = await cloudinary.uploader.upload_large(filePath, {
-    chunk_size: 6000000
-  });
-  console.log('Large upload complete:', result.secure_url);
+// ❌ VIOLATION: upload-large-missing-error-handling
+async function uploadLargeWithoutTryCatch(file: string) {
+  const result = await cloudinary.uploader.upload_large(file, { chunk_size: 6000000 });
   return result;
 }
 
-/**
- * ❌ VIOLATION: upload-stream-missing-error-handling
- * Stream upload without error callback
- */
-function uploadStreamNoErrorHandling(buffer: Buffer) {
-  const uploadStream = cloudinary.uploader.upload_stream();
-  uploadStream.end(buffer);
+// ❌ VIOLATION: upload-stream-missing-error-handling
+function uploadStreamWithoutCallback(buffer: Buffer) {
+  const stream = cloudinary.uploader.upload_stream();
+  stream.end(buffer);
 }
 
-/**
- * ❌ VIOLATION: destroy-missing-error-handling
- * Missing try-catch for destroy operation
- */
-async function deleteWithoutErrorHandling(publicId: string) {
+// ❌ VIOLATION: destroy-missing-error-handling
+async function destroyWithoutTryCatch(publicId: string) {
   const result = await cloudinary.uploader.destroy(publicId);
-  console.log('Deleted:', result);
   return result;
 }
 
-// Export for testing
-export {
-  uploadWithoutErrorHandling,
-  uploadLargeWithoutErrorHandling,
-  uploadStreamNoErrorHandling,
-  deleteWithoutErrorHandling
-};
+export { uploadWithoutTryCatch, uploadLargeWithoutTryCatch, uploadStreamWithoutCallback, destroyWithoutTryCatch };
