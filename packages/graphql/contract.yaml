@@ -1,0 +1,53 @@
+package: graphql
+semver: ^16.0.0
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+detection:
+  type_names:
+    - GraphQLSchema
+    - GraphQLObjectType
+    - GraphQLError
+
+functions:
+  - name: execute
+    import_path: "graphql"
+    description: "Executes a GraphQL query"
+    postconditions:
+      - id: execute-no-error-handling
+        description: "Must check execute() result for errors before accessing data"
+        severity: error
+        rationale: "execute() returns {errors, data} - errors array contains resolver failures"
+        source: "https://graphql.org/graphql-js/execution/#execute"
+
+  - name: parse
+    import_path: "graphql"
+    description: "Parses GraphQL query string into AST"
+    postconditions:
+      - id: parse-no-error-handling
+        description: "Must wrap parse() in try-catch to handle syntax errors"
+        severity: error
+        rationale: "parse() throws GraphQLError for invalid query syntax"
+        source: "https://graphql.org/graphql-js/language/#parse"
+
+  - name: validate
+    import_path: "graphql"
+    description: "Validates GraphQL query against schema"
+    postconditions:
+      - id: validate-errors-unchecked
+        description: "Must check validate() return value for validation errors"
+        severity: error
+        rationale: "validate() returns array of errors - empty array means valid query"
+        source: "https://graphql.org/graphql-js/validation/#validate"
+
+postconditions:
+  resolver-error-handling:
+    description: "GraphQL resolvers should handle errors and return proper GraphQLError"
+    severity: error
+    rationale: "Unhandled resolver errors expose internal details to clients"
+    source: "https://graphql.org/learn/execution/#handling-errors"
+
+# Category: api
+# Latest version: 16.13.0
+# Generated: 2026-02-26

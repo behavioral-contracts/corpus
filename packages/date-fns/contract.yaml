@@ -1,0 +1,42 @@
+package: date-fns
+semver: ^3.0.0 || ^4.0.0
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+detection:
+  type_names:
+    - Duration
+    - Interval
+
+functions:
+  - name: parse
+    import_path: "date-fns"
+    description: "Parses date string into Date object"
+    postconditions:
+      - id: parse-invalid-date
+        description: "Must validate parsed date with isValid() before using"
+        severity: warning
+        rationale: "parse() returns Invalid Date for malformed input, which causes NaN in calculations"
+        source: "https://date-fns.org/docs/parse"
+
+  - name: format
+    import_path: "date-fns"
+    description: "Formats Date object as string"
+    postconditions:
+      - id: format-invalid-date
+        description: "Should check if date is valid before formatting"
+        severity: warning
+        rationale: "Formatting Invalid Date produces 'Invalid Date' string"
+        source: "https://date-fns.org/docs/format"
+
+postconditions:
+  invalid-date-handling:
+    description: "Always validate dates with isValid() when parsing user input"
+    severity: warning
+    rationale: "Invalid Date objects propagate through calculations silently"
+    source: "https://date-fns.org/docs/isValid"
+
+# Category: utility
+# Latest version: 4.1.0
+# Generated: 2026-02-26
