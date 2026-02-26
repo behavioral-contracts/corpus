@@ -1,0 +1,49 @@
+package: multer
+semver: ^2.0.0
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+detection:
+  type_names:
+    - Multer
+    - StorageEngine
+    - FileFilterCallback
+
+functions:
+  - name: single
+    import_path: "multer"
+    description: "Middleware for handling single file upload"
+    postconditions:
+      - id: single-no-error-handling
+        description: "Must add error handling middleware after multer for upload errors"
+        severity: error
+        rationale: "File upload can fail due to size limits, file type restrictions, or disk errors"
+        source: "https://github.com/expressjs/multer#error-handling"
+
+  - name: array
+    import_path: "multer"
+    description: "Middleware for handling multiple file uploads"
+    postconditions:
+      - id: array-no-error-handling
+        description: "Must add error handling middleware after multer for upload errors"
+        severity: error
+        rationale: "Multiple file uploads can fail, need to handle MulterError"
+        source: "https://github.com/expressjs/multer#error-handling"
+
+postconditions:
+  file-size-limit:
+    description: "Should configure limits option to prevent DoS via large file uploads"
+    severity: warning
+    rationale: "Unlimited file sizes can exhaust disk space or memory"
+    source: "https://github.com/expressjs/multer#limits"
+
+  file-filter:
+    description: "Should use fileFilter to validate file types and prevent malicious uploads"
+    severity: warning
+    rationale: "Without file type validation, users can upload executables or scripts"
+    source: "https://github.com/expressjs/multer#filefilter"
+
+# Category: middleware
+# Latest version: 2.0.2
+# Generated: 2026-02-26

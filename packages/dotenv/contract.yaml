@@ -1,0 +1,43 @@
+package: dotenv
+semver: ^16.0.0 || ^17.0.0
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+detection:
+  type_names:
+    - DotenvConfigOptions
+    - DotenvConfigOutput
+    - DotenvParseOutput
+
+functions:
+  - name: config
+    import_path: "dotenv"
+    description: "Loads .env file into process.env"
+    postconditions:
+      - id: config-no-error-handling
+        description: "Must check config().error for file reading or parsing errors"
+        severity: warning
+        rationale: "config() returns {error} when .env file is missing or malformed, causing undefined env vars"
+        source: "https://github.com/motdotla/dotenv#usage"
+
+  - name: parse
+    import_path: "dotenv"
+    description: "Parses .env file content into object"
+    postconditions:
+      - id: parse-no-error-handling
+        description: "Must wrap parse() in try-catch to handle malformed .env content"
+        severity: error
+        rationale: "parse() throws SyntaxError on malformed .env files"
+        source: "https://github.com/motdotla/dotenv#parse"
+
+postconditions:
+  missing-env-check:
+    description: "Should validate required environment variables exist after loading"
+    severity: warning
+    rationale: "Missing .env file or variables causes runtime errors when accessing process.env properties"
+    source: "https://github.com/motdotla/dotenv#what-happens-to-environment-variables-that-were-already-set"
+
+# Category: configuration
+# Latest version: 17.3.1
+# Generated: 2026-02-26

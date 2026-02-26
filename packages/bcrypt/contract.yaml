@@ -1,0 +1,51 @@
+package: bcrypt
+semver: ^5.0.0 || ^6.0.0
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+detection:
+  type_names:
+    - HashOptions
+
+functions:
+  - name: hash
+    import_path: "bcrypt"
+    description: "Hashes a password using bcrypt algorithm"
+    postconditions:
+      - id: hash-no-error-handling
+        description: "Must wrap hash() in try-catch to handle hashing errors"
+        severity: error
+        rationale: "hash() can throw errors for invalid inputs or salt generation failures"
+        source: "https://github.com/kelektiv/node.bcrypt.js#usage"
+
+  - name: compare
+    import_path: "bcrypt"
+    description: "Compares password with hash"
+    postconditions:
+      - id: compare-no-error-handling
+        description: "Must wrap compare() in try-catch to handle comparison errors"
+        severity: error
+        rationale: "compare() can throw errors for malformed hashes"
+        source: "https://github.com/kelektiv/node.bcrypt.js#usage"
+
+  - name: genSalt
+    import_path: "bcrypt"
+    description: "Generates salt for hashing"
+    postconditions:
+      - id: gensalt-no-error-handling
+        description: "Must wrap genSalt() in try-catch to handle generation errors"
+        severity: warning
+        rationale: "genSalt() can fail due to system entropy issues"
+        source: "https://github.com/kelektiv/node.bcrypt.js#usage"
+
+postconditions:
+  timing-attack-protection:
+    description: "Always use compare() instead of manual comparison to prevent timing attacks"
+    severity: error
+    rationale: "Manual string comparison is vulnerable to timing attacks"
+    source: "https://github.com/kelektiv/node.bcrypt.js#a-note-on-timing-attacks"
+
+# Category: security
+# Latest version: 6.0.0
+# Generated: 2026-02-26
