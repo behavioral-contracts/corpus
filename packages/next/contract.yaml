@@ -1,0 +1,28 @@
+package: next
+semver: ^16.0.0
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-25"
+
+detection:
+  type_names:
+    - NextRequest
+    - NextResponse
+
+functions:
+  - name: GET
+    import_path: "next/server"
+    description: "API route handler"
+    postconditions:
+      - id: route-handler-no-error-handling
+        description: "API route handlers must handle async errors"
+        severity: error
+        rationale: "Unhandled errors return 500 with stack traces"
+        source: "https://nextjs.org/docs/app/building-your-application/routing/route-handlers"
+
+postconditions:
+  error-handling:
+    description: "Must wrap async operations in route handlers"
+    severity: error
+    rationale: "Unhandled errors expose stack traces and crash requests"
+    source: "https://nextjs.org/"

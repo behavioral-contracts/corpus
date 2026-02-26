@@ -1,0 +1,28 @@
+package: joi
+semver: ^18.0.0
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-25"
+
+detection:
+  type_names:
+    - Schema
+    - ValidationResult
+
+functions:
+  - name: validate
+    import_path: "joi"
+    description: "Validates data against schema"
+    postconditions:
+      - id: validate-no-error-handling
+        description: "Must handle validation errors from validate()"
+        severity: error
+        rationale: "Validation failures throw errors that crash application"
+        source: "https://joi.dev/api/"
+
+postconditions:
+  error-handling:
+    description: "Must handle validation errors"
+    severity: error
+    rationale: "Validation errors are expected and must be handled gracefully"
+    source: "https://joi.dev/"

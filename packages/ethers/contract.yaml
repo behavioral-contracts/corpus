@@ -1,0 +1,39 @@
+package: ethers
+semver: ^6.0.0
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-25"
+
+detection:
+  type_names:
+    - Provider
+    - Contract
+    - Wallet
+
+functions:
+  - name: getBalance
+    import_path: "ethers"
+    description: "Gets account balance from blockchain"
+    postconditions:
+      - id: getbalance-no-error-handling
+        description: "Must wrap provider calls in try-catch"
+        severity: error
+        rationale: "Network calls can fail due to RPC errors"
+        source: "https://docs.ethers.org/"
+
+  - name: sendTransaction
+    import_path: "ethers"
+    description: "Sends transaction to blockchain"
+    postconditions:
+      - id: sendtransaction-no-error-handling
+        description: "Must handle transaction errors"
+        severity: error
+        rationale: "Transactions can fail due to gas, nonce, or network errors"
+        source: "https://docs.ethers.org/"
+
+postconditions:
+  error-handling:
+    description: "Must wrap blockchain operations in try-catch"
+    severity: error
+    rationale: "Network and transaction errors are common"
+    source: "https://docs.ethers.org/"
