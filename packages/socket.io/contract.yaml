@@ -1,0 +1,44 @@
+package: socket.io
+semver: ^4.0.0
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-25"
+
+detection:
+  type_names:
+    - Server
+    - Socket
+
+functions:
+  - name: emit
+    import_path: "socket.io"
+    description: "Emits an event to connected clients"
+    postconditions:
+      - id: emit-no-error-handling
+        description: "Should handle emit errors in error event listeners"
+        severity: warning
+        rationale: "Emit can fail if client disconnected or data serialization fails"
+        source: "https://socket.io/docs/v4/emitting-events/"
+
+  - name: on
+    import_path: "socket.io"
+    description: "Registers event handler"
+    postconditions:
+      - id: on-handler-no-error-handling
+        description: "Event handlers must wrap async operations in try-catch"
+        severity: error
+        rationale: "Unhandled errors in event handlers crash the server"
+        source: "https://socket.io/docs/v4/listening-to-events/"
+
+postconditions:
+  error-handling:
+    description: "Must wrap async operations in event handlers with try-catch"
+    severity: error
+    rationale: "Unhandled promise rejections in event handlers crash the server"
+    source: "https://socket.io/docs/v4/"
+
+  connection-management:
+    description: "Should handle disconnect events and cleanup resources"
+    severity: warning
+    rationale: "Prevents memory leaks from uncleaned connection resources"
+    source: "https://socket.io/docs/v4/server-api/"
