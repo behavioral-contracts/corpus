@@ -1,5 +1,5 @@
 package: joi
-semver: ^18.0.0
+semver: ">=18.0.0 <19.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-25"
@@ -14,15 +14,19 @@ functions:
     import_path: "joi"
     description: "Validates data against schema"
     postconditions:
-      - id: validate-no-error-handling
-        description: "Must handle validation errors from validate()"
-        severity: error
-        rationale: "Validation failures throw errors that crash application"
+      - id: validate-throws-error
+        condition: "data fails validation (missing required field, type mismatch, constraint violation) and abortEarly is true"
+        throws: "ValidationError with details about first validation failure"
+        required_handling: "Caller MUST wrap validate() in try-catch to handle validation errors OR use {abortEarly: false} option and check result.error. Validation failures are expected for user input and must be handled gracefully."
         source: "https://joi.dev/api/"
+        severity: error
+      - id: validate-returns-error
+        condition: "data fails validation and abortEarly is false"
+        returns: "{error: ValidationError, value: any} - error contains all validation failures"
+        required_handling: "Caller MUST check result.error before using result.value. Use if (result.error) to detect validation failures and handle appropriately (return 400 error, show user feedback, etc)."
+        source: "https://joi.dev/api/"
+        severity: error
 
-postconditions:
-  error-handling:
-    description: "Must handle validation errors"
-    severity: error
-    rationale: "Validation errors are expected and must be handled gracefully"
-    source: "https://joi.dev/"
+# Category: validation
+# Latest version: 17.13.3
+# Generated: 2026-02-25

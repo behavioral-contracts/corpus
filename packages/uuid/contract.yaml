@@ -1,5 +1,5 @@
 package: uuid
-semver: ^9.0.0 || ^10.0.0 || ^11.0.0 || ^12.0.0 || ^13.0.0
+semver: ">=9.0.0 <14.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
@@ -15,18 +15,18 @@ functions:
     import_path: "uuid"
     description: "Generates a random UUID v4"
     postconditions:
-      - id: v4-validation
-        description: "Should validate UUID format when parsing user input"
-        severity: warning
-        rationale: "User-provided UUIDs may be malformed or malicious"
+      - id: v4-returns-valid-uuid
+        condition: "called with valid or no arguments"
+        returns: "string containing valid UUID v4 format"
+        required_handling: "When accepting UUID from user input, caller SHOULD use validate() to verify format before using in database queries or business logic. Malformed UUIDs can cause SQL errors or security issues."
         source: "https://github.com/uuidjs/uuid#uuidvalidatestr"
+        severity: warning
 
-postconditions:
-  uuid-validation:
-    description: "Use validate() to check UUID format before using in database queries"
-    severity: warning
-    rationale: "Malformed UUIDs can cause SQL injection or database errors"
+edge_cases:
+  - id: user-input-validation
+    description: "Use validate() to check UUID format when parsing user-provided UUIDs before database queries - prevents SQL injection attempts and invalid data errors"
     source: "https://github.com/uuidjs/uuid#uuidvalidatestr"
+    severity: warning
 
 # Category: utility
 # Latest version: 13.0.0

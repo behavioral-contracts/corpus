@@ -1,5 +1,5 @@
 package: graphql
-semver: ^16.0.0
+semver: ">=16.0.0 <17.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
@@ -15,38 +15,40 @@ functions:
     import_path: "graphql"
     description: "Executes a GraphQL query"
     postconditions:
-      - id: execute-no-error-handling
-        description: "Must check execute() result for errors before accessing data"
-        severity: error
-        rationale: "execute() returns {errors, data} - errors array contains resolver failures"
+      - id: execute-resolver-errors
+        condition: "resolver throws error or promise rejects (database error, validation error, network error)"
+        returns: "{errors: GraphQLError[], data: null | partial} - errors array contains resolver failures"
+        required_handling: "Caller MUST check result.errors array before accessing result.data. Resolver errors are returned in errors array, not thrown. Use if (result.errors) to detect failures and handle appropriately."
         source: "https://graphql.org/graphql-js/execution/#execute"
+        severity: error
 
   - name: parse
     import_path: "graphql"
     description: "Parses GraphQL query string into AST"
     postconditions:
-      - id: parse-no-error-handling
-        description: "Must wrap parse() in try-catch to handle syntax errors"
-        severity: error
-        rationale: "parse() throws GraphQLError for invalid query syntax"
+      - id: parse-syntax-error
+        condition: "query string has syntax error (invalid GraphQL syntax, malformed query)"
+        throws: "GraphQLError with syntax error details and location"
+        required_handling: "Caller MUST wrap parse() in try-catch to handle syntax errors. Invalid query syntax throws GraphQLError that crashes application if unhandled."
         source: "https://graphql.org/graphql-js/language/#parse"
+        severity: error
 
   - name: validate
     import_path: "graphql"
     description: "Validates GraphQL query against schema"
     postconditions:
-      - id: validate-errors-unchecked
-        description: "Must check validate() return value for validation errors"
-        severity: error
-        rationale: "validate() returns array of errors - empty array means valid query"
+      - id: validate-schema-errors
+        condition: "query violates schema rules (unknown field, type mismatch, invalid argument)"
+        returns: "GraphQLError[] - array of validation errors (empty array means valid)"
+        required_handling: "Caller MUST check if validate() returns non-empty array before executing query. Validation errors indicate query will fail - check if (errors.length > 0) and handle before execution."
         source: "https://graphql.org/graphql-js/validation/#validate"
+        severity: error
 
-postconditions:
-  resolver-error-handling:
-    description: "GraphQL resolvers should handle errors and return proper GraphQLError"
-    severity: error
-    rationale: "Unhandled resolver errors expose internal details to clients"
+edge_cases:
+  - id: resolver-error-masking
+    description: "GraphQL resolvers should handle errors and return proper GraphQLError instances - uncaught errors expose internal stack traces to clients unless formatError is configured"
     source: "https://graphql.org/learn/execution/#handling-errors"
+    severity: error
 
 # Category: api
 # Latest version: 16.13.0

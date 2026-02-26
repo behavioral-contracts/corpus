@@ -15,7 +15,10 @@ functions:
     description: "Emits an event to connected clients"
     postconditions:
       - id: emit-no-error-handling
+        condition: "emit fails due to disconnected client or serialization error"
+        throws: "Error may be thrown or silently fail"
         description: "Should handle emit errors in error event listeners"
+        required_handling: "Register 'error' event listener or wrap emit in try-catch when using acknowledgement callbacks"
         severity: warning
         rationale: "Emit can fail if client disconnected or data serialization fails"
         source: "https://socket.io/docs/v4/emitting-events/"
@@ -25,20 +28,10 @@ functions:
     description: "Registers event handler"
     postconditions:
       - id: on-handler-no-error-handling
+        condition: "async operation within event handler throws"
+        throws: "Unhandled promise rejection crashes server"
         description: "Event handlers must wrap async operations in try-catch"
+        required_handling: "Wrap all async operations inside event handlers with try-catch blocks"
         severity: error
         rationale: "Unhandled errors in event handlers crash the server"
         source: "https://socket.io/docs/v4/listening-to-events/"
-
-postconditions:
-  error-handling:
-    description: "Must wrap async operations in event handlers with try-catch"
-    severity: error
-    rationale: "Unhandled promise rejections in event handlers crash the server"
-    source: "https://socket.io/docs/v4/"
-
-  connection-management:
-    description: "Should handle disconnect events and cleanup resources"
-    severity: warning
-    rationale: "Prevents memory leaks from uncleaned connection resources"
-    source: "https://socket.io/docs/v4/server-api/"

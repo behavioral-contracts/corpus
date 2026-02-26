@@ -1,5 +1,5 @@
 package: bcrypt
-semver: ^5.0.0 || ^6.0.0
+semver: ">=5.0.0 <7.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
@@ -12,40 +12,41 @@ functions:
   - name: hash
     import_path: "bcrypt"
     description: "Hashes a password using bcrypt algorithm"
+
     postconditions:
-      - id: hash-no-error-handling
-        description: "Must wrap hash() in try-catch to handle hashing errors"
-        severity: error
-        rationale: "hash() can throw errors for invalid inputs or salt generation failures"
+      - id: hash-throws-on-error
+        condition: "invalid input or salt generation fails"
+        throws: "Error"
+        required_handling: "Caller MUST wrap hash() in try-catch to handle hashing errors"
         source: "https://github.com/kelektiv/node.bcrypt.js#usage"
+        severity: error
 
   - name: compare
     import_path: "bcrypt"
-    description: "Compares password with hash"
+    description: "Compares password with hash using constant-time comparison"
+
     postconditions:
-      - id: compare-no-error-handling
-        description: "Must wrap compare() in try-catch to handle comparison errors"
-        severity: error
-        rationale: "compare() can throw errors for malformed hashes"
+      - id: compare-throws-on-error
+        condition: "hash is malformed or comparison fails"
+        throws: "Error"
+        required_handling: "Caller MUST wrap compare() in try-catch to handle comparison errors"
         source: "https://github.com/kelektiv/node.bcrypt.js#usage"
+        severity: error
+
+    edge_cases:
+      - id: timing-attack-protection
+        description: "Always use compare() instead of manual string comparison to prevent timing attacks. Manual comparison leaks hash information through execution time."
+        source: "https://github.com/kelektiv/node.bcrypt.js#a-note-on-timing-attacks"
+        severity: warning
 
   - name: genSalt
     import_path: "bcrypt"
     description: "Generates salt for hashing"
+
     postconditions:
-      - id: gensalt-no-error-handling
-        description: "Must wrap genSalt() in try-catch to handle generation errors"
-        severity: warning
-        rationale: "genSalt() can fail due to system entropy issues"
+      - id: gensalt-throws-on-error
+        condition: "system entropy unavailable or rounds invalid"
+        throws: "Error"
+        required_handling: "Caller SHOULD wrap genSalt() in try-catch to handle generation errors"
         source: "https://github.com/kelektiv/node.bcrypt.js#usage"
-
-postconditions:
-  timing-attack-protection:
-    description: "Always use compare() instead of manual comparison to prevent timing attacks"
-    severity: error
-    rationale: "Manual string comparison is vulnerable to timing attacks"
-    source: "https://github.com/kelektiv/node.bcrypt.js#a-note-on-timing-attacks"
-
-# Category: security
-# Latest version: 6.0.0
-# Generated: 2026-02-26
+        severity: warning

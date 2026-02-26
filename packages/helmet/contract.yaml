@@ -1,5 +1,5 @@
 package: helmet
-semver: ^7.0.0 || ^8.0.0
+semver: ">=7.0.0 <9.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
@@ -12,20 +12,22 @@ functions:
   - name: helmet
     import_path: "helmet"
     description: "Middleware that sets security headers"
+
     postconditions:
-      - id: helmet-missing-csp
-        description: "Should configure Content-Security-Policy for XSS protection"
-        severity: warning
-        rationale: "Default CSP may be too permissive for your application"
+      - id: helmet-returns-middleware
+        condition: "helmet() is called"
+        returns: "Express middleware function that sets security headers"
+        required_handling: "None - helmet middleware does not throw errors in normal operation"
+        source: "https://helmetjs.github.io/"
+        severity: info
+
+    edge_cases:
+      - id: csp-configuration
+        description: "Default Content-Security-Policy may be too permissive. Configure CSP directives specific to your application to prevent XSS attacks."
         source: "https://helmetjs.github.io/#content-security-policy"
+        severity: warning
 
-postconditions:
-  security-headers:
-    description: "helmet() should be applied early in middleware chain"
-    severity: warning
-    rationale: "Security headers must be set before other middleware processes requests"
-    source: "https://helmetjs.github.io/"
-
-# Category: security
-# Latest version: 8.1.0
-# Generated: 2026-02-26
+      - id: middleware-order
+        description: "helmet() should be applied early in middleware chain before other middleware processes requests"
+        source: "https://helmetjs.github.io/"
+        severity: info

@@ -1,5 +1,5 @@
 package: "@nestjs/common"
-semver: ^10.0.0 || ^11.0.0
+semver: ">=10.0.0 <12.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
@@ -16,28 +16,29 @@ functions:
     import_path: "@nestjs/common"
     description: "Decorator for dependency injection"
     postconditions:
-      - id: injectable-constructor-errors
-        description: "Injectable class constructors should handle initialization errors"
-        severity: warning
-        rationale: "Constructor errors during DI can crash application startup"
+      - id: injectable-constructor-error
+        condition: "constructor throws error during dependency injection (connection failure, initialization error)"
+        throws: "Error that prevents application startup"
+        required_handling: "Injectable class constructors SHOULD handle initialization errors gracefully or throw descriptive errors. Constructor errors during DI crash application startup with unclear error messages."
         source: "https://docs.nestjs.com/providers"
+        severity: warning
 
   - name: Controller
     import_path: "@nestjs/common"
     description: "Decorator for route controllers"
     postconditions:
-      - id: controller-route-errors
-        description: "Controller route handlers must handle async errors"
-        severity: error
-        rationale: "Unhandled async errors in routes crash the application"
+      - id: controller-async-handler-error
+        condition: "async route handler throws error or promise rejects"
+        throws: "Error propagated to exception filter or default error handler"
+        required_handling: "Controller route handlers MUST handle async errors with try-catch or let NestJS exception filters handle them. Unhandled async errors crash application if no exception filter is configured."
         source: "https://docs.nestjs.com/exception-filters"
+        severity: error
 
-postconditions:
-  exception-filters:
-    description: "Use ExceptionFilter for centralized error handling"
-    severity: warning
-    rationale: "Exception filters provide consistent error handling across the application"
+edge_cases:
+  - id: exception-filter-pattern
+    description: "Use @UseFilters() with custom ExceptionFilter for centralized error handling - prevents inconsistent error responses and provides proper error formatting"
     source: "https://docs.nestjs.com/exception-filters#exception-filters-1"
+    severity: warning
 
 # Category: framework
 # Latest version: 11.1.14

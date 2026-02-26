@@ -15,14 +15,10 @@ functions:
     description: "API route handler"
     postconditions:
       - id: route-handler-no-error-handling
+        condition: "async operation in route handler throws"
+        throws: "Unhandled error returns 500 with stack trace exposed"
         description: "API route handlers must handle async errors"
+        required_handling: "Wrap async operations in try-catch and return appropriate error responses"
         severity: error
-        rationale: "Unhandled errors return 500 with stack traces"
+        rationale: "Unhandled errors return 500 with stack traces exposed in response"
         source: "https://nextjs.org/docs/app/building-your-application/routing/route-handlers"
-
-postconditions:
-  error-handling:
-    description: "Must wrap async operations in route handlers"
-    severity: error
-    rationale: "Unhandled errors expose stack traces and crash requests"
-    source: "https://nextjs.org/"

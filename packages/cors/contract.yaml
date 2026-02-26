@@ -1,5 +1,5 @@
 package: cors
-semver: ^2.8.0
+semver: ">=2.8.0 <3.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
@@ -13,20 +13,22 @@ functions:
   - name: cors
     import_path: "cors"
     description: "Middleware for enabling CORS"
+
     postconditions:
-      - id: cors-wildcard-origin
-        description: "Should not use origin: '*' in production with credentials"
-        severity: warning
-        rationale: "Wildcard origin with credentials is insecure and not allowed by browsers"
+      - id: cors-returns-middleware
+        condition: "cors() is called"
+        returns: "Express middleware function that sets CORS headers"
+        required_handling: "None - cors middleware does not throw errors in normal operation"
+        source: "https://github.com/expressjs/cors"
+        severity: info
+
+    edge_cases:
+      - id: wildcard-with-credentials
+        description: "Do not use origin: '*' with credentials: true. This is insecure and blocked by browsers. Wildcard origin exposes credentials to all domains."
         source: "https://github.com/expressjs/cors#configuration-options"
+        severity: warning
 
-postconditions:
-  cors-configuration:
-    description: "Should explicitly configure origin and credentials options"
-    severity: warning
-    rationale: "Default CORS settings may be too permissive for production"
-    source: "https://github.com/expressjs/cors#configuring-cors"
-
-# Category: middleware
-# Latest version: 2.8.6
-# Generated: 2026-02-26
+      - id: production-configuration
+        description: "Explicitly configure origin and credentials options for production. Default CORS settings may be too permissive."
+        source: "https://github.com/expressjs/cors#configuring-cors"
+        severity: info

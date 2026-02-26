@@ -1,5 +1,5 @@
 package: passport
-semver: ^0.7.0
+semver: ">=0.7.0 <1.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
@@ -15,18 +15,24 @@ functions:
     import_path: "passport"
     description: "Middleware for authenticating requests"
     postconditions:
-      - id: authenticate-no-error-handling
-        description: "Must handle authentication failures and errors in callback"
+      - id: authenticate-failure
+        condition: "authentication fails (invalid credentials, missing user, strategy error)"
+        returns: "middleware that may call callback with error or fail object"
+        required_handling: "Caller MUST handle authentication failures in callback or error middleware. Use custom callback (req, res, next) => passport.authenticate('strategy', (err, user, info) => {...}) to handle errors, missing users, and validation failures."
+        source: "https://www.passportjs.org/docs/authenticate/"
         severity: error
-        rationale: "Authentication can fail due to invalid credentials, network errors, or database issues"
-        source: "http://www.passportjs.org/docs/authenticate/"
+      - id: authenticate-strategy-error
+        condition: "strategy encounters error (database down, network timeout, invalid configuration)"
+        returns: "middleware that calls callback with error as first argument"
+        required_handling: "Caller MUST handle strategy errors in callback or Express error handler. Check if (err) in custom callback and forward to next(err) for centralized error handling."
+        source: "https://www.passportjs.org/docs/authenticate/"
+        severity: error
 
-postconditions:
-  strategy-error-handling:
-    description: "Custom strategies must properly handle and propagate errors"
+edge_cases:
+  - id: custom-strategy-errors
+    description: "Custom strategies must properly call done(err) or done(null, false, info) to propagate errors - uncaught errors in strategy crash application"
+    source: "https://www.passportjs.org/packages/passport-strategy/"
     severity: error
-    rationale: "Strategy errors can crash application if not handled properly"
-    source: "http://www.passportjs.org/packages/passport-strategy/"
 
 # Category: authentication
 # Latest version: 0.7.0

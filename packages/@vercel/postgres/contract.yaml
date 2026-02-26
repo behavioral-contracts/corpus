@@ -1,4 +1,4 @@
-package: @vercel/postgres
+package: "@vercel/postgres"
 semver: ^0.10.0
 contract_version: "1.0.0"
 maintainer: "corpus-team"
@@ -16,7 +16,10 @@ functions:
     description: "Tagged template function for executing SQL queries"
     postconditions:
       - id: sql-query-no-error-handling
+        condition: "SQL query fails due to syntax error, connection issue, or constraint violation"
+        throws: "Database error with error code and message"
         description: "Must wrap sql queries in try-catch to handle SQL errors"
+        required_handling: "Wrap sql queries in try-catch blocks to handle database errors appropriately"
         severity: error
         rationale: "SQL queries can fail due to syntax errors, connection issues, or constraint violations"
         source: "https://vercel.com/docs/storage/vercel-postgres"
@@ -26,7 +29,10 @@ functions:
     description: "Executes a SQL query on database connection"
     postconditions:
       - id: query-no-error-handling
+        condition: "Query fails due to connection issue or SQL error"
+        throws: "Database error"
         description: "Must wrap query() in try-catch to handle database errors"
+        required_handling: "Wrap query() calls in try-catch blocks to handle connection and SQL errors"
         severity: error
         rationale: "Query operations can fail due to connection issues or SQL errors"
         source: "https://vercel.com/docs/storage/vercel-postgres"
@@ -36,24 +42,13 @@ functions:
     description: "Obtains a client from the connection pool"
     postconditions:
       - id: connect-no-cleanup
+        condition: "Client obtained from pool is not released"
+        throws: "Connection pool exhaustion on subsequent queries"
         description: "Must release client in finally block after connect()"
+        required_handling: "Call client.release() in a finally block to ensure connection is returned to pool"
         severity: error
         rationale: "Unreleased clients cause connection pool exhaustion"
         source: "https://vercel.com/kb/guide/connection-pooling-with-functions"
-
-# Common postconditions for all Vercel Postgres operations
-postconditions:
-  error-handling:
-    description: "Must wrap database operations in try-catch blocks to handle SQL and connection errors"
-    severity: error
-    rationale: "Database operations can fail due to SQL errors, connection issues, or constraint violations, causing application crashes"
-    source: "https://vercel.com/docs/storage/vercel-postgres/vercel-postgres-error-codes"
-
-  connection-cleanup:
-    description: "Must release pooled connections in finally blocks to prevent pool exhaustion"
-    severity: error
-    rationale: "Unreleased connections exhaust the connection pool, causing future queries to hang or fail"
-    source: "https://vercel.com/kb/guide/connection-pooling-with-functions"
 
 # Category: database
 # Latest version: 0.10.0

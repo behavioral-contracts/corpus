@@ -1,5 +1,5 @@
 package: typeorm
-semver: ^0.3.0
+semver: ">=0.3.0 <1.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
@@ -16,38 +16,40 @@ functions:
     import_path: "typeorm"
     description: "Finds entities matching criteria"
     postconditions:
-      - id: find-no-error-handling
-        description: "Must wrap repository operations in try-catch for database errors"
-        severity: error
-        rationale: "Database operations can fail due to connection issues or query errors"
+      - id: find-query-error
+        condition: "query fails (connection lost, invalid relation, timeout, syntax error)"
+        throws: "QueryFailedError or connection error"
+        required_handling: "Caller MUST wrap repository.find() in try-catch to handle database errors. Connection failures and invalid queries crash application if unhandled."
         source: "https://typeorm.io/find-options"
+        severity: error
 
   - name: save
     import_path: "typeorm"
     description: "Saves entity to database"
     postconditions:
-      - id: save-no-error-handling
-        description: "Must wrap save() in try-catch to handle constraint violations"
-        severity: error
-        rationale: "save() can fail due to validation errors, unique constraints, or foreign key violations"
+      - id: save-constraint-violation
+        condition: "save violates constraint (unique, foreign key, validation, type mismatch)"
+        throws: "QueryFailedError with constraint violation details"
+        required_handling: "Caller MUST wrap save() in try-catch to handle constraint violations and validation errors. Unique violations, foreign key errors, and validation failures crash application if unhandled."
         source: "https://typeorm.io/repository-api"
+        severity: error
 
   - name: transaction
     import_path: "typeorm"
     description: "Executes operations within a transaction"
     postconditions:
-      - id: transaction-no-error-handling
-        description: "Must handle transaction errors to ensure rollback"
-        severity: error
-        rationale: "Unhandled errors in transactions can leave database in inconsistent state"
+      - id: transaction-error
+        condition: "operation within transaction fails (constraint violation, deadlock, connection lost)"
+        throws: "Error causing automatic rollback"
+        required_handling: "Caller MUST wrap transaction operations in try-catch to handle errors and ensure rollback. Unhandled errors leave database in inconsistent state if transaction partially commits."
         source: "https://typeorm.io/transactions"
+        severity: error
 
-postconditions:
-  connection-lifecycle:
-    description: "Must properly initialize and destroy DataSource connections"
-    severity: warning
-    rationale: "Uninitialized or unclosed connections cause application failures"
+edge_cases:
+  - id: datasource-initialization
+    description: "DataSource.initialize() must be called before any database operations and can fail - must wrap in try-catch. DataSource.destroy() must be called on shutdown to close connections."
     source: "https://typeorm.io/data-source"
+    severity: warning
 
 # Category: database
 # Latest version: 0.3.28

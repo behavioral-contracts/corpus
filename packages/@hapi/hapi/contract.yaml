@@ -1,5 +1,5 @@
 package: "@hapi/hapi"
-semver: ^21.0.0
+semver: ">=21.0.0 <22.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
@@ -16,28 +16,29 @@ functions:
     import_path: "@hapi/hapi"
     description: "Registers route handler"
     postconditions:
-      - id: route-handler-errors
-        description: "Route handlers should handle errors and return proper error responses"
-        severity: error
-        rationale: "Unhandled errors in route handlers can crash the server"
+      - id: route-handler-error
+        condition: "route handler throws error or promise rejects (database error, validation error)"
+        throws: "Error causing 500 Internal Server Error response if not handled"
+        required_handling: "Route handlers MUST handle errors with try-catch or return error via h.response().code() to prevent server crash and provide proper error responses. Use h.response(error).code(statusCode) for controlled error responses."
         source: "https://hapi.dev/api/?v=21.4.6#-serverrouteroute"
+        severity: error
 
   - name: start
     import_path: "@hapi/hapi"
     description: "Starts the server"
     postconditions:
-      - id: start-no-error-handling
-        description: "Must wrap server.start() in try-catch to handle startup errors"
-        severity: error
-        rationale: "Server startup can fail due to port conflicts or configuration errors"
+      - id: start-error
+        condition: "server fails to start (port in use, invalid configuration, plugin error)"
+        throws: "Error with startup failure details"
+        required_handling: "Caller MUST wrap server.start() in try-catch to handle startup errors. Port conflicts, plugin failures, and configuration errors crash application if unhandled."
         source: "https://hapi.dev/api/?v=21.4.6#-async-serverstartoptionsoptions"
+        severity: error
 
-postconditions:
-  error-handling:
-    description: "Configure onPreResponse extension for centralized error handling"
-    severity: warning
-    rationale: "Centralized error handling ensures consistent error responses"
+edge_cases:
+  - id: centralized-error-handling
+    description: "Configure onPreResponse extension point for centralized error handling - ensures consistent error responses across all routes and proper error formatting"
     source: "https://hapi.dev/api/?v=21.4.6#-serverextoptions"
+    severity: warning
 
 # Category: framework
 # Latest version: 21.4.6

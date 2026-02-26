@@ -1,5 +1,5 @@
 package: jsonwebtoken
-semver: ^9.0.0
+semver: ">=9.0.0 <10.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
@@ -15,37 +15,36 @@ functions:
   - name: verify
     import_path: "jsonwebtoken"
     description: "Verifies JWT token signature and returns decoded payload"
-    postconditions:
-      - id: verify-no-error-handling
-        description: "Must wrap verify() in try-catch to handle invalid tokens"
-        severity: error
-        rationale: "verify() throws JsonWebTokenError, TokenExpiredError, NotBeforeError on invalid tokens"
-        source: "https://github.com/auth0/node-jsonwebtoken#jwtverifytoken-secretorpublickey-options-callback"
 
-      - id: verify-missing-algorithm
-        description: "Must specify algorithms option in verify() to prevent algorithm confusion (CVE-2015-9235)"
+    postconditions:
+      - id: verify-throws-on-invalid-token
+        condition: "token is invalid, expired, or signature verification fails"
+        throws: "JsonWebTokenError, TokenExpiredError, or NotBeforeError"
+        required_handling: "Caller MUST wrap verify() in try-catch to handle invalid tokens"
+        source: "https://github.com/auth0/node-jsonwebtoken#jwtverifytoken-secretorpublickey-options-callback"
         severity: error
-        rationale: "Without algorithms specified, attacker can switch from RS256 to HS256 and forge tokens"
+
+      - id: verify-algorithm-confusion-cve
+        condition: "algorithms option not specified in verify() call"
+        throws: "None (silent vulnerability - attacker can forge tokens)"
+        required_handling: "Caller MUST specify algorithms option in verify() to prevent CVE-2015-9235. Without algorithms specified, attacker can switch from RS256 to HS256 and forge tokens using public key."
         source: "https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/"
+        severity: error
+
+    edge_cases:
+      - id: algorithm-none-attack
+        description: "If algorithms includes 'none', tokens with no signature will be accepted"
+        source: "https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/"
+        severity: warning
 
   - name: sign
     import_path: "jsonwebtoken"
     description: "Creates and signs a JWT token"
+
     postconditions:
-      - id: sign-no-error-handling
-        description: "Must wrap sign() in try-catch for synchronous signing errors"
-        severity: warning
-        rationale: "sign() can throw errors for invalid payloads or options"
+      - id: sign-throws-on-invalid-input
+        condition: "payload or options are invalid"
+        throws: "Error"
+        required_handling: "Caller SHOULD wrap sign() in try-catch for synchronous signing errors"
         source: "https://github.com/auth0/node-jsonwebtoken#jwtsignpayload-secretorprivatekey-options-callback"
-
-postconditions:
-  algorithm-confusion:
-    description: "Always specify algorithms in verify() options to prevent CVE-2015-9235"
-    severity: error
-    rationale: "Algorithm confusion attack allows forging tokens by switching algorithm"
-    source: "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2015-9235"
-
-# Category: authentication
-# CVE: CVE-2015-9235 (algorithm confusion)
-# Latest version: 9.0.3
-# Generated: 2026-02-26
+        severity: warning

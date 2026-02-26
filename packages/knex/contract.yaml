@@ -1,5 +1,5 @@
 package: knex
-semver: ^3.0.0
+semver: ">=3.0.0 <4.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
@@ -15,38 +15,40 @@ functions:
     import_path: "knex"
     description: "Executes SELECT query"
     postconditions:
-      - id: select-no-error-handling
-        description: "Must wrap select queries in try-catch to handle SQL errors"
-        severity: error
-        rationale: "Queries can fail due to syntax errors, connection issues, or constraint violations"
+      - id: select-query-error
+        condition: "query fails (syntax error, connection lost, timeout, invalid table/column)"
+        throws: "Error with query details and database-specific error code"
+        required_handling: "Caller MUST wrap select() in try-catch to handle SQL errors, connection failures, and timeouts. Query errors crash application if unhandled."
         source: "https://knexjs.org/guide/query-builder.html"
+        severity: error
 
   - name: insert
     import_path: "knex"
     description: "Executes INSERT query"
     postconditions:
-      - id: insert-no-error-handling
-        description: "Must wrap insert in try-catch to handle constraint violations"
-        severity: error
-        rationale: "Insert can fail due to unique constraints, foreign key violations, or type mismatches"
+      - id: insert-constraint-violation
+        condition: "insert violates constraint (unique, foreign key, not null, type mismatch)"
+        throws: "Error with constraint violation details and database error code"
+        required_handling: "Caller MUST wrap insert() in try-catch to handle constraint violations. Unique violations, foreign key errors, and type mismatches crash application if unhandled."
         source: "https://knexjs.org/guide/query-builder.html#insert"
+        severity: error
 
   - name: transaction
     import_path: "knex"
     description: "Executes queries within a transaction"
     postconditions:
-      - id: transaction-no-rollback
-        description: "Must handle transaction errors and rollback on failure"
-        severity: error
-        rationale: "Failed transactions must be rolled back to prevent partial data commits"
+      - id: transaction-error
+        condition: "query within transaction fails (constraint violation, deadlock, connection lost)"
+        throws: "Error causing automatic rollback if unhandled"
+        required_handling: "Caller MUST wrap transaction callback in try-catch to handle errors and ensure proper rollback. Unhandled errors may leave database in inconsistent state if transaction partially commits."
         source: "https://knexjs.org/guide/transactions.html"
+        severity: error
 
-postconditions:
-  connection-management:
-    description: "Must call destroy() when application shuts down to close connections"
-    severity: warning
-    rationale: "Unclosed connections can prevent graceful shutdown"
+edge_cases:
+  - id: connection-pool-exhaustion
+    description: "Must call destroy() on knex instance during graceful shutdown to close connection pool - unclosed connections prevent process exit"
     source: "https://knexjs.org/guide/#destroy"
+    severity: warning
 
 # Category: database
 # Latest version: 3.1.0
