@@ -1,0 +1,62 @@
+package: drizzle-orm
+semver: ^0.45.0
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-25"
+
+detection:
+  type_names:
+    - DrizzleDB
+    - PgDatabase
+
+functions:
+  - name: select
+    import_path: "drizzle-orm"
+    description: "Executes a SELECT query"
+    postconditions:
+      - id: select-no-error-handling
+        description: "Must wrap select queries in try-catch"
+        severity: error
+        rationale: "Queries can fail due to connection or SQL errors"
+        source: "https://orm.drizzle.team/docs/select"
+
+  - name: insert
+    import_path: "drizzle-orm"
+    description: "Executes an INSERT query"
+    postconditions:
+      - id: insert-no-error-handling
+        description: "Must wrap insert operations in try-catch"
+        severity: error
+        rationale: "Inserts can fail due to constraints or connection errors"
+        source: "https://orm.drizzle.team/docs/insert"
+
+  - name: update
+    import_path: "drizzle-orm"
+    description: "Executes an UPDATE query"
+    postconditions:
+      - id: update-no-error-handling
+        description: "Must wrap update operations in try-catch"
+        severity: error
+        rationale: "Updates can fail due to constraints or connection errors"
+        source: "https://orm.drizzle.team/docs/update"
+
+  - name: delete
+    import_path: "drizzle-orm"
+    description: "Executes a DELETE query"
+    postconditions:
+      - id: delete-no-error-handling
+        description: "Must wrap delete operations in try-catch"
+        severity: error
+        rationale: "Deletes can fail due to foreign key constraints"
+        source: "https://orm.drizzle.team/docs/delete"
+
+postconditions:
+  error-handling:
+    description: "Must wrap database operations in try-catch blocks"
+    severity: error
+    rationale: "ORM operations can fail due to SQL errors, constraints, or connection issues"
+    source: "https://orm.drizzle.team/"
+
+# Category: database
+# Latest version: 0.45.1
+# Generated: 2026-02-25
