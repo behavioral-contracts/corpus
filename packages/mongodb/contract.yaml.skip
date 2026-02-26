@@ -1,0 +1,88 @@
+package: mongodb
+semver: ">=3.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-25"
+
+# Detection rules for analyzer
+detection:
+  class_names: ["MongoClient", "Db", "Collection"]
+  type_names: ["MongoClient", "Db", "Collection", "MongoClientOptions"]
+  factory_methods: []
+  await_patterns:
+    - ".find("
+    - ".findOne("
+    - ".insertOne("
+    - ".insertMany("
+    - ".updateOne("
+    - ".updateMany("
+    - ".deleteOne("
+    - ".deleteMany("
+    - ".aggregate("
+    - ".countDocuments("
+    - ".createIndex("
+    - ".drop("
+    - ".bulkWrite("
+    - ".collection("
+    - ".connect("
+
+functions:
+  - name: connect
+    import_path: "mongodb"
+    description: "Establishes connection to MongoDB server or cluster"
+
+    postconditions:
+      - id: connection-failure
+        condition: "Network error, authentication failure, or server selection timeout"
+        throws: "MongoNetworkError, MongoServerSelectionError, MongoNetworkTimeoutError, or MongoError"
+        required_handling: >
+          Caller MUST catch connection errors and handle them separately from query errors.
+          Implement retry logic with exponential backoff for transient connection issues.
+          Log connection errors for operations monitoring.
+        source: "https://www.mongodb.com/docs/drivers/node/current/connection-troubleshooting/"
+        severity: error
+
+  - name: find
+    import_path: "mongodb"
+    description: "Queries collection for documents matching filter criteria"
+
+    postconditions:
+      - id: query-failure
+        condition: "Network error, timeout, or invalid query syntax"
+        throws: "MongoServerError, MongoNetworkError, or MongoError"
+        required_handling: >
+          Caller MUST catch query errors.
+          Network errors (MongoNetworkError) may be transient and can be retried.
+          Invalid query errors (MongoServerError) should not be retried.
+        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        severity: error
+
+  - name: findOne
+    import_path: "mongodb"
+    description: "Queries collection for a single document matching filter criteria"
+
+    postconditions:
+      - id: query-failure
+        condition: "Network error, timeout, or invalid query"
+        throws: "MongoServerError, MongoNetworkError, or MongoError"
+        required_handling: >
+          Caller MUST catch query errors.
+          Returns null if no document matches (not an error).
+          Network errors may be transient and retriable.
+        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        severity: error
+
+  - name: insertOne
+    import_path: "mongodb"
+    description: "Inserts a single document into collection"
+
+    postconditions:
+      - id: duplicate-key
+        condition: "Document violates unique index constraint"
+        throws: "MongoServerError with error.code === 11000"
+        required_handling: >
+          Caller MUST catch duplicate key errors (code 11000) and handle gracefully.
+          Extract conflicting field from error message.
+          DO NOT retry without changing the unique field value.
+        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        severity: error

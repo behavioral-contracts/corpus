@@ -43,29 +43,41 @@ functions:
 
       - id: empty-catch-block-silent-failure
         condition: |
-          onSubmit has try-catch but catch block is empty, only logs to console, or doesn't provide user feedback
-        throws: N/A (silent failure)
+          WITHIN a handleSubmit onSubmit callback function, try-catch exists but catch block is empty,
+          only logs to console, or doesn't call setError/toast/user feedback mechanisms
+        throws: N/A (silent failure - users unaware of submission failure)
         required_handling: |
-          Catch blocks MUST provide meaningful user feedback.
+          In form submission handlers (onSubmit callbacks), catch blocks MUST provide user feedback
+          about submission failures. This rule ONLY applies to react-hook-form submission contexts.
 
           Users should be informed when form submission fails through:
-          - Toast notifications
-          - Error messages via setError()
+          - Toast notifications (toast.error, notification APIs)
+          - Form error state via setError()
           - Alert/modal dialogs
-          - Form-level error state
+          - Form-level error display
 
-          Incorrect patterns:
+          Note: Backend logging code, utility functions, and non-form code should NOT trigger this rule.
+          This is specifically for user-facing form submission error handling.
+
+          Incorrect patterns (in onSubmit callbacks):
             catch (error) { }                           // ❌ Empty catch
-            catch (error) { console.log(error); }       // ❌ Only logs
+            catch (error) { console.log(error); }       // ❌ Only logs (no user feedback)
             catch (error) { /* TODO: handle */ }        // ❌ No implementation
 
-          Correct patterns:
+          Correct patterns (in onSubmit callbacks):
             catch (error) {
-              toast.error('Failed to submit form');
+              toast.error('Failed to submit form');     // ✅ User feedback
               setError('root', { message: error.message });
             }
+
+          Acceptable patterns (outside form contexts - should NOT trigger):
+            // Logging code
+            catch (error) { console.error('Log failed:', error); }  // ✅ OK for loggers
+
+            // Backend/API code
+            catch (error) { logger.error(error); }                  // ✅ OK for servers
         source: https://react-hook-form.com/advanced-usage
-        severity: warning
+        severity: info
 
       - id: server-validation-error-not-displayed
         condition: |
