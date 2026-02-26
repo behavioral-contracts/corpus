@@ -1,0 +1,33 @@
+package: undici
+semver: ">=5.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+detection:
+  factory_methods:
+    - request
+    - fetch
+
+functions:
+  - name: request
+    import_path: "undici"
+    description: "Makes HTTP request using undici's low-level API"
+    postconditions:
+      - id: network-error-handling
+        condition: "network failure, DNS error, timeout, connection refused"
+        throws: "Promise rejection with Error"
+        required_handling: "Use try-catch (async/await) or .catch() (promises)"
+        source: "https://www.npmjs.com/package/undici"
+        severity: error
+
+  - name: fetch
+    import_path: "undici"
+    description: "Makes HTTP request using Fetch API (similar to browser fetch)"
+    postconditions:
+      - id: network-error-handling
+        condition: "network failure, DNS error, timeout, connection refused"
+        throws: "Promise rejection with TypeError or network error"
+        required_handling: "Use try-catch (async/await) or .catch() (promises)"
+        source: "https://www.npmjs.com/package/undici"
+        severity: error

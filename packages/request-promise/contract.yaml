@@ -1,0 +1,93 @@
+package: request-promise
+semver: ">=1.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+detection:
+  factory_methods:
+    - default
+    - get
+    - post
+    - put
+    - delete
+    - patch
+    - head
+
+functions:
+  - name: default
+    import_path: "request-promise"
+    description: "Makes HTTP request with promise support (wraps request library)"
+    postconditions:
+      - id: network-error-handling
+        condition: "network failure, DNS error, timeout, connection refused, HTTP errors"
+        throws: "Promise rejection with StatusCodeError or RequestError"
+        required_handling: "Use try-catch (async/await) or .catch() (promises)"
+        source: "https://www.npmjs.com/package/request-promise"
+        severity: error
+
+  - name: get
+    import_path: "request-promise"
+    description: "Makes HTTP GET request"
+    postconditions:
+      - id: network-error-handling
+        condition: "network failure, DNS error, timeout, connection refused, HTTP errors"
+        throws: "Promise rejection with StatusCodeError or RequestError"
+        required_handling: "Use try-catch (async/await) or .catch() (promises)"
+        source: "https://www.npmjs.com/package/request-promise"
+        severity: error
+
+  - name: post
+    import_path: "request-promise"
+    description: "Makes HTTP POST request"
+    postconditions:
+      - id: network-error-handling
+        condition: "network failure, DNS error, timeout, connection refused, HTTP errors"
+        throws: "Promise rejection with StatusCodeError or RequestError"
+        required_handling: "Use try-catch (async/await) or .catch() (promises)"
+        source: "https://www.npmjs.com/package/request-promise"
+        severity: error
+
+  - name: put
+    import_path: "request-promise"
+    description: "Makes HTTP PUT request"
+    postconditions:
+      - id: network-error-handling
+        condition: "network failure, DNS error, timeout, connection refused, HTTP errors"
+        throws: "Promise rejection with StatusCodeError or RequestError"
+        required_handling: "Use try-catch (async/await) or .catch() (promises)"
+        source: "https://www.npmjs.com/package/request-promise"
+        severity: error
+
+  - name: delete
+    import_path: "request-promise"
+    description: "Makes HTTP DELETE request"
+    postconditions:
+      - id: network-error-handling
+        condition: "network failure, DNS error, timeout, connection refused, HTTP errors"
+        throws: "Promise rejection with StatusCodeError or RequestError"
+        required_handling: "Use try-catch (async/await) or .catch() (promises)"
+        source: "https://www.npmjs.com/package/request-promise"
+        severity: error
+
+  - name: patch
+    import_path: "request-promise"
+    description: "Makes HTTP PATCH request"
+    postconditions:
+      - id: network-error-handling
+        condition: "network failure, DNS error, timeout, connection refused, HTTP errors"
+        throws: "Promise rejection with StatusCodeError or RequestError"
+        required_handling: "Use try-catch (async/await) or .catch() (promises)"
+        source: "https://www.npmjs.com/package/request-promise"
+        severity: error
+
+  - name: head
+    import_path: "request-promise"
+    description: "Makes HTTP HEAD request"
+    postconditions:
+      - id: network-error-handling
+        condition: "network failure, DNS error, timeout, connection refused, HTTP errors"
+        throws: "Promise rejection with StatusCodeError or RequestError"
+        required_handling: "Use try-catch (async/await) or .catch() (promises)"
+        source: "https://www.npmjs.com/package/request-promise"
+        severity: error

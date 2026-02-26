@@ -1,0 +1,81 @@
+package: superagent
+semver: ">=1.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+detection:
+  factory_methods:
+    - get
+    - post
+    - put
+    - delete
+    - patch
+    - head
+
+functions:
+  - name: get
+    import_path: "superagent"
+    description: "Makes HTTP GET request"
+    postconditions:
+      - id: network-error-handling
+        condition: "network failure, DNS error, timeout, connection refused"
+        throws: "Promise rejection or Error in callback"
+        required_handling: "Use try-catch (async/await) or .catch() (promises) or error callback"
+        source: "https://www.npmjs.com/package/superagent"
+        severity: error
+
+  - name: post
+    import_path: "superagent"
+    description: "Makes HTTP POST request"
+    postconditions:
+      - id: network-error-handling
+        condition: "network failure, DNS error, timeout, connection refused"
+        throws: "Promise rejection or Error in callback"
+        required_handling: "Use try-catch (async/await) or .catch() (promises) or error callback"
+        source: "https://www.npmjs.com/package/superagent"
+        severity: error
+
+  - name: put
+    import_path: "superagent"
+    description: "Makes HTTP PUT request"
+    postconditions:
+      - id: network-error-handling
+        condition: "network failure, DNS error, timeout, connection refused"
+        throws: "Promise rejection or Error in callback"
+        required_handling: "Use try-catch (async/await) or .catch() (promises) or error callback"
+        source: "https://www.npmjs.com/package/superagent"
+        severity: error
+
+  - name: delete
+    import_path: "superagent"
+    description: "Makes HTTP DELETE request"
+    postconditions:
+      - id: network-error-handling
+        condition: "network failure, DNS error, timeout, connection refused"
+        throws: "Promise rejection or Error in callback"
+        required_handling: "Use try-catch (async/await) or .catch() (promises) or error callback"
+        source: "https://www.npmjs.com/package/superagent"
+        severity: error
+
+  - name: patch
+    import_path: "superagent"
+    description: "Makes HTTP PATCH request"
+    postconditions:
+      - id: network-error-handling
+        condition: "network failure, DNS error, timeout, connection refused"
+        throws: "Promise rejection or Error in callback"
+        required_handling: "Use try-catch (async/await) or .catch() (promises) or error callback"
+        source: "https://www.npmjs.com/package/superagent"
+        severity: error
+
+  - name: head
+    import_path: "superagent"
+    description: "Makes HTTP HEAD request"
+    postconditions:
+      - id: network-error-handling
+        condition: "network failure, DNS error, timeout, connection refused"
+        throws: "Promise rejection or Error in callback"
+        required_handling: "Use try-catch (async/await) or .catch() (promises) or error callback"
+        source: "https://www.npmjs.com/package/superagent"
+        severity: error

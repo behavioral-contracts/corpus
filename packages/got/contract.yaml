@@ -1,0 +1,76 @@
+package: got
+semver: ">=11.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+detection:
+  factory_methods:
+    - default
+
+functions:
+  - name: default
+    import_path: "got"
+    description: "Makes HTTP request (supports all HTTP methods via options or got.get/post/etc)"
+    postconditions:
+      - id: network-error-handling
+        condition: "network failure, DNS error, timeout, connection refused, HTTP errors"
+        throws: "RequestError or HTTPError (Promise rejection)"
+        required_handling: "Use try-catch (async/await) or .catch() (promises)"
+        source: "https://www.npmjs.com/package/got"
+        severity: error
+
+  - name: get
+    import_path: "got"
+    description: "Makes HTTP GET request"
+    postconditions:
+      - id: network-error-handling
+        condition: "network failure, DNS error, timeout, connection refused, HTTP errors"
+        throws: "RequestError or HTTPError (Promise rejection)"
+        required_handling: "Use try-catch (async/await) or .catch() (promises)"
+        source: "https://www.npmjs.com/package/got"
+        severity: error
+
+  - name: post
+    import_path: "got"
+    description: "Makes HTTP POST request"
+    postconditions:
+      - id: network-error-handling
+        condition: "network failure, DNS error, timeout, connection refused, HTTP errors"
+        throws: "RequestError or HTTPError (Promise rejection)"
+        required_handling: "Use try-catch (async/await) or .catch() (promises)"
+        source: "https://www.npmjs.com/package/got"
+        severity: error
+
+  - name: put
+    import_path: "got"
+    description: "Makes HTTP PUT request"
+    postconditions:
+      - id: network-error-handling
+        condition: "network failure, DNS error, timeout, connection refused, HTTP errors"
+        throws: "RequestError or HTTPError (Promise rejection)"
+        required_handling: "Use try-catch (async/await) or .catch() (promises)"
+        source: "https://www.npmjs.com/package/got"
+        severity: error
+
+  - name: delete
+    import_path: "got"
+    description: "Makes HTTP DELETE request"
+    postconditions:
+      - id: network-error-handling
+        condition: "network failure, DNS error, timeout, connection refused, HTTP errors"
+        throws: "RequestError or HTTPError (Promise rejection)"
+        required_handling: "Use try-catch (async/await) or .catch() (promises)"
+        source: "https://www.npmjs.com/package/got"
+        severity: error
+
+  - name: patch
+    import_path: "got"
+    description: "Makes HTTP PATCH request"
+    postconditions:
+      - id: network-error-handling
+        condition: "network failure, DNS error, timeout, connection refused, HTTP errors"
+        throws: "RequestError or HTTPError (Promise rejection)"
+        required_handling: "Use try-catch (async/await) or .catch() (promises)"
+        source: "https://www.npmjs.com/package/got"
+        severity: error
