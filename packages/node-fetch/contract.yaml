@@ -1,0 +1,27 @@
+package: node-fetch
+semver: ">=2.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+detection:
+  factory_methods:
+    - fetch
+
+functions:
+  - name: fetch
+    import_path: "node-fetch"
+    description: "Makes HTTP request and returns Promise that resolves to Response object"
+    postconditions:
+      - id: fetch-rejects-on-network-error
+        condition: "network failure (DNS resolution failure, connection refused, timeout, etc.)"
+        throws: "Promise rejection with FetchError (error.type='system', error.code like ENOTFOUND, ECONNREFUSED, ETIMEDOUT)"
+        required_handling: >
+          Caller MUST use try-catch to handle Promise rejections from fetch().
+          Network-level failures (DNS errors, connection refused, timeouts) reject the Promise.
+          CRITICAL: fetch() does NOT reject on HTTP 4xx/5xx status codes - those are successful
+          responses that must be checked with response.ok. Recommended pattern:
+          try { const res = await fetch(url); if (!res.ok) throw new Error(`HTTP ${res.status}`); }
+          catch (error) { /* handle network errors */ }
+        source: "https://github.com/node-fetch/node-fetch/blob/main/docs/ERROR-HANDLING.md"
+        severity: error
