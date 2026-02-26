@@ -1,0 +1,120 @@
+package: puppeteer
+semver: ">=1.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+detection:
+  type_names:
+    - Browser
+    - Page
+    - ElementHandle
+  factory_methods:
+    - puppeteer
+  class_names:
+    - Puppeteer
+
+functions:
+  - name: launch
+    import_path: "puppeteer"
+    description: "Launches a browser instance"
+    postconditions:
+      - id: launch-rejects-on-error
+        condition: "browser launch fails (timeout, protocol error, missing Chrome)"
+        throws: "Promise rejection with TimeoutError, ProtocolError, or Error"
+        required_handling: >
+          Caller MUST use try-catch to handle Promise rejections from puppeteer.launch().
+          Common failures: timeout (default 30s), protocol errors in Docker/containers,
+          missing Chrome binary. Browser instance MUST be closed in finally block to
+          prevent zombie processes. Use pattern:
+          let browser;
+          try { browser = await puppeteer.launch(); }
+          catch (error) { /* handle */ }
+          finally { if (browser) await browser.close(); }
+        source: "https://pptr.dev/api/puppeteer.puppeteernode.launch"
+        severity: error
+
+  - name: goto
+    import_path: "puppeteer"
+    description: "Navigates page to URL"
+    postconditions:
+      - id: goto-rejects-on-timeout
+        condition: "navigation timeout (default 30s) or network error"
+        throws: "Promise rejection with TimeoutError"
+        required_handling: >
+          Caller MUST use try-catch to handle Promise rejections from page.goto().
+          This is the #1 cause of production failures. Timeouts occur with slow networks,
+          Cloudflare protection, heavy JavaScript pages. CRITICAL: In headless shell mode,
+          HTTP 404/500 do NOT throw - must check response.ok(). Use pattern:
+          const response = await page.goto(url, { timeout: 60000 });
+          if (!response || !response.ok()) throw new Error('Navigation failed');
+        source: "https://pptr.dev/api/puppeteer.page.goto"
+        severity: error
+
+  - name: newPage
+    import_path: "puppeteer"
+    description: "Creates a new browser page"
+    postconditions:
+      - id: newpage-rejects-on-error
+        condition: "page creation timeout or protocol error"
+        throws: "Promise rejection with ProtocolError (Target.createTarget timed out)"
+        required_handling: >
+          Caller MUST use try-catch to handle Promise rejections from browser.newPage().
+          Common in Docker/containers with rapid page creation cycles. Increase
+          protocolTimeout in launch options for containers. Use pattern:
+          try { const page = await browser.newPage(); } catch (error) { /* handle */ }
+        source: "https://pptr.dev/api/puppeteer.browser.newpage"
+        severity: error
+
+  - name: close
+    import_path: "puppeteer"
+    namespace: "browser"
+    description: "Closes browser instance"
+    postconditions:
+      - id: browser-close-must-run
+        condition: "browser instance exists after operations"
+        throws: "May throw Error if browser already closed or connection lost"
+        required_handling: >
+          Browser.close() MUST be called in finally block to prevent zombie Chrome processes.
+          Each zombie process consumes 80-90MB. Accumulation causes memory exhaustion and
+          server crashes. Close can itself throw errors - wrap in try-catch within finally
+          to avoid masking original errors. Use pattern:
+          finally { if (browser) { try { await browser.close(); } catch (e) {} } }
+        source: "https://pptr.dev/api/puppeteer.browser.close"
+        severity: warning
+
+  - name: waitForSelector
+    import_path: "puppeteer"
+    description: "Waits for element to appear"
+    postconditions:
+      - id: waitforselector-rejects-on-timeout
+        condition: "element not found within timeout (default 30s)"
+        throws: "Promise rejection with TimeoutError"
+        required_handling: >
+          Caller MUST use try-catch to handle TimeoutError from page.waitForSelector().
+          Timeouts common when element never appears or takes longer than expected.
+          Consider increasing timeout for slow-loading pages. Use pattern:
+          try { await page.waitForSelector('selector', { timeout: 10000 }); }
+          catch (error) { /* handle */ }
+        source: "https://pptr.dev/api/puppeteer.page.waitforselector"
+        severity: warning
+
+  - name: click
+    import_path: "puppeteer"
+    description: "Clicks an element"
+    postconditions:
+      - id: click-rejects-on-error
+        condition: "element not found or not clickable"
+        throws: "Promise rejection with Error"
+        required_handling: >
+          Caller MUST use try-catch to handle errors from page.click().
+          Common failures: selector not found, element not clickable, element moved.
+          CRITICAL: When click triggers navigation, use Promise.all([page.waitForNavigation(), page.click()])
+          to avoid race conditions. Use pattern:
+          try { await page.click('button'); } catch (error) { /* handle */ }
+        source: "https://pptr.dev/api/puppeteer.page.click"
+        severity: warning
+
+# Category: browser-automation
+# npm: https://www.npmjs.com/package/puppeteer
+# Repository: https://github.com/puppeteer/puppeteer
