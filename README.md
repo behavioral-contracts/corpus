@@ -50,15 +50,68 @@ corpus/
 
 ## Current Coverage
 
-### Launch Packages (MVP)
-- ✅ **axios** - HTTP error states, rate limiting, network failures
-- 🚧 **jsonwebtoken** - Token verification, algorithm confusion
-- 🚧 **prisma** - Null returns, database errors
-- 🚧 **stripe** - Idempotency, webhooks, card errors
-- 🚧 **bullmq** - Worker errors, connection failures
+**35 packages** with behavioral contracts (as of 2026-02-26)
 
-### Roadmap
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for priority packages.
+### API Clients & SDKs (9 packages)
+- ✅ **stripe** - Payment API errors, idempotency, webhooks
+- ✅ **openai** - API errors, rate limiting, token handling
+- ✅ **@anthropic-ai/sdk** - API errors, streaming, rate limits
+- ✅ **@aws-sdk/client-s3** - S3 operations, credential errors
+- ✅ **@sendgrid/mail** - Email API errors, validation
+- ✅ **twilio** - SMS/voice API errors, webhook validation
+- ✅ **cloudinary** - Image upload errors, transformation failures
+- ✅ **square** - Payment errors, idempotency
+- ✅ **@octokit/rest** - GitHub API errors, rate limiting
+
+### Databases & ORMs (6 packages)
+- ✅ **@prisma/client** - Null returns, constraint violations
+- ✅ **mongodb** - Connection errors, query failures
+- ✅ **mongoose** - Schema validation, connection handling
+- ✅ **pg** - PostgreSQL errors, connection pooling
+- ✅ **@vercel/postgres** - Serverless connection pooling
+- ✅ **drizzle-orm** - Type-safe SQL errors
+
+### Caching & Queues (3 packages)
+- ✅ **redis** - Connection errors, data serialization
+- ✅ **ioredis** - Cluster errors, pipeline failures
+- ✅ **bullmq** - Job failures, worker errors, connection cleanup
+
+### Web Frameworks (5 packages)
+- ✅ **express** - Middleware errors, route handler failures
+- ✅ **fastify** - Async handler errors, schema validation
+- ✅ **next** - API route errors, server-side errors
+- ✅ **socket.io** - WebSocket errors, event handler failures
+- ✅ **@clerk/nextjs** - Authentication errors, session handling
+
+### HTTP & Networking (1 package)
+- ✅ **axios** - Network errors, timeouts, rate limiting (429)
+
+### Real-time & Messaging (2 packages)
+- ✅ **discord.js** - Bot errors, rate limiting, permission errors
+- ✅ **@slack/web-api** - API errors, rate limiting
+
+### Data & Storage (1 package)
+- ✅ **@supabase/supabase-js** - Database errors, auth failures
+
+### Validation & Forms (3 packages)
+- ✅ **zod** - Schema validation errors, parsing failures
+- ✅ **joi** - Validation errors, schema mismatches
+- ✅ **react-hook-form** - Form validation, submission errors
+
+### Blockchain (1 package)
+- ✅ **ethers** - Transaction errors, network failures, gas errors
+
+### Authentication (1 package)
+- ✅ **firebase-admin** - Auth errors, Firestore operations
+
+### State Management (1 package)
+- ✅ **@tanstack/react-query** - Query errors, cache invalidation
+
+### Type System (1 package)
+- ✅ **typescript** - Compiler API errors, transformation failures
+
+### Roadmap to 50 Packages
+See [CATALOG.md](./CATALOG.md) for complete package index and upcoming additions.
 
 ---
 
