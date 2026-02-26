@@ -1,0 +1,187 @@
+package: cassandra-driver
+semver: ">=4.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+detection:
+  class_names: ["Client", "Mapper", "ResultSet"]
+  type_names: ["Client", "ClientOptions", "QueryOptions", "ResultSet"]
+  factory_methods: []
+  require_instance_tracking: true
+
+  await_patterns:
+    # Connection
+    - ".connect("
+    - ".shutdown("
+
+    # Query operations
+    - ".execute("
+    - ".batch("
+    - ".stream("
+
+    # Metadata operations
+    - ".metadata.getkeyspace("
+    - ".metadata.gettable("
+
+functions:
+  - name: connect
+    import_path: "cassandra-driver"
+    description: "Establishes connection to Cassandra cluster"
+    postconditions:
+      - id: connection-failure
+        condition: "Cannot connect to any contact point in cluster"
+        throws: "NoHostAvailableError with details of failed contact points"
+        required_handling: >
+          Caller MUST handle NoHostAvailableError.
+          Common causes:
+          - All nodes unreachable
+          - Wrong contact points
+          - Authentication failure
+          Check error.innerErrors for details on each contact point.
+          Implement retry with exponential backoff.
+        source: "https://docs.datastax.com/en/developer/nodejs-driver/4.6/getting-started/"
+        severity: error
+
+      - id: authentication-failure
+        condition: "Invalid credentials"
+        throws: "AuthenticationError"
+        required_handling: >
+          Caller MUST handle authentication errors.
+          DO NOT retry with same credentials.
+          Verify username/password in connection config.
+        source: "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/auth/"
+        severity: error
+
+  - name: execute
+    import_path: "cassandra-driver"
+    description: "Executes CQL query or prepared statement"
+    postconditions:
+      - id: syntax-error
+        condition: "Invalid CQL syntax"
+        throws: "ResponseError with code indicating syntax error"
+        required_handling: >
+          Caller MUST validate CQL syntax before execution.
+          Common error codes:
+          - 0x2000: Syntax error
+          - 0x2200: Invalid query
+          DO NOT retry - fix CQL syntax.
+        source: "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/error-handling/"
+        severity: error
+
+      - id: unavailable
+        condition: "Required replicas unavailable for consistency level"
+        throws: "ResponseError with code 0x1000 (Unavailable)"
+        required_handling: >
+          Caller MUST handle unavailable errors.
+          Not enough replicas available for requested consistency level.
+          May be transient if nodes are recovering.
+          Consider:
+          1. Retry with exponential backoff
+          2. Lower consistency level (if acceptable)
+          3. Check cluster health
+        source: "https://docs.datastax.com/en/cassandra-oss/3.x/cassandra/dml/dmlAboutDataConsistency.html"
+        severity: error
+
+      - id: timeout
+        condition: "Query timeout exceeded"
+        throws: "OperationTimedOutError"
+        required_handling: >
+          Caller MUST handle timeout errors.
+          Query took longer than configured timeout.
+          May indicate:
+          - Slow query needing optimization
+          - Overloaded cluster
+          - Network issues
+          Consider retry with exponential backoff for transient issues.
+        source: "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/error-handling/"
+        severity: error
+
+      - id: write-timeout
+        condition: "Write operation timeout at replica"
+        throws: "ResponseError with code 0x1100 (Write_timeout)"
+        required_handling: >
+          Caller MUST handle write timeout errors.
+          Write acknowledged by coordinator but timeout waiting for replicas.
+          Data may or may not be written (non-idempotent risk).
+          Implement idempotent retries or check if write succeeded.
+        source: "https://docs.datastax.com/en/cassandra-oss/3.x/cassandra/dml/dmlAboutDataConsistency.html"
+        severity: error
+
+      - id: read-timeout
+        condition: "Read operation timeout at replica"
+        throws: "ResponseError with code 0x1200 (Read_timeout)"
+        required_handling: >
+          Caller MUST handle read timeout errors.
+          Timeout waiting for replicas to respond.
+          May be transient - implement retry logic.
+        source: "https://docs.datastax.com/en/cassandra-oss/3.x/cassandra/dml/dmlAboutDataConsistency.html"
+        severity: error
+
+      - id: overloaded
+        condition: "Coordinator node is overloaded"
+        throws: "ResponseError with code 0x1001 (Overloaded)"
+        required_handling: >
+          Caller MUST handle overloaded errors.
+          Coordinator cannot handle more requests.
+          Implement retry with exponential backoff and jitter.
+        source: "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/error-handling/"
+        severity: error
+
+      - id: invalid-query
+        condition: "Keyspace or table does not exist"
+        throws: "ResponseError with code 0x2200 (Invalid)"
+        required_handling: >
+          Caller MUST verify schema exists before querying.
+          DO NOT retry - indicates schema mismatch.
+        source: "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/error-handling/"
+        severity: error
+
+  - name: batch
+    import_path: "cassandra-driver"
+    description: "Executes batch of statements atomically (within same partition)"
+    postconditions:
+      - id: batch-failure
+        condition: "One or more statements in batch failed"
+        throws: "ResponseError with details of failure"
+        required_handling: >
+          Caller MUST handle batch errors.
+          Entire batch fails if any statement fails.
+          Check error code to determine failure reason.
+          Note: Cassandra batches are NOT transactions across partitions.
+        source: "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/batch/"
+        severity: error
+
+      - id: write-timeout
+        condition: "Batch write timeout"
+        throws: "ResponseError with code 0x1100 (Write_timeout)"
+        required_handling: >
+          Caller MUST handle batch write timeouts.
+          Batch may be partially applied (non-atomic across partitions).
+          Implement idempotent retry logic.
+        source: "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/batch/"
+        severity: error
+
+  - name: shutdown
+    import_path: "cassandra-driver"
+    description: "Closes all connections to cluster"
+    postconditions:
+      - id: shutdown-error
+        condition: "Error during shutdown (rare)"
+        throws: "Error with details of shutdown issue"
+        required_handling: >
+          Caller SHOULD handle shutdown errors.
+          Typically safe to ignore, but log for investigation.
+        source: "https://docs.datastax.com/en/developer/nodejs-driver/4.6/getting-started/"
+        severity: warning
+
+edge_cases:
+  - id: prepared-statements
+    description: "Always use prepared statements for repeated queries. Improves performance and prevents injection."
+    source: "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/prepared-statements/"
+    severity: warning
+
+  - id: consistency-levels
+    description: "Choose appropriate consistency level. QUORUM for strong consistency, ONE for performance."
+    source: "https://docs.datastax.com/en/cassandra-oss/3.x/cassandra/dml/dmlConfigConsistency.html"
+    severity: warning

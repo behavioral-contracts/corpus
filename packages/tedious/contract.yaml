@@ -1,0 +1,135 @@
+package: tedious
+semver: ">=15.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+# Tedious is the core SQL Server driver for Node.js
+detection:
+  class_names: ["Connection", "Request"]
+  type_names: ["Connection", "Request", "ConnectionConfig", "ColumnValue"]
+  factory_methods: []
+  require_instance_tracking: true
+
+  await_patterns:
+    # Connection operations
+    - ".connect("
+
+    # Request execution (when promisified)
+    - ".execsql("
+    - ".callprocedure("
+
+functions:
+  - name: connect
+    import_path: "tedious"
+    description: "Establishes connection to SQL Server"
+    postconditions:
+      - id: connection-failure
+        condition: "Cannot connect (wrong credentials, server unreachable, etc.)"
+        throws: "ConnectionError event with details"
+        required_handling: >
+          Caller MUST handle 'error' event on Connection.
+          Common error codes:
+          - ESOCKET: Network/socket error
+          - ELOGIN: Authentication failed
+          - ETIMEOUT: Connection timeout
+          Implement retry with exponential backoff for transient issues.
+        source: "https://tediousjs.github.io/tedious/api-connection.html"
+        severity: error
+
+  - name: execSql
+    import_path: "tedious"
+    description: "Executes SQL statement"
+    postconditions:
+      - id: syntax-error
+        condition: "SQL syntax error"
+        throws: "Error event on Request with error.number indicating syntax error"
+        required_handling: >
+          Caller MUST handle 'error' event on Request.
+          SQL Server error numbers:
+          - 102, 156: Syntax errors
+          - 207: Invalid column name
+          - 208: Invalid object name (table not found)
+          DO NOT retry - fix SQL syntax.
+        source: "https://tediousjs.github.io/tedious/api-request.html"
+        severity: error
+
+      - id: constraint-violation
+        condition: "Unique constraint, foreign key, or NOT NULL violation"
+        throws: "Error event with error.number for constraint violations"
+        required_handling: >
+          Caller MUST handle constraint violations:
+          - 2627: Unique constraint violation
+          - 547: Foreign key constraint violation
+          - 515: NOT NULL constraint violation
+          Extract details from error.message.
+          DO NOT retry without fixing data.
+        source: "https://docs.microsoft.com/en-us/sql/relational-databases/errors-events/database-engine-events-and-errors"
+        severity: error
+
+      - id: connection-error
+        condition: "Connection lost during query execution"
+        throws: "Error event with connection-related error codes"
+        required_handling: >
+          Caller MUST handle connection errors.
+          Connection may be lost due to timeout or server restart.
+          Implement retry with exponential backoff.
+        source: "https://tediousjs.github.io/tedious/api-connection.html"
+        severity: error
+
+      - id: deadlock
+        condition: "Transaction deadlock detected"
+        throws: "Error event with error.number = 1205"
+        required_handling: >
+          Caller MUST handle deadlock errors.
+          Deadlocks are transient - implement retry logic.
+          SQL Server automatically rolls back deadlocked transaction.
+          Consider transaction isolation level and lock hints to reduce deadlocks.
+        source: "https://docs.microsoft.com/en-us/sql/relational-databases/sql-server-transaction-locking-and-row-versioning-guide"
+        severity: error
+
+      - id: timeout
+        condition: "Query execution timeout exceeded"
+        throws: "Error event with ETIMEOUT code"
+        required_handling: >
+          Caller MUST handle timeout errors.
+          Query took longer than request timeout setting.
+          Consider optimizing query or increasing timeout.
+        source: "https://tediousjs.github.io/tedious/api-request.html"
+        severity: error
+
+  - name: callProcedure
+    import_path: "tedious"
+    description: "Calls stored procedure"
+    postconditions:
+      - id: procedure-error
+        condition: "Stored procedure raises error or does not exist"
+        throws: "Error event on Request with SQL Server error number"
+        required_handling: >
+          Caller MUST handle 'error' event on Request.
+          Error numbers:
+          - 2812: Procedure not found
+          - Application errors: RAISERROR in procedure
+          Check error.number and error.message for details.
+        source: "https://tediousjs.github.io/tedious/api-request.html"
+        severity: error
+
+      - id: connection-error
+        condition: "Connection lost during procedure call"
+        throws: "Error event with connection-related error codes"
+        required_handling: >
+          Caller MUST handle connection errors.
+          Implement retry with exponential backoff for transient issues.
+        source: "https://tediousjs.github.io/tedious/api-connection.html"
+        severity: error
+
+edge_cases:
+  - id: event-based-api
+    description: "Tedious uses event-based API. Must promisify or use wrapper like mssql package for promises."
+    source: "https://tediousjs.github.io/tedious/"
+    severity: warning
+
+  - id: connection-pooling
+    description: "Tedious does not include connection pooling. Use tedious-connection-pool or mssql package."
+    source: "https://github.com/tediousjs/tedious-connection-pool"
+    severity: warning

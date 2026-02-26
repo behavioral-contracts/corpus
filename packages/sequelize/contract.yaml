@@ -1,0 +1,226 @@
+package: sequelize
+semver: ">=6.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+detection:
+  class_names: ["Sequelize", "Model", "QueryInterface"]
+  type_names: ["Sequelize", "Model", "ModelStatic", "Transaction"]
+  factory_methods: []
+  require_instance_tracking: true
+
+  await_patterns:
+    # Connection
+    - ".authenticate("
+    - ".sync("
+
+    # Query operations
+    - ".findall("
+    - ".findone("
+    - ".findbypk("
+    - ".create("
+    - ".update("
+    - ".destroy("
+    - ".count("
+
+    # Transaction operations
+    - ".transaction("
+    - ".commit("
+    - ".rollback("
+
+    # Raw queries
+    - ".query("
+
+functions:
+  - name: authenticate
+    import_path: "sequelize"
+    description: "Tests database connection"
+    postconditions:
+      - id: connection-failure
+        condition: "Cannot connect to database (wrong credentials, host unreachable, etc.)"
+        throws: "ConnectionError, ConnectionRefusedError, HostNotFoundError"
+        required_handling: >
+          Caller MUST catch connection errors.
+          Common causes: wrong credentials, database down, network issues.
+          Implement retry with exponential backoff for transient issues.
+        source: "https://sequelize.org/docs/v6/core-concepts/getting-started/"
+        severity: error
+
+  - name: query
+    import_path: "sequelize"
+    description: "Executes raw SQL query"
+    postconditions:
+      - id: syntax-error
+        condition: "SQL syntax error"
+        throws: "DatabaseError with original SQL error from underlying driver"
+        required_handling: >
+          Caller MUST validate SQL syntax before execution.
+          DO NOT retry - indicates SQL syntax error.
+          Check error.original for underlying driver error.
+        source: "https://sequelize.org/docs/v6/core-concepts/raw-queries/"
+        severity: error
+
+      - id: constraint-violation
+        condition: "Unique constraint, foreign key, or NOT NULL violation"
+        throws: "UniqueConstraintError, ForeignKeyConstraintError, ValidationError"
+        required_handling: >
+          Caller MUST handle constraint violations gracefully.
+          UniqueConstraintError: extract fields from error.fields.
+          ForeignKeyConstraintError: check error.index.
+          DO NOT retry without fixing data.
+        source: "https://sequelize.org/docs/v6/core-concepts/validations-and-constraints/"
+        severity: error
+
+      - id: connection-error
+        condition: "Connection lost during query execution"
+        throws: "ConnectionError, TimeoutError"
+        required_handling: >
+          Caller MUST handle connection errors separately from query errors.
+          Implement retry with exponential backoff for transient connection issues.
+        source: "https://sequelize.org/docs/v6/"
+        severity: error
+
+  - name: findAll
+    import_path: "sequelize"
+    description: "Finds all records matching criteria"
+    postconditions:
+      - id: query-failure
+        condition: "Network error, timeout, or invalid query"
+        throws: "DatabaseError, ConnectionError, TimeoutError"
+        required_handling: >
+          Caller MUST catch query errors.
+          Network errors may be transient and retriable.
+          Invalid query errors should not be retried.
+        source: "https://sequelize.org/docs/v6/core-concepts/model-querying-basics/"
+        severity: error
+
+  - name: findOne
+    import_path: "sequelize"
+    description: "Finds single record matching criteria"
+    postconditions:
+      - id: query-failure
+        condition: "Network error, timeout, or invalid query"
+        throws: "DatabaseError, ConnectionError, TimeoutError"
+        required_handling: >
+          Caller MUST catch query errors.
+          Returns null if no record matches (not an error).
+          Network errors may be transient and retriable.
+        source: "https://sequelize.org/docs/v6/core-concepts/model-querying-basics/"
+        severity: error
+
+  - name: findByPk
+    import_path: "sequelize"
+    description: "Finds record by primary key"
+    postconditions:
+      - id: query-failure
+        condition: "Network error or timeout"
+        throws: "DatabaseError, ConnectionError, TimeoutError"
+        required_handling: >
+          Caller MUST catch query errors.
+          Returns null if record not found (not an error).
+        source: "https://sequelize.org/docs/v6/core-concepts/model-querying-finders/"
+        severity: error
+
+  - name: create
+    import_path: "sequelize"
+    description: "Inserts new record into database"
+    postconditions:
+      - id: unique-constraint
+        condition: "Unique constraint violation"
+        throws: "UniqueConstraintError with fields and error.errors array"
+        required_handling: >
+          Caller MUST catch unique constraint errors.
+          Extract conflicting fields from error.fields.
+          DO NOT retry without changing unique field values.
+        source: "https://sequelize.org/docs/v6/core-concepts/validations-and-constraints/"
+        severity: error
+
+      - id: validation-error
+        condition: "Model validation fails (NOT NULL, data type, etc.)"
+        throws: "ValidationError with error.errors array"
+        required_handling: >
+          Caller MUST validate data before insert.
+          Check error.errors for list of validation failures.
+          DO NOT retry without fixing validation issues.
+        source: "https://sequelize.org/docs/v6/core-concepts/validations-and-constraints/"
+        severity: error
+
+      - id: foreign-key-constraint
+        condition: "Foreign key constraint violation"
+        throws: "ForeignKeyConstraintError"
+        required_handling: >
+          Caller MUST verify referenced record exists before insertion.
+          DO NOT retry - indicates data integrity issue.
+        source: "https://sequelize.org/docs/v6/core-concepts/validations-and-constraints/"
+        severity: error
+
+  - name: update
+    import_path: "sequelize"
+    description: "Updates existing records"
+    postconditions:
+      - id: update-failure
+        condition: "Network error, validation error, or constraint violation"
+        throws: "DatabaseError, ValidationError, UniqueConstraintError"
+        required_handling: >
+          Caller MUST catch update errors.
+          Validation errors: check error.errors array.
+          Constraint violations: DO NOT retry without fixing data.
+        source: "https://sequelize.org/docs/v6/core-concepts/model-querying-basics/"
+        severity: error
+
+  - name: destroy
+    import_path: "sequelize"
+    description: "Deletes records from database"
+    postconditions:
+      - id: delete-failure
+        condition: "Network error or foreign key constraint"
+        throws: "DatabaseError, ForeignKeyConstraintError"
+        required_handling: >
+          Caller MUST catch delete errors.
+          Foreign key errors: child records may still reference this record.
+          Deleting non-existent record is NOT an error (returns 0).
+        source: "https://sequelize.org/docs/v6/core-concepts/model-querying-basics/"
+        severity: error
+
+  - name: transaction
+    import_path: "sequelize"
+    description: "Executes operations within transaction"
+    postconditions:
+      - id: transaction-failure
+        condition: "Deadlock, timeout, or constraint violation during transaction"
+        throws: "DatabaseError, TimeoutError, UniqueConstraintError, etc."
+        required_handling: >
+          Caller MUST catch transaction errors and handle rollback.
+          Sequelize auto-rollbacks on error in managed transactions.
+          For unmanaged transactions, caller must explicitly rollback.
+          Deadlocks may be transient and retriable.
+        source: "https://sequelize.org/docs/v6/other-topics/transactions/"
+        severity: error
+
+  - name: sync
+    import_path: "sequelize"
+    description: "Synchronizes model definitions with database"
+    postconditions:
+      - id: sync-failure
+        condition: "Schema mismatch, permission denied, or connection error"
+        throws: "DatabaseError, ConnectionError"
+        required_handling: >
+          Caller MUST catch sync errors.
+          NEVER use sync() in production - use migrations instead.
+          sync() can drop and recreate tables - data loss risk.
+        source: "https://sequelize.org/docs/v6/core-concepts/model-basics/"
+        severity: error
+
+  - name: count
+    import_path: "sequelize"
+    description: "Counts records matching criteria"
+    postconditions:
+      - id: count-failure
+        condition: "Network error, timeout, or invalid query"
+        throws: "DatabaseError, ConnectionError, TimeoutError"
+        required_handling: >
+          Caller MUST catch count errors.
+          Network errors may be transient and retriable.
+        source: "https://sequelize.org/docs/v6/core-concepts/model-querying-basics/"
+        severity: error

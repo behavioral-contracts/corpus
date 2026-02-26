@@ -1,0 +1,188 @@
+package: mysql2
+semver: ">=2.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+detection:
+  class_names: ["Connection", "Pool", "PoolConnection"]
+  type_names: ["Connection", "Pool", "PoolConnection", "ConnectionOptions"]
+  factory_methods: []
+  require_instance_tracking: true
+
+  await_patterns:
+    # Connection
+    - ".connect("
+    - ".getconnection("
+
+    # Query operations
+    - ".query("
+    - ".execute("
+
+    # Transaction operations
+    - ".beginTransaction("
+    - ".commit("
+    - ".rollback("
+
+functions:
+  - name: connect
+    import_path: "mysql2/promise"
+    description: "Establishes connection to MySQL server"
+    postconditions:
+      - id: connection-failure
+        condition: "Cannot connect (wrong credentials, host unreachable, etc.)"
+        throws: "Error with code 'ECONNREFUSED', 'ER_ACCESS_DENIED_ERROR', etc."
+        required_handling: >
+          Caller MUST catch connection errors.
+          Common error codes:
+          - ECONNREFUSED: MySQL server not running
+          - ER_ACCESS_DENIED_ERROR: Wrong username/password
+          - ETIMEDOUT: Network timeout
+          Implement retry with exponential backoff for transient issues.
+        source: "https://github.com/sidorares/node-mysql2"
+        severity: error
+
+  - name: query
+    import_path: "mysql2/promise"
+    description: "Executes SQL query without prepared statements"
+    postconditions:
+      - id: syntax-error
+        condition: "SQL syntax error"
+        throws: "Error with code 'ER_PARSE_ERROR' or similar"
+        required_handling: >
+          Caller MUST validate SQL syntax before execution.
+          DO NOT retry - indicates SQL syntax error.
+          Check error.sqlMessage for details.
+        source: "https://github.com/sidorares/node-mysql2"
+        severity: error
+
+      - id: constraint-violation
+        condition: "Unique constraint, foreign key, or NOT NULL violation"
+        throws: "Error with code 'ER_DUP_ENTRY', 'ER_NO_REFERENCED_ROW', 'ER_BAD_NULL_ERROR'"
+        required_handling: >
+          Caller MUST handle constraint violations:
+          - ER_DUP_ENTRY (1062): Duplicate key violation
+          - ER_NO_REFERENCED_ROW_2 (1452): Foreign key constraint
+          - ER_BAD_NULL_ERROR (1048): NOT NULL constraint
+          Extract details from error.sqlMessage.
+          DO NOT retry without fixing data.
+        source: "https://dev.mysql.com/doc/mysql-errors/8.0/en/server-error-reference.html"
+        severity: error
+
+      - id: connection-error
+        condition: "Connection lost during query execution"
+        throws: "Error with code 'PROTOCOL_CONNECTION_LOST', 'ECONNRESET'"
+        required_handling: >
+          Caller MUST handle connection errors.
+          Connection may be lost due to timeout or server restart.
+          Implement retry with exponential backoff.
+        source: "https://github.com/sidorares/node-mysql2"
+        severity: error
+
+      - id: table-not-found
+        condition: "Table or view does not exist"
+        throws: "Error with code 'ER_NO_SUCH_TABLE' (1146)"
+        required_handling: >
+          Caller MUST verify table exists before querying.
+          DO NOT retry - indicates schema mismatch or missing migration.
+        source: "https://dev.mysql.com/doc/mysql-errors/8.0/en/server-error-reference.html"
+        severity: error
+
+  - name: execute
+    import_path: "mysql2/promise"
+    description: "Executes prepared statement (parameterized query)"
+    postconditions:
+      - id: syntax-error
+        condition: "SQL syntax error in prepared statement"
+        throws: "Error with code 'ER_PARSE_ERROR' or similar"
+        required_handling: >
+          Caller MUST validate SQL syntax.
+          Prepared statements prevent SQL injection but not syntax errors.
+          DO NOT retry - fix SQL syntax.
+        source: "https://github.com/sidorares/node-mysql2"
+        severity: error
+
+      - id: constraint-violation
+        condition: "Unique, foreign key, or NOT NULL constraint violation"
+        throws: "Error with code 'ER_DUP_ENTRY', 'ER_NO_REFERENCED_ROW_2', 'ER_BAD_NULL_ERROR'"
+        required_handling: >
+          Caller MUST handle constraint violations gracefully.
+          DO NOT retry without changing violating data.
+        source: "https://dev.mysql.com/doc/mysql-errors/8.0/en/server-error-reference.html"
+        severity: error
+
+      - id: connection-error
+        condition: "Connection lost or timeout"
+        throws: "Error with code 'PROTOCOL_CONNECTION_LOST', 'ETIMEDOUT'"
+        required_handling: >
+          Caller MUST handle connection errors.
+          May be transient - implement retry logic.
+        source: "https://github.com/sidorares/node-mysql2"
+        severity: error
+
+  - name: getConnection
+    import_path: "mysql2/promise"
+    description: "Gets connection from pool"
+    postconditions:
+      - id: pool-exhausted
+        condition: "All connections in pool are busy and timeout exceeded"
+        throws: "Error with message 'Pool is closed' or timeout error"
+        required_handling: >
+          Caller MUST handle pool exhaustion.
+          Root causes:
+          1. Connections not released (forgot connection.release())
+          2. Pool size too small for load
+          3. Queries taking too long
+          ALWAYS release connections in finally block.
+        source: "https://github.com/sidorares/node-mysql2"
+        severity: error
+
+      - id: connection-failure
+        condition: "Cannot establish connection from pool"
+        throws: "Error with code 'ECONNREFUSED', 'ETIMEDOUT'"
+        required_handling: >
+          Caller MUST handle connection failures.
+          Implement retry with exponential backoff.
+        source: "https://github.com/sidorares/node-mysql2"
+        severity: error
+
+  - name: beginTransaction
+    import_path: "mysql2/promise"
+    description: "Starts database transaction"
+    postconditions:
+      - id: transaction-start-failure
+        condition: "Cannot start transaction (connection error, etc.)"
+        throws: "Error with connection-related codes"
+        required_handling: >
+          Caller MUST catch transaction start errors.
+          Network errors may be transient and retriable.
+        source: "https://github.com/sidorares/node-mysql2"
+        severity: error
+
+  - name: commit
+    import_path: "mysql2/promise"
+    description: "Commits transaction"
+    postconditions:
+      - id: commit-failure
+        condition: "Transaction commit fails (constraint violation, connection lost, etc.)"
+        throws: "Error with various codes depending on failure reason"
+        required_handling: >
+          Caller MUST catch commit errors.
+          If commit fails, transaction is rolled back.
+          Caller should handle rollback appropriately.
+        source: "https://github.com/sidorares/node-mysql2"
+        severity: error
+
+  - name: rollback
+    import_path: "mysql2/promise"
+    description: "Rolls back transaction"
+    postconditions:
+      - id: rollback-failure
+        condition: "Rollback fails (connection lost, etc.)"
+        throws: "Error with connection-related codes"
+        required_handling: >
+          Caller MUST catch rollback errors.
+          Even rollback can fail due to connection issues.
+          Log rollback failures for investigation.
+        source: "https://github.com/sidorares/node-mysql2"
+        severity: error
