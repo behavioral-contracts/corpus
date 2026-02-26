@@ -1,0 +1,33 @@
+package: passport
+semver: ^0.7.0
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+detection:
+  type_names:
+    - PassportStatic
+    - Strategy
+    - AuthenticateOptions
+
+functions:
+  - name: authenticate
+    import_path: "passport"
+    description: "Middleware for authenticating requests"
+    postconditions:
+      - id: authenticate-no-error-handling
+        description: "Must handle authentication failures and errors in callback"
+        severity: error
+        rationale: "Authentication can fail due to invalid credentials, network errors, or database issues"
+        source: "http://www.passportjs.org/docs/authenticate/"
+
+postconditions:
+  strategy-error-handling:
+    description: "Custom strategies must properly handle and propagate errors"
+    severity: error
+    rationale: "Strategy errors can crash application if not handled properly"
+    source: "http://www.passportjs.org/packages/passport-strategy/"
+
+# Category: authentication
+# Latest version: 0.7.0
+# Generated: 2026-02-26

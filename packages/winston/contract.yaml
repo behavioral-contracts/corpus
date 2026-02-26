@@ -1,0 +1,43 @@
+package: winston
+semver: ^3.0.0
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+detection:
+  type_names:
+    - Logger
+    - LoggerOptions
+    - Transport
+
+functions:
+  - name: createLogger
+    import_path: "winston"
+    description: "Creates a logger instance"
+    postconditions:
+      - id: logger-no-error-handling
+        description: "Should add error event listener to logger and transports"
+        severity: warning
+        rationale: "Logger errors (file write failures, network issues) can go unnoticed"
+        source: "https://github.com/winstonjs/winston#handling-uncaught-exceptions-with-winston"
+
+  - name: log
+    import_path: "winston"
+    description: "Logs a message"
+    postconditions:
+      - id: log-transport-errors
+        description: "Should handle transport errors (file system, network failures)"
+        severity: warning
+        rationale: "Transport failures should not crash the application"
+        source: "https://github.com/winstonjs/winston#awaiting-logs-to-be-written-in-winston"
+
+postconditions:
+  uncaught-exception-handling:
+    description: "Use handleExceptions option carefully - can prevent proper error handling"
+    severity: warning
+    rationale: "handleExceptions can mask application errors if not configured properly"
+    source: "https://github.com/winstonjs/winston#to-exit-or-not-to-exit"
+
+# Category: logging
+# Latest version: 3.19.0
+# Generated: 2026-02-26
