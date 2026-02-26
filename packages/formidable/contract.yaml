@@ -1,0 +1,20 @@
+package: "formidable"
+description: "A Node.js module for parsing form data, especially file uploads"
+semver: ">=3.0.0"
+
+postconditions:
+  - id: formidable-001
+    summary: "Form parsing operations must handle parsing errors"
+    severity: ERROR
+    behavior: |
+      All formidable form parsing operations must be wrapped in try-catch
+      blocks (promise-based) or use error callbacks to handle parsing errors,
+      file size limit errors, and invalid data errors.
+    patterns:
+      # Promise-based parsing
+      - "form.parse()"
+      - "formidable().parse()"
+      - "new formidable.IncomingForm().parse()"
+
+      # Instance-based patterns
+      - "new IncomingForm().parse()"

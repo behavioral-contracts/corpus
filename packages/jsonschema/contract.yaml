@@ -1,0 +1,12 @@
+package: "jsonschema"
+description: "Node.js package - jsonschema"
+semver: ">=1.0.0"
+
+postconditions:
+  - id: jsonschema-001
+    summary: "Package operations should handle errors appropriately"
+    severity: ERROR
+    behavior: |
+      Operations must handle potential errors.
+    patterns:
+      - "jsonschema()"

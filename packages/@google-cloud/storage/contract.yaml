@@ -1,0 +1,39 @@
+package: "@google-cloud/storage"
+description: "Google Cloud Storage client library for Node.js"
+semver: ">=7.0.0"
+
+postconditions:
+  - id: gcs-001
+    summary: "Storage operations must handle connection errors"
+    severity: ERROR
+    behavior: |
+      All Storage client operations that interact with GCS (bucket operations,
+      file operations, etc.) must be wrapped in try-catch blocks to handle
+      connection errors, authentication failures, and API errors.
+    patterns:
+      # Bucket operations
+      - "new Storage().bucket().upload()"
+      - "new Storage().bucket().file().save()"
+      - "new Storage().bucket().file().download()"
+      - "new Storage().bucket().file().delete()"
+      - "new Storage().bucket().file().exists()"
+      - "new Storage().bucket().file().getMetadata()"
+      - "new Storage().bucket().file().setMetadata()"
+      - "new Storage().bucket().file().copy()"
+      - "new Storage().bucket().file().move()"
+      - "new Storage().bucket().create()"
+      - "new Storage().bucket().delete()"
+      - "new Storage().bucket().getFiles()"
+      - "new Storage().createBucket()"
+      - "new Storage().getBuckets()"
+
+      # Instance-based patterns
+      - "storage.bucket().upload()"
+      - "storage.bucket().file().save()"
+      - "storage.bucket().file().download()"
+      - "storage.createBucket()"
+      - "bucket.upload()"
+      - "bucket.file().save()"
+      - "file.save()"
+      - "file.download()"
+      - "file.delete()"

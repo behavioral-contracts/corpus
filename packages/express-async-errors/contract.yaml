@@ -1,0 +1,12 @@
+package: "express-async-errors"
+description: "Express middleware - express-async-errors"
+semver: ">=1.0.0"
+
+postconditions:
+  - id: express_async_errors-001
+    summary: "Middleware operations should handle errors"
+    severity: ERROR
+    behavior: |
+      Operations must handle potential errors appropriately.
+    patterns:
+      - "express-async-errors()"

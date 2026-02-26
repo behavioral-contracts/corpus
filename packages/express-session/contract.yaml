@@ -1,0 +1,12 @@
+package: "express-session"
+description: "Express middleware - express-session"
+semver: ">=1.0.0"
+
+postconditions:
+  - id: express_session-001
+    summary: "Middleware operations should handle errors"
+    severity: ERROR
+    behavior: |
+      Operations must handle potential errors appropriately.
+    patterns:
+      - "express-session()"

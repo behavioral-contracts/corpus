@@ -1,0 +1,12 @@
+package: "express-rate-limit"
+description: "Express middleware - express-rate-limit"
+semver: ">=1.0.0"
+
+postconditions:
+  - id: express_rate_limit-001
+    summary: "Middleware operations should handle errors"
+    severity: ERROR
+    behavior: |
+      Operations must handle potential errors appropriately.
+    patterns:
+      - "express-rate-limit()"

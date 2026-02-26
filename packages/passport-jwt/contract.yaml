@@ -1,0 +1,17 @@
+package: "passport-jwt"
+description: "JWT authentication strategy for Passport"
+semver: ">=4.0.0"
+
+postconditions:
+  - id: passport-jwt-001
+    summary: "Strategy verify callback must handle token validation errors"
+    severity: ERROR
+    behavior: |
+      The verify callback provided to JwtStrategy must handle user lookup
+      errors and token validation failures by calling the done callback
+      with appropriate error parameters. Unhandled errors in the verify
+      callback will crash the application.
+    patterns:
+      # JwtStrategy with verify callback
+      - "new JwtStrategy(options, verifyCallback)"
+      - "passport.use(new JwtStrategy())"

@@ -1,0 +1,44 @@
+package: "@azure/storage-blob"
+description: "Azure Blob Storage client library for JavaScript"
+semver: ">=12.0.0"
+
+postconditions:
+  - id: azure-blob-001
+    summary: "Blob storage operations must handle connection errors"
+    severity: ERROR
+    behavior: |
+      All Azure Blob Storage client operations must be wrapped in try-catch
+      blocks to handle connection errors, authentication failures, and API errors.
+    patterns:
+      # BlobServiceClient operations
+      - "new BlobServiceClient().createContainer()"
+      - "new BlobServiceClient().deleteContainer()"
+      - "new BlobServiceClient().getContainerClient()"
+      - "BlobServiceClient.fromConnectionString().createContainer()"
+
+      # ContainerClient operations
+      - "containerClient.uploadBlockBlob()"
+      - "containerClient.deleteBlob()"
+      - "containerClient.getBlockBlobClient()"
+      - "containerClient.listBlobsFlat()"
+      - "containerClient.create()"
+      - "containerClient.delete()"
+
+      # BlobClient operations
+      - "blobClient.download()"
+      - "blobClient.downloadToBuffer()"
+      - "blobClient.downloadToFile()"
+      - "blobClient.upload()"
+      - "blobClient.delete()"
+      - "blobClient.exists()"
+      - "blobClient.getProperties()"
+      - "blobClient.setMetadata()"
+
+      # BlockBlobClient operations
+      - "blockBlobClient.upload()"
+      - "blockBlobClient.uploadFile()"
+      - "blockBlobClient.uploadStream()"
+
+      # Instance-based patterns
+      - "blobServiceClient.createContainer()"
+      - "blobServiceClient.getContainerClient()"

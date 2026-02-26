@@ -1,0 +1,12 @@
+package: "cookie-parser"
+description: "Node.js package - cookie-parser"
+semver: ">=1.0.0"
+
+postconditions:
+  - id: cookie-parser-001
+    summary: "Package operations should handle errors appropriately"
+    severity: ERROR
+    behavior: |
+      Operations must handle potential errors.
+    patterns:
+      - "cookie-parser()"

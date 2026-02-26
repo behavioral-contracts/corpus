@@ -1,0 +1,15 @@
+package: "eventemitter2"
+description: "Event emitter with namespaces, wildcards, and additional features"
+semver: ">=6.0.0"
+
+postconditions:
+  - id: eventemitter2-001
+    summary: "EventEmitter2 instances should handle error events"
+    severity: ERROR
+    behavior: |
+      EventEmitter2 instances that can emit error events should have error
+      event listeners attached. Unhandled error events will throw uncaught
+      exceptions unless ignoreErrors is configured.
+    patterns:
+      # EventEmitter2 creation
+      - "new EventEmitter2()"

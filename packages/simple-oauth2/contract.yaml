@@ -1,0 +1,25 @@
+package: "simple-oauth2"
+description: "Node.js client library for OAuth 2.0 authorization framework"
+semver: ">=4.0.0"
+
+postconditions:
+  - id: simple-oauth2-001
+    summary: "OAuth2 token operations must handle connection errors"
+    severity: ERROR
+    behavior: |
+      All OAuth2 client operations (getToken, refreshToken, revokeToken)
+      must be wrapped in try-catch blocks to handle connection errors,
+      authentication failures, and API errors.
+    patterns:
+      # AccessToken operations
+      - "client.authorizationCode.getToken()"
+      - "client.clientCredentials.getToken()"
+      - "client.ownerPassword.getToken()"
+      - "accessToken.refresh()"
+      - "accessToken.revoke()"
+      - "accessToken.revokeAll()"
+
+      # Instance-based patterns
+      - "authCode.getToken()"
+      - "credentials.getToken()"
+      - "token.refresh()"

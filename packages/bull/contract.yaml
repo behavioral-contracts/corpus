@@ -1,0 +1,20 @@
+package: "bull"
+description: "Premium Queue package for handling distributed jobs and messages"
+semver: ">=3.0.0 <5.0.0"
+
+postconditions:
+  - id: bull-001
+    summary: "Bull job processors must handle job processing errors"
+    severity: ERROR
+    behavior: |
+      Job processors must handle errors by either calling done(error) in
+      callback-based processors or using try-catch in async processors.
+      Additionally, queues should have 'failed' and 'stalled' event listeners
+      to handle job failures.
+    patterns:
+      # Job processing
+      - "queue.process()"
+      - "queue.add()"
+
+      # Queue creation
+      - "new Queue()"

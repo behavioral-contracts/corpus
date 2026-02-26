@@ -1,0 +1,12 @@
+package: "compression"
+description: "Node.js package - compression"
+semver: ">=1.0.0"
+
+postconditions:
+  - id: compression-001
+    summary: "Package operations should handle errors appropriately"
+    severity: ERROR
+    behavior: |
+      Operations must handle potential errors.
+    patterns:
+      - "compression()"

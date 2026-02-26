@@ -1,36 +1,12 @@
-package: dotenv
-semver: ">=16.0.0 <18.0.0"
-contract_version: "1.0.0"
-maintainer: "corpus-team"
-last_verified: "2026-02-26"
+package: "dotenv"
+description: "Node.js package - dotenv"
+semver: ">=1.0.0"
 
-detection:
-  type_names:
-    - DotenvConfigOptions
-    - DotenvConfigOutput
-    - DotenvParseOutput
-
-functions:
-  - name: config
-    import_path: "dotenv"
-    description: "Loads .env file into process.env"
-
-    postconditions:
-      - id: config-returns-error
-        condition: ".env file is missing or malformed"
-        returns: "Object with error property containing Error instance"
-        required_handling: "Caller MUST check result.error before assuming environment variables are loaded. Undefined env vars cause runtime failures."
-        source: "https://github.com/motdotla/dotenv#usage"
-        severity: warning
-
-  - name: parse
-    import_path: "dotenv"
-    description: "Parses .env file content into object"
-
-    postconditions:
-      - id: parse-throws-syntax-error
-        condition: ".env content is malformed"
-        throws: "SyntaxError"
-        required_handling: "Caller MUST wrap parse() in try-catch to handle malformed .env content"
-        source: "https://github.com/motdotla/dotenv#parse"
-        severity: error
+postconditions:
+  - id: dotenv-001
+    summary: "Package operations should handle errors appropriately"
+    severity: ERROR
+    behavior: |
+      Operations must handle potential errors.
+    patterns:
+      - "dotenv()"

@@ -1,0 +1,18 @@
+package: "passport-local"
+description: "Username and password authentication strategy for Passport"
+semver: ">=1.0.0"
+
+postconditions:
+  - id: passport-local-001
+    summary: "Strategy verify callback must handle authentication errors"
+    severity: ERROR
+    behavior: |
+      The verify callback provided to LocalStrategy must handle database
+      lookup errors and authentication failures by calling the done callback
+      with appropriate error parameters. Unhandled errors in the verify
+      callback will crash the application.
+    patterns:
+      # LocalStrategy with verify callback
+      - "new LocalStrategy(verifyCallback)"
+      - "new LocalStrategy(options, verifyCallback)"
+      - "passport.use(new LocalStrategy())"

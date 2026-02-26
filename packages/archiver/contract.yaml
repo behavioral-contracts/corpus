@@ -1,0 +1,17 @@
+package: "archiver"
+description: "A streaming interface for archive generation"
+semver: ">=5.0.0"
+
+postconditions:
+  - id: archiver-001
+    summary: "Archive streams must handle error and warning events"
+    severity: ERROR
+    behavior: |
+      All archiver instances must have 'error' and 'warning' event listeners
+      attached to handle file not found errors, I/O errors, and compression
+      errors. Unhandled errors will crash the application.
+    patterns:
+      # Archiver instance creation
+      - "archiver()"
+      - "archiver('zip')"
+      - "archiver('tar')"

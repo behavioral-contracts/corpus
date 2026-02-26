@@ -1,32 +1,70 @@
 package: joi
-semver: ">=18.0.0 <19.0.0"
+semver: ">=17.0.0 <19.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
-last_verified: "2026-02-25"
-
-detection:
-  type_names:
-    - Schema
-    - ValidationResult
+last_verified: "2026-02-26"
 
 functions:
   - name: validate
     import_path: "joi"
-    description: "Validates data against schema"
+    description: "Validates data against a Joi schema synchronously"
     postconditions:
-      - id: validate-throws-error
-        condition: "data fails validation (missing required field, type mismatch, constraint violation) and abortEarly is true"
-        throws: "ValidationError with details about first validation failure"
-        required_handling: "Caller MUST wrap validate() in try-catch to handle validation errors OR use {abortEarly: false} option and check result.error. Validation failures are expected for user input and must be handled gracefully."
-        source: "https://joi.dev/api/"
-        severity: error
       - id: validate-returns-error
-        condition: "data fails validation and abortEarly is false"
-        returns: "{error: ValidationError, value: any} - error contains all validation failures"
-        required_handling: "Caller MUST check result.error before using result.value. Use if (result.error) to detect validation failures and handle appropriately (return 400 error, show user feedback, etc)."
-        source: "https://joi.dev/api/"
+        condition: "data fails validation against the schema"
+        returns: "{error: ValidationError, value: any} where error contains validation failure details"
+        required_handling: >
+          Caller MUST check result.error property before using result.value.
+          Without checking error, invalid data will pass through silently, leading to data
+          corruption, business logic errors, or security vulnerabilities.
+          Use pattern: const { error, value } = schema.validate(data); if (error) { /* handle */ }
+        source: "https://joi.dev/api/#anyvalidatevalue-options"
+        severity: error
+
+  - name: validateAsync
+    import_path: "joi"
+    description: "Validates data against a Joi schema asynchronously"
+    postconditions:
+      - id: validateasync-rejects
+        condition: "data fails validation against the schema"
+        throws: "Promise rejection with ValidationError"
+        required_handling: >
+          Caller MUST wrap validateAsync() in try-catch or use .catch() handler.
+          Without error handling, validation failures cause unhandled promise rejections
+          that crash the application.
+          Use pattern: try { const value = await schema.validateAsync(data); } catch (error) { /* handle */ }
+        source: "https://joi.dev/api/#anyvalidateasyncvalue-options"
+        severity: error
+
+  - name: assert
+    import_path: "joi"
+    description: "Asserts that a value matches a schema, throwing on failure"
+    postconditions:
+      - id: assert-throws
+        condition: "data fails validation against the schema"
+        throws: "ValidationError"
+        required_handling: >
+          Caller MUST wrap Joi.assert() in try-catch block.
+          Without error handling, validation failures throw uncaught exceptions that crash
+          the application.
+          Use pattern: try { Joi.assert(value, schema); } catch (error) { /* handle */ }
+        source: "https://joi.dev/api/#assertvalue-schema-message-options"
+        severity: error
+
+  - name: attempt
+    import_path: "joi"
+    description: "Validates data and returns the validated value or throws"
+    postconditions:
+      - id: attempt-throws
+        condition: "data fails validation against the schema"
+        throws: "ValidationError"
+        required_handling: >
+          Caller MUST wrap Joi.attempt() in try-catch block.
+          Without error handling, validation failures throw uncaught exceptions that crash
+          the application.
+          Use pattern: try { const validated = Joi.attempt(value, schema); } catch (error) { /* handle */ }
+        source: "https://joi.dev/api/#attemptvalue-schema-message-options"
         severity: error
 
 # Category: validation
-# Latest version: 17.13.3
-# Generated: 2026-02-25
+# npm: https://www.npmjs.com/package/joi
+# Repository: https://github.com/hapijs/joi

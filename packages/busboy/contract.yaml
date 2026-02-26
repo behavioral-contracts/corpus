@@ -1,0 +1,16 @@
+package: "busboy"
+description: "A streaming parser for HTML form data for Node.js"
+semver: ">=1.0.0"
+
+postconditions:
+  - id: busboy-001
+    summary: "Busboy streams must handle parsing and limit errors"
+    severity: ERROR
+    behavior: |
+      All busboy instances must have error event listeners attached to handle
+      parsing errors, limit exceeded errors, and stream errors. Unhandled
+      errors will crash the application.
+    patterns:
+      # Busboy instance creation without error handler
+      - "new Busboy()"
+      - "busboy()"

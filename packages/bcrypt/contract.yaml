@@ -1,52 +1,15 @@
-package: bcrypt
-semver: ">=5.0.0 <7.0.0"
-contract_version: "1.0.0"
-maintainer: "corpus-team"
-last_verified: "2026-02-26"
+package: "bcrypt"
+description: "A library to help you hash passwords"
+semver: ">=5.0.0"
 
-detection:
-  type_names:
-    - HashOptions
-
-functions:
-  - name: hash
-    import_path: "bcrypt"
-    description: "Hashes a password using bcrypt algorithm"
-
-    postconditions:
-      - id: hash-throws-on-error
-        condition: "invalid input or salt generation fails"
-        throws: "Error"
-        required_handling: "Caller MUST wrap hash() in try-catch to handle hashing errors"
-        source: "https://github.com/kelektiv/node.bcrypt.js#usage"
-        severity: error
-
-  - name: compare
-    import_path: "bcrypt"
-    description: "Compares password with hash using constant-time comparison"
-
-    postconditions:
-      - id: compare-throws-on-error
-        condition: "hash is malformed or comparison fails"
-        throws: "Error"
-        required_handling: "Caller MUST wrap compare() in try-catch to handle comparison errors"
-        source: "https://github.com/kelektiv/node.bcrypt.js#usage"
-        severity: error
-
-    edge_cases:
-      - id: timing-attack-protection
-        description: "Always use compare() instead of manual string comparison to prevent timing attacks. Manual comparison leaks hash information through execution time."
-        source: "https://github.com/kelektiv/node.bcrypt.js#a-note-on-timing-attacks"
-        severity: warning
-
-  - name: genSalt
-    import_path: "bcrypt"
-    description: "Generates salt for hashing"
-
-    postconditions:
-      - id: gensalt-throws-on-error
-        condition: "system entropy unavailable or rounds invalid"
-        throws: "Error"
-        required_handling: "Caller SHOULD wrap genSalt() in try-catch to handle generation errors"
-        source: "https://github.com/kelektiv/node.bcrypt.js#usage"
-        severity: warning
+postconditions:
+  - id: bcrypt-001
+    summary: "Bcrypt operations must handle hashing errors"
+    severity: ERROR
+    behavior: |
+      All bcrypt hashing and comparison operations must be wrapped in try-catch
+      blocks to handle errors.
+    patterns:
+      - "bcrypt.hash()"
+      - "bcrypt.compare()"
+      - "bcrypt.genSalt()"

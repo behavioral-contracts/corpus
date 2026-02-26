@@ -1,0 +1,42 @@
+package: "minio"
+description: "MinIO Client SDK for JavaScript"
+semver: ">=7.0.0"
+
+postconditions:
+  - id: minio-001
+    summary: "MinIO storage operations must handle connection errors"
+    severity: ERROR
+    behavior: |
+      All MinIO client operations that interact with S3-compatible storage
+      must be wrapped in try-catch blocks to handle connection errors,
+      authentication failures, and API errors.
+    patterns:
+      # Bucket operations
+      - "minioClient.makeBucket()"
+      - "minioClient.removeBucket()"
+      - "minioClient.listBuckets()"
+      - "minioClient.bucketExists()"
+
+      # Object operations
+      - "minioClient.putObject()"
+      - "minioClient.fPutObject()"
+      - "minioClient.getObject()"
+      - "minioClient.fGetObject()"
+      - "minioClient.removeObject()"
+      - "minioClient.removeObjects()"
+      - "minioClient.listObjects()"
+      - "minioClient.listObjectsV2()"
+      - "minioClient.statObject()"
+      - "minioClient.copyObject()"
+
+      # Presigned operations
+      - "minioClient.presignedGetObject()"
+      - "minioClient.presignedPutObject()"
+      - "minioClient.presignedUrl()"
+
+      # Instance-based patterns
+      - "new Client().putObject()"
+      - "new Client().getObject()"
+      - "new Client().makeBucket()"
+      - "client.putObject()"
+      - "client.getObject()"

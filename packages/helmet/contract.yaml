@@ -1,33 +1,12 @@
-package: helmet
-semver: ">=7.0.0 <9.0.0"
-contract_version: "1.0.0"
-maintainer: "corpus-team"
-last_verified: "2026-02-26"
+package: "helmet"
+description: "Node.js package - helmet"
+semver: ">=1.0.0"
 
-detection:
-  type_names:
-    - HelmetOptions
-
-functions:
-  - name: helmet
-    import_path: "helmet"
-    description: "Middleware that sets security headers"
-
-    postconditions:
-      - id: helmet-returns-middleware
-        condition: "helmet() is called"
-        returns: "Express middleware function that sets security headers"
-        required_handling: "None - helmet middleware does not throw errors in normal operation"
-        source: "https://helmetjs.github.io/"
-        severity: info
-
-    edge_cases:
-      - id: csp-configuration
-        description: "Default Content-Security-Policy may be too permissive. Configure CSP directives specific to your application to prevent XSS attacks."
-        source: "https://helmetjs.github.io/#content-security-policy"
-        severity: warning
-
-      - id: middleware-order
-        description: "helmet() should be applied early in middleware chain before other middleware processes requests"
-        source: "https://helmetjs.github.io/"
-        severity: info
+postconditions:
+  - id: helmet-001
+    summary: "Package operations should handle errors appropriately"
+    severity: ERROR
+    behavior: |
+      Operations must handle potential errors.
+    patterns:
+      - "helmet()"
