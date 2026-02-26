@@ -1,0 +1,60 @@
+package: @vercel/postgres
+semver: ^0.10.0
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-25"
+
+detection:
+  type_names:
+    - VercelPool
+    - VercelClient
+    - VercelPoolClient
+
+functions:
+  - name: sql
+    import_path: "@vercel/postgres"
+    description: "Tagged template function for executing SQL queries"
+    postconditions:
+      - id: sql-query-no-error-handling
+        description: "Must wrap sql queries in try-catch to handle SQL errors"
+        severity: error
+        rationale: "SQL queries can fail due to syntax errors, connection issues, or constraint violations"
+        source: "https://vercel.com/docs/storage/vercel-postgres"
+
+  - name: query
+    import_path: "@vercel/postgres"
+    description: "Executes a SQL query on database connection"
+    postconditions:
+      - id: query-no-error-handling
+        description: "Must wrap query() in try-catch to handle database errors"
+        severity: error
+        rationale: "Query operations can fail due to connection issues or SQL errors"
+        source: "https://vercel.com/docs/storage/vercel-postgres"
+
+  - name: connect
+    import_path: "@vercel/postgres"
+    description: "Obtains a client from the connection pool"
+    postconditions:
+      - id: connect-no-cleanup
+        description: "Must release client in finally block after connect()"
+        severity: error
+        rationale: "Unreleased clients cause connection pool exhaustion"
+        source: "https://vercel.com/kb/guide/connection-pooling-with-functions"
+
+# Common postconditions for all Vercel Postgres operations
+postconditions:
+  error-handling:
+    description: "Must wrap database operations in try-catch blocks to handle SQL and connection errors"
+    severity: error
+    rationale: "Database operations can fail due to SQL errors, connection issues, or constraint violations, causing application crashes"
+    source: "https://vercel.com/docs/storage/vercel-postgres/vercel-postgres-error-codes"
+
+  connection-cleanup:
+    description: "Must release pooled connections in finally blocks to prevent pool exhaustion"
+    severity: error
+    rationale: "Unreleased connections exhaust the connection pool, causing future queries to hang or fail"
+    source: "https://vercel.com/kb/guide/connection-pooling-with-functions"
+
+# Category: database
+# Latest version: 0.10.0
+# Generated: 2026-02-26
