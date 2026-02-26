@@ -1,0 +1,44 @@
+package: "@nestjs/common"
+semver: ^10.0.0 || ^11.0.0
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+detection:
+  type_names:
+    - Injectable
+    - Controller
+    - HttpException
+    - ExceptionFilter
+
+functions:
+  - name: Injectable
+    import_path: "@nestjs/common"
+    description: "Decorator for dependency injection"
+    postconditions:
+      - id: injectable-constructor-errors
+        description: "Injectable class constructors should handle initialization errors"
+        severity: warning
+        rationale: "Constructor errors during DI can crash application startup"
+        source: "https://docs.nestjs.com/providers"
+
+  - name: Controller
+    import_path: "@nestjs/common"
+    description: "Decorator for route controllers"
+    postconditions:
+      - id: controller-route-errors
+        description: "Controller route handlers must handle async errors"
+        severity: error
+        rationale: "Unhandled async errors in routes crash the application"
+        source: "https://docs.nestjs.com/exception-filters"
+
+postconditions:
+  exception-filters:
+    description: "Use ExceptionFilter for centralized error handling"
+    severity: warning
+    rationale: "Exception filters provide consistent error handling across the application"
+    source: "https://docs.nestjs.com/exception-filters#exception-filters-1"
+
+# Category: framework
+# Latest version: 11.1.14
+# Generated: 2026-02-26

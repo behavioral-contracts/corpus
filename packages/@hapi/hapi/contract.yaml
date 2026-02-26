@@ -1,0 +1,44 @@
+package: "@hapi/hapi"
+semver: ^21.0.0
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+detection:
+  type_names:
+    - Server
+    - ServerRoute
+    - Request
+    - ResponseToolkit
+
+functions:
+  - name: route
+    import_path: "@hapi/hapi"
+    description: "Registers route handler"
+    postconditions:
+      - id: route-handler-errors
+        description: "Route handlers should handle errors and return proper error responses"
+        severity: error
+        rationale: "Unhandled errors in route handlers can crash the server"
+        source: "https://hapi.dev/api/?v=21.4.6#-serverrouteroute"
+
+  - name: start
+    import_path: "@hapi/hapi"
+    description: "Starts the server"
+    postconditions:
+      - id: start-no-error-handling
+        description: "Must wrap server.start() in try-catch to handle startup errors"
+        severity: error
+        rationale: "Server startup can fail due to port conflicts or configuration errors"
+        source: "https://hapi.dev/api/?v=21.4.6#-async-serverstartoptionsoptions"
+
+postconditions:
+  error-handling:
+    description: "Configure onPreResponse extension for centralized error handling"
+    severity: warning
+    rationale: "Centralized error handling ensures consistent error responses"
+    source: "https://hapi.dev/api/?v=21.4.6#-serverextoptions"
+
+# Category: framework
+# Latest version: 21.4.6
+# Generated: 2026-02-26

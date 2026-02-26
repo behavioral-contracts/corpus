@@ -1,0 +1,53 @@
+package: knex
+semver: ^3.0.0
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+detection:
+  type_names:
+    - Knex
+    - QueryBuilder
+    - Transaction
+
+functions:
+  - name: select
+    import_path: "knex"
+    description: "Executes SELECT query"
+    postconditions:
+      - id: select-no-error-handling
+        description: "Must wrap select queries in try-catch to handle SQL errors"
+        severity: error
+        rationale: "Queries can fail due to syntax errors, connection issues, or constraint violations"
+        source: "https://knexjs.org/guide/query-builder.html"
+
+  - name: insert
+    import_path: "knex"
+    description: "Executes INSERT query"
+    postconditions:
+      - id: insert-no-error-handling
+        description: "Must wrap insert in try-catch to handle constraint violations"
+        severity: error
+        rationale: "Insert can fail due to unique constraints, foreign key violations, or type mismatches"
+        source: "https://knexjs.org/guide/query-builder.html#insert"
+
+  - name: transaction
+    import_path: "knex"
+    description: "Executes queries within a transaction"
+    postconditions:
+      - id: transaction-no-rollback
+        description: "Must handle transaction errors and rollback on failure"
+        severity: error
+        rationale: "Failed transactions must be rolled back to prevent partial data commits"
+        source: "https://knexjs.org/guide/transactions.html"
+
+postconditions:
+  connection-management:
+    description: "Must call destroy() when application shuts down to close connections"
+    severity: warning
+    rationale: "Unclosed connections can prevent graceful shutdown"
+    source: "https://knexjs.org/guide/#destroy"
+
+# Category: database
+# Latest version: 3.1.0
+# Generated: 2026-02-26

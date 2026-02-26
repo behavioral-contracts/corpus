@@ -1,0 +1,54 @@
+package: typeorm
+semver: ^0.3.0
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+detection:
+  type_names:
+    - Repository
+    - EntityManager
+    - DataSource
+    - QueryRunner
+
+functions:
+  - name: find
+    import_path: "typeorm"
+    description: "Finds entities matching criteria"
+    postconditions:
+      - id: find-no-error-handling
+        description: "Must wrap repository operations in try-catch for database errors"
+        severity: error
+        rationale: "Database operations can fail due to connection issues or query errors"
+        source: "https://typeorm.io/find-options"
+
+  - name: save
+    import_path: "typeorm"
+    description: "Saves entity to database"
+    postconditions:
+      - id: save-no-error-handling
+        description: "Must wrap save() in try-catch to handle constraint violations"
+        severity: error
+        rationale: "save() can fail due to validation errors, unique constraints, or foreign key violations"
+        source: "https://typeorm.io/repository-api"
+
+  - name: transaction
+    import_path: "typeorm"
+    description: "Executes operations within a transaction"
+    postconditions:
+      - id: transaction-no-error-handling
+        description: "Must handle transaction errors to ensure rollback"
+        severity: error
+        rationale: "Unhandled errors in transactions can leave database in inconsistent state"
+        source: "https://typeorm.io/transactions"
+
+postconditions:
+  connection-lifecycle:
+    description: "Must properly initialize and destroy DataSource connections"
+    severity: warning
+    rationale: "Uninitialized or unclosed connections cause application failures"
+    source: "https://typeorm.io/data-source"
+
+# Category: database
+# Latest version: 0.3.28
+# Generated: 2026-02-26
