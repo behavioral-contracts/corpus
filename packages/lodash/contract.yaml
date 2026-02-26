@@ -1,0 +1,30 @@
+package: lodash
+semver: ">=4.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+functions:
+  - name: template
+    import_path: "lodash"
+    description: "Compiles a template string into a function"
+
+    postconditions:
+      - id: syntax-error
+        condition: "template string has invalid syntax"
+        throws: "SyntaxError"
+        required_handling: "Caller MUST wrap in try-catch if template comes from untrusted input"
+        source: "https://lodash.com/docs/#template"
+        severity: error
+
+  - name: attempt
+    import_path: "lodash"
+    description: "Attempts to invoke a function, returning an Error on failure"
+
+    postconditions:
+      - id: function-error
+        condition: "wrapped function throws"
+        returns: "Error instance"
+        required_handling: "Caller MUST check if result is Error using _.isError()"
+        source: "https://lodash.com/docs/#attempt"
+        severity: warning

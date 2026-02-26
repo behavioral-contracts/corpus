@@ -1,0 +1,30 @@
+package: validator
+semver: ">=13.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+functions:
+  - name: isEmail
+    import_path: "validator"
+    description: "Validates email format"
+
+    postconditions:
+      - id: invalid-email
+        condition: "email format is invalid"
+        returns: "false"
+        required_handling: "Caller SHOULD check return value to prevent security vulnerabilities"
+        source: "https://www.npmjs.com/package/validator"
+        severity: warning
+
+  - name: isURL
+    import_path: "validator"
+    description: "Validates URL format"
+
+    postconditions:
+      - id: invalid-url
+        condition: "URL format is invalid"
+        returns: "false"
+        required_handling: "Caller SHOULD check return value to prevent security vulnerabilities"
+        source: "https://www.npmjs.com/package/validator"
+        severity: warning

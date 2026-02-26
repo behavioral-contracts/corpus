@@ -1,0 +1,37 @@
+package: socket.io-client
+semver: ">=4.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+functions:
+  - name: io
+    import_path: "socket.io-client"
+    description: "Creates Socket.IO client connection"
+
+    postconditions:
+      - id: connect-error
+        condition: "connection fails"
+        throws: "emits 'connect_error' event"
+        required_handling: "Caller MUST attach connect_error event listener"
+        source: "https://socket.io/docs/v4/client-api/"
+        severity: error
+
+      - id: general-error
+        condition: "socket error occurs"
+        throws: "emits 'error' event"
+        required_handling: "Caller MUST attach error event listener"
+        source: "https://socket.io/docs/v4/client-api/"
+        severity: error
+
+  - name: emit
+    import_path: "socket.io-client"
+    description: "Emits an event to the server"
+
+    postconditions:
+      - id: disconnected
+        condition: "socket is disconnected"
+        returns: "silently fails"
+        required_handling: "Caller SHOULD use acknowledgment callbacks or check socket state"
+        source: "https://socket.io/docs/v4/client-api/"
+        severity: warning

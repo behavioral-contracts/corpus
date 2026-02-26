@@ -1,0 +1,44 @@
+package: nodemailer
+semver: ">=6.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+functions:
+  - name: sendMail
+    import_path: "nodemailer"
+    description: "Sends an email via configured transport"
+
+    postconditions:
+      - id: smtp-error
+        condition: "SMTP connection fails"
+        throws: "Error"
+        required_handling: "Caller MUST wrap in try-catch to handle connection errors"
+        source: "https://nodemailer.com/"
+        severity: error
+
+      - id: auth-error
+        condition: "SMTP authentication fails"
+        throws: "Error"
+        required_handling: "Caller MUST wrap in try-catch to handle authentication failures"
+        source: "https://nodemailer.com/"
+        severity: error
+
+      - id: invalid-recipient
+        condition: "recipient address is invalid"
+        throws: "Error"
+        required_handling: "Caller MUST wrap in try-catch to handle invalid addresses"
+        source: "https://nodemailer.com/"
+        severity: error
+
+  - name: createTransport
+    import_path: "nodemailer"
+    description: "Creates a mail transport instance"
+
+    postconditions:
+      - id: transport-created
+        condition: "transport is created"
+        returns: "Transport instance"
+        required_handling: "Caller MUST handle errors on transporter.sendMail() calls"
+        source: "https://nodemailer.com/"
+        severity: warning

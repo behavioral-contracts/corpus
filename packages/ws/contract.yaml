@@ -1,0 +1,37 @@
+package: ws
+semver: ">=8.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+functions:
+  - name: send
+    import_path: "ws"
+    description: "Sends data through WebSocket connection"
+
+    postconditions:
+      - id: not-open
+        condition: "WebSocket is not in OPEN state"
+        throws: "Error"
+        required_handling: "Caller MUST wrap in try-catch or use callback error handling"
+        source: "https://www.npmjs.com/package/ws"
+        severity: error
+
+      - id: buffer-full
+        condition: "send buffer is full"
+        throws: "Error"
+        required_handling: "Caller MUST handle buffer overflow errors"
+        source: "https://www.npmjs.com/package/ws"
+        severity: error
+
+  - name: WebSocket
+    import_path: "ws"
+    description: "Creates WebSocket connection"
+
+    postconditions:
+      - id: connection-error
+        condition: "connection fails"
+        throws: "emits 'error' event"
+        required_handling: "Caller MUST attach error event listener"
+        source: "https://www.npmjs.com/package/ws"
+        severity: error
