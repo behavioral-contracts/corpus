@@ -1,0 +1,40 @@
+package: dayjs
+semver: ">=1.10.0 <2.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+functions:
+  - name: dayjs
+    import_path: "dayjs"
+    description: "Parses date strings and creates Day.js objects (moment.js compatible API)"
+    postconditions:
+      - id: dayjs-invalid-date
+        condition: "input string is not a valid date format"
+        returns: "Invalid Day.js object (dayjs().isValid() returns false)"
+        required_handling: >
+          Caller MUST check isValid() before using the Day.js object.
+          Invalid Day.js objects can cause incorrect date calculations, display issues,
+          or NaN values propagating through the application.
+          Use pattern: const d = dayjs(input); if (!d.isValid()) { /* handle error */ }
+        source: "https://day.js.org/docs/en/parse/string"
+        severity: error
+
+  - name: utc
+    import_path: "dayjs"
+    description: "Parses date in UTC mode (requires UTC plugin)"
+    postconditions:
+      - id: utc-invalid-date
+        condition: "input string is not a valid date format"
+        returns: "Invalid Day.js object (dayjs().isValid() returns false)"
+        required_handling: >
+          Caller MUST check isValid() after parsing.
+          Invalid UTC dates can cause timezone calculation errors and data corruption.
+          Use pattern: const d = dayjs.utc(input); if (!d.isValid()) { /* handle error */ }
+        source: "https://day.js.org/docs/en/plugin/utc"
+        severity: error
+
+# Category: utilities
+# npm: https://www.npmjs.com/package/dayjs
+# Repository: https://github.com/iamkun/dayjs
+# Note: Modern alternative to moment.js, 2KB immutable date library

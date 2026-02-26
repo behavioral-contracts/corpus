@@ -1,0 +1,49 @@
+package: sinon
+semver: ">=10.0.0 <20.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+functions:
+  - name: stub
+    import_path: "sinon"
+    description: "Creates a test stub that can replace functions and track calls"
+    postconditions:
+      - id: stub-throws-configured
+        condition: "stub is configured to throw via stub.throws(error)"
+        throws: "Configured error object"
+        required_handling: >
+          When a stub is configured to throw, calls to that stub will throw the configured error.
+          Test code MUST handle these thrown errors appropriately.
+          Use pattern: try { stubFunction(); } catch (e) { /* verify expected error */ }
+        source: "https://sinonjs.org/releases/latest/stubs/"
+        severity: info
+
+  - name: mock
+    import_path: "sinon"
+    description: "Creates a mock object with expectations"
+    postconditions:
+      - id: mock-verify-fails
+        condition: "mock.verify() is called and expectations are not met"
+        throws: "ExpectationError"
+        required_handling: >
+          Mock verification throws ExpectationError when expectations are not met.
+          In test code, this is expected behavior. Ensure mock.verify() is called in test assertions.
+        source: "https://sinonjs.org/releases/latest/mocks/"
+        severity: info
+
+  - name: fake
+    import_path: "sinon"
+    description: "Creates a fake function with configured behavior"
+    postconditions:
+      - id: fake-throws-configured
+        condition: "fake is configured to throw via fake.throws(error)"
+        throws: "Configured error object"
+        required_handling: >
+          Fakes configured to throw will throw on invocation. Test code should handle appropriately.
+        source: "https://sinonjs.org/releases/latest/fakes/"
+        severity: info
+
+# Category: testing
+# npm: https://www.npmjs.com/package/sinon
+# Repository: https://github.com/sinonjs/sinon

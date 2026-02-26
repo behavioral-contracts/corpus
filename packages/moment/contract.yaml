@@ -1,0 +1,40 @@
+package: moment
+semver: ">=2.29.0 <3.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+functions:
+  - name: moment
+    import_path: "moment"
+    description: "Parses date strings and creates moment objects"
+    postconditions:
+      - id: moment-invalid-date
+        condition: "input string is not a valid date format"
+        returns: "Invalid moment object (moment.isValid() returns false)"
+        required_handling: >
+          Caller MUST check isValid() before using the moment object.
+          Invalid moment objects can cause incorrect date calculations, display issues,
+          or NaN values propagating through the application.
+          Use pattern: const m = moment(input); if (!m.isValid()) { /* handle error */ }
+        source: "https://momentjs.com/docs/#/parsing/string/"
+        severity: error
+
+  - name: utc
+    import_path: "moment"
+    description: "Parses date in UTC mode"
+    postconditions:
+      - id: utc-invalid-date
+        condition: "input string is not a valid date format"
+        returns: "Invalid moment object (moment.isValid() returns false)"
+        required_handling: >
+          Caller MUST check isValid() after parsing.
+          Invalid UTC moments can cause timezone calculation errors and data corruption.
+          Use pattern: const m = moment.utc(input); if (!m.isValid()) { /* handle error */ }
+        source: "https://momentjs.com/docs/#/parsing/utc/"
+        severity: error
+
+# Category: utilities
+# npm: https://www.npmjs.com/package/moment
+# Repository: https://github.com/moment/moment
+# Note: Moment.js is in maintenance mode (no new features), but still widely used

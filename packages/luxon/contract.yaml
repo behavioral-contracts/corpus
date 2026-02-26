@@ -1,0 +1,81 @@
+package: luxon
+semver: ">=3.0.0 <5.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+functions:
+  - name: DateTime.fromISO
+    import_path: "luxon"
+    description: "Parses an ISO 8601 date string into a DateTime object"
+    postconditions:
+      - id: fromiso-invalid-date
+        condition: "input string is not a valid ISO 8601 format"
+        returns: "Invalid DateTime object (dt.isValid is false, dt.invalidReason contains error)"
+        required_handling: >
+          Caller MUST check isValid property before using the DateTime object.
+          Invalid DateTime objects contain error information in invalidReason and invalidExplanation.
+          Without validation, invalid dates cause calculation errors, display issues, or data corruption.
+          Use pattern: const dt = DateTime.fromISO(input); if (!dt.isValid) { console.error(dt.invalidReason); }
+        source: "https://moment.github.io/luxon/api-docs/index.html#datetimefromiso"
+        severity: error
+
+  - name: DateTime.fromFormat
+    import_path: "luxon"
+    description: "Parses a date string using a specified format"
+    postconditions:
+      - id: fromformat-invalid-date
+        condition: "input string does not match the specified format"
+        returns: "Invalid DateTime object (dt.isValid is false, dt.invalidReason contains error)"
+        required_handling: >
+          Caller MUST check isValid property after parsing.
+          Invalid DateTime objects indicate parsing failure but do not throw.
+          Use pattern: const dt = DateTime.fromFormat(input, format); if (!dt.isValid) { /* handle */ }
+        source: "https://moment.github.io/luxon/api-docs/index.html#datetimefromformat"
+        severity: error
+
+  - name: DateTime.fromSQL
+    import_path: "luxon"
+    description: "Parses a SQL date/datetime string"
+    postconditions:
+      - id: fromsql-invalid-date
+        condition: "input string is not a valid SQL date format"
+        returns: "Invalid DateTime object (dt.isValid is false)"
+        required_handling: >
+          Caller MUST check isValid property.
+          Invalid SQL dates can cause database query errors and data corruption.
+          Use pattern: const dt = DateTime.fromSQL(input); if (!dt.isValid) { /* handle */ }
+        source: "https://moment.github.io/luxon/api-docs/index.html#datetimefromsql"
+        severity: error
+
+  - name: DateTime.fromHTTP
+    import_path: "luxon"
+    description: "Parses an HTTP header date string (RFC 2822/1123)"
+    postconditions:
+      - id: fromhttp-invalid-date
+        condition: "input string is not a valid HTTP date format"
+        returns: "Invalid DateTime object (dt.isValid is false)"
+        required_handling: >
+          Caller MUST check isValid property.
+          Invalid HTTP dates can cause caching errors and incorrect header processing.
+          Use pattern: const dt = DateTime.fromHTTP(input); if (!dt.isValid) { /* handle */ }
+        source: "https://moment.github.io/luxon/api-docs/index.html#datetimefromhttp"
+        severity: error
+
+  - name: DateTime.fromRFC2822
+    import_path: "luxon"
+    description: "Parses an RFC 2822 date string"
+    postconditions:
+      - id: fromrfc2822-invalid-date
+        condition: "input string is not a valid RFC 2822 format"
+        returns: "Invalid DateTime object (dt.isValid is false)"
+        required_handling: >
+          Caller MUST check isValid property.
+          Use pattern: const dt = DateTime.fromRFC2822(input); if (!dt.isValid) { /* handle */ }
+        source: "https://moment.github.io/luxon/api-docs/index.html#datetimefromrfc2822"
+        severity: error
+
+# Category: utilities
+# npm: https://www.npmjs.com/package/luxon
+# Repository: https://github.com/moment/luxon
+# Note: Modern date library by moment.js team, immutable, timezone-aware

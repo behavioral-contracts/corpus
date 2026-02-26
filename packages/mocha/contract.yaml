@@ -1,0 +1,80 @@
+package: mocha
+semver: ">=8.0.0 <12.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+
+functions:
+  - name: it
+    import_path: "mocha"
+    description: "Defines a test case that may be synchronous or asynchronous"
+    postconditions:
+      - id: it-async-unhandled-rejection
+        condition: "test function is async or returns a Promise that rejects"
+        throws: "UnhandledPromiseRejectionWarning"
+        required_handling: >
+          Test functions that return promises or use async/await MUST handle rejections.
+          Without proper error handling, unhandled promise rejections in tests cause test
+          failures to be reported incorrectly or crash the test runner.
+          Use pattern: it('test', async () => { try { await operation(); } catch (e) { throw e; } })
+          or rely on Mocha's built-in async handling.
+        source: "https://mochajs.org/#asynchronous-code"
+        severity: warning
+
+  - name: before
+    import_path: "mocha"
+    description: "Defines a hook that runs before all tests in a suite"
+    postconditions:
+      - id: before-async-unhandled-rejection
+        condition: "hook function is async or returns a Promise that rejects"
+        throws: "UnhandledPromiseRejectionWarning"
+        required_handling: >
+          Before hooks that return promises MUST handle rejections properly.
+          Unhandled rejections in before hooks cause test suite failures without clear
+          error messages. Use async/await or return promises that are properly handled.
+        source: "https://mochajs.org/#hooks"
+        severity: warning
+
+  - name: after
+    import_path: "mocha"
+    description: "Defines a hook that runs after all tests in a suite"
+    postconditions:
+      - id: after-async-unhandled-rejection
+        condition: "hook function is async or returns a Promise that rejects"
+        throws: "UnhandledPromiseRejectionWarning"
+        required_handling: >
+          After hooks that return promises MUST handle rejections properly.
+          Unhandled rejections in cleanup hooks can leave resources in inconsistent states.
+          Use async/await or return promises that are properly handled.
+        source: "https://mochajs.org/#hooks"
+        severity: warning
+
+  - name: beforeEach
+    import_path: "mocha"
+    description: "Defines a hook that runs before each test in a suite"
+    postconditions:
+      - id: beforeeach-async-unhandled-rejection
+        condition: "hook function is async or returns a Promise that rejects"
+        throws: "UnhandledPromiseRejectionWarning"
+        required_handling: >
+          BeforeEach hooks that return promises MUST handle rejections properly.
+          Unhandled rejections cause individual test failures without clear attribution.
+        source: "https://mochajs.org/#hooks"
+        severity: warning
+
+  - name: afterEach
+    import_path: "mocha"
+    description: "Defines a hook that runs after each test in a suite"
+    postconditions:
+      - id: aftereach-async-unhandled-rejection
+        condition: "hook function is async or returns a Promise that rejects"
+        throws: "UnhandledPromiseRejectionWarning"
+        required_handling: >
+          AfterEach hooks that return promises MUST handle rejections properly.
+          Unhandled rejections in cleanup can leave test environment in bad state.
+        source: "https://mochajs.org/#hooks"
+        severity: warning
+
+# Category: testing
+# npm: https://www.npmjs.com/package/mocha
+# Repository: https://github.com/mochajs/mocha
