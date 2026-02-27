@@ -1,7 +1,10 @@
 package: "formidable"
+semver: ">=3.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-27"
 status: production  # Event listener detection now supported by EventListenerAnalyzer
 description: "A Node.js module for parsing form data, especially file uploads"
-semver: ">=3.0.0"
 
 detection:
   class_names:
@@ -14,19 +17,14 @@ detection:
       required: true
       severity: error
 
-postconditions:
-  - id: formidable-001
-    summary: "Form parsing operations must handle parsing errors"
-    severity: ERROR
-    behavior: |
-      All formidable form parsing operations must be wrapped in try-catch
-      blocks (promise-based) or use error callbacks to handle parsing errors,
-      file size limit errors, and invalid data errors.
-    patterns:
-      # Promise-based parsing
-      - "form.parse()"
-      - "formidable().parse()"
-      - "new formidable.IncomingForm().parse()"
-
-      # Instance-based patterns
-      - "new IncomingForm().parse()"
+functions:
+  - name: parse
+    import_path: "formidable"
+    description: "Parses form data from HTTP request"
+    postconditions:
+      - id: formidable-001
+        condition: "form parsing fails due to invalid data or size limits"
+        throws: "Error with parsing details"
+        required_handling: "Caller MUST handle parsing errors in event listener or try-catch"
+        severity: error
+        source: "https://github.com/node-formidable/formidable"

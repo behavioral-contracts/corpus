@@ -1,7 +1,10 @@
 package: "busboy"
+semver: ">=1.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-27"
 status: production  # Event listener detection now supported by EventListenerAnalyzer
 description: "A streaming parser for HTML form data for Node.js"
-semver: ">=1.0.0"
 
 detection:
   class_names:
@@ -14,15 +17,14 @@ detection:
       required: true
       severity: error
 
-postconditions:
-  - id: busboy-001
-    summary: "Busboy streams must handle parsing and limit errors"
-    severity: ERROR
-    behavior: |
-      All busboy instances must have error event listeners attached to handle
-      parsing errors, limit exceeded errors, and stream errors. Unhandled
-      errors will crash the application.
-    patterns:
-      # Busboy instance creation without error handler
-      - "new Busboy()"
-      - "busboy()"
+functions:
+  - name: Busboy
+    import_path: "busboy"
+    description: "Creates Busboy parser instance"
+    postconditions:
+      - id: busboy-001
+        condition: "parsing fails due to limits or malformed data"
+        throws: "Error emitted via 'error' event"
+        required_handling: "Caller MUST attach error event listener to Busboy instance"
+        severity: error
+        source: "https://github.com/mscdex/busboy"

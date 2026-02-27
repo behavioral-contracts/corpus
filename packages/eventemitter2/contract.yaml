@@ -1,7 +1,10 @@
 package: "eventemitter2"
+semver: ">=6.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-27"
 status: production  # Event listener detection now supported by EventListenerAnalyzer
 description: "Event emitter with namespaces, wildcards, and additional features"
-semver: ">=6.0.0"
 
 detection:
   class_names:
@@ -14,14 +17,14 @@ detection:
       required: true
       severity: error
 
-postconditions:
-  - id: eventemitter2-001
-    summary: "EventEmitter2 instances should handle error events"
-    severity: ERROR
-    behavior: |
-      EventEmitter2 instances that can emit error events should have error
-      event listeners attached. Unhandled error events will throw uncaught
-      exceptions unless ignoreErrors is configured.
-    patterns:
-      # EventEmitter2 creation
-      - "new EventEmitter2()"
+functions:
+  - name: EventEmitter2
+    import_path: "eventemitter2"
+    description: "Creates EventEmitter2 instance"
+    postconditions:
+      - id: eventemitter2-001
+        condition: "error event emitted without listener"
+        throws: "Uncaught exception unless ignoreErrors configured"
+        required_handling: "Caller MUST attach error event listener"
+        severity: error
+        source: "https://github.com/EventEmitter2/EventEmitter2"
