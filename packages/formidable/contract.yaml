@@ -1,30 +1,23 @@
-package: "formidable"
-semver: ">=3.0.0"
+package: formidable
+semver: ">=3.5.3"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-27"
-status: production  # Event listener detection now supported by EventListenerAnalyzer
-description: "A Node.js module for parsing form data, especially file uploads"
-
-detection:
-  class_names:
-    - IncomingForm
-  require_instance_tracking: true
-
-  # Required event listeners to prevent process crashes
-  required_event_listeners:
-    - event: "error"
-      required: true
-      severity: error
+status: draft
 
 functions:
   - name: parse
     import_path: "formidable"
-    description: "Parses form data from HTTP request"
+    description: "Parses multipart form data from HTTP request (promise-based, async/await)"
+
     postconditions:
-      - id: formidable-001
-        condition: "form parsing fails due to invalid data or size limits"
-        throws: "Error with parsing details"
-        required_handling: "Caller MUST handle parsing errors in event listener or try-catch"
+      - id: formidable-parse-error
+        condition: "form parsing fails due to invalid data, size limits, or filesystem errors"
+        throws: "Error with code and httpCode properties (e.g., maxFieldsExceeded, maxFileSizeExceeded)"
+        required_handling: >
+          Caller MUST handle parsing errors with try-catch (promise-based) or callback error parameter.
+          Without error handling, the server will crash when: maxFileSize exceeded (default 200MB),
+          maxFields exceeded (default 1000), invalid multipart data is received, filesystem errors occur,
+          or filter function validation fails. Promise-based (v3+): try { const [fields, files] = await form.parse(req); } catch (err) { /* handle */ }
+        source: "https://github.com/node-formidable/formidable/blob/master/README.md"
         severity: error
-        source: "https://github.com/node-formidable/formidable"

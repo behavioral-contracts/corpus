@@ -5,12 +5,17 @@
   "main": "index.js",
   "types": "index.d.ts",
   "files": [
-    "packages/**/*.yaml",
-    "packages/**/*.md",
+    "packages/**/contract.yaml",
+    "packages/**/SOURCES.md",
+    "!packages/**/fixtures/",
+    "!packages/**/node_modules/",
     "schema/",
     "index.js",
     "index.d.ts"
   ],
+  "scripts": {
+    "verify": "cd ../verify-cli && npm run build && node dist/index.js --tsconfig ../corpus/tsconfig.json --corpus ../corpus"
+  },
   "keywords": [
     "behavioral-contracts",
     "error-handling",

@@ -1,0 +1,55 @@
+# Behavioral Contract: lodash
+# Status: BLOCKED - Analyzer Incompatibility
+# Detection Rate: <2% (only _.template throws)
+# Last Updated: 2026-02-27
+
+package: lodash
+semver: ">=4.17.23"  # CVE-2025-13465 fix (prototype pollution)
+status: blocked  # ⚠️ BLOCKED: Incompatible with current analyzer
+
+description: >
+  JavaScript utility library providing functional programming helpers.
+  WARNING: This package is BLOCKED for behavioral contracts.
+  Lodash deliberately avoids throwing exceptions. Only _.template() throws
+  errors, representing <1% of the API surface. Detection rate <2%.
+
+language: javascript
+
+postconditions:
+  - function: _.template
+    behavior: |
+      Compiles a template string into a function. Throws SyntaxError if the
+      template contains invalid JavaScript syntax.
+    throws: true
+    severity: error
+    source: https://lodash.com/docs/#template
+    cve: CVE-2021-23337
+    rationale: |
+      Template compilation can throw syntax errors. However, this represents
+      <1% of lodash usage. Even with high detection rate for this function,
+      overall value is minimal.
+
+limitations:
+  analyzer:
+    - type: return-value-validation
+      description: Cannot detect missing validation of _.get() results
+      impact: high
+      coverage: 95%
+    - type: silent-failure-detection
+      description: Cannot detect silent failures like _.map(undefined) returning []
+      impact: high
+      coverage: 95%
+
+notes:
+  blocking_reasons:
+    - "Only 1 function (_.template) throws exceptions out of 300+ functions"
+    - "99% of lodash functions return safe defaults instead of throwing"
+    - "Real safety concerns are return value validations (undetectable)"
+    - "Detection rate <2% provides near-zero value"
+
+metadata:
+  onboarding_date: 2026-02-27
+  detection_rate: 1-2%
+  false_negative_rate: 98%
+  production_ready: false
+  blocked_reason: analyzer_incompatibility

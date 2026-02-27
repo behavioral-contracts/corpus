@@ -1,77 +1,185 @@
 /**
- * Demonstrates PROPER error handling for request-promise.
- * Should NOT trigger violations.
+ * PROPER ERROR HANDLING for request-promise
+ * 
+ * This file demonstrates CORRECT usage patterns.
+ * Should have 0 violations when analyzed.
  */
+
 import rp from 'request-promise';
 
-async function fetchDataWithTryCatch() {
+/**
+ * ✅ GOOD: Using try-catch with async/await
+ */
+async function fetchWithTryCatch() {
   try {
-    const response = await rp('https://api.example.com/data');
-    return JSON.parse(response);
-  } catch (error) {
-    console.error('Request failed:', error);
-    throw error;
+    const html = await rp('http://example.com');
+    console.log('Success:', html);
+  } catch (err: any) {
+    if (err.statusCode) {
+      console.error('HTTP error:', err.statusCode);
+    } else if (err.cause) {
+      console.error('Network error:', err.cause);
+    } else {
+      console.error('Unknown error:', err);
+    }
   }
 }
 
-async function fetchWithOptionsWithTryCatch() {
-  try {
-    const response = await rp({
-      uri: 'https://api.example.com/users',
-      method: 'GET',
-      json: true
+/**
+ * ✅ GOOD: Using .catch() with promise chain
+ */
+function fetchWithCatch() {
+  rp('http://example.com')
+    .then(html => {
+      console.log('Success:', html);
+    })
+    .catch(err => {
+      console.error('Error:', err);
     });
-    return response;
-  } catch (error) {
-    console.error('GET failed:', error);
-    throw error;
+}
+
+/**
+ * ✅ GOOD: Using rp.get() with error handling
+ */
+async function getWithErrorHandling() {
+  try {
+    const data = await rp.get('http://api.example.com/users');
+    return JSON.parse(data);
+  } catch (err: any) {
+    if (err.statusCode === 404) {
+      return []; // Return empty array on 404
+    }
+    throw err; // Re-throw other errors
   }
 }
 
-async function postDataWithTryCatch() {
+/**
+ * ✅ GOOD: Using rp.post() with error handling
+ */
+async function postWithErrorHandling(userData: any) {
   try {
     const response = await rp.post({
-      uri: 'https://api.example.com/users',
-      body: { name: 'John', email: 'john@example.com' },
-      json: true
+      uri: 'http://api.example.com/users',
+      json: true,
+      body: userData
     });
     return response;
-  } catch (error) {
-    console.error('POST failed:', error);
-    throw error;
+  } catch (err: any) {
+    if (err.statusCode === 400) {
+      console.error('Validation error:', err.error);
+    }
+    throw err;
   }
 }
 
-async function putDataWithTryCatch() {
+/**
+ * ✅ GOOD: Custom instance with error handling
+ */
+async function customInstanceWithTryCatch() {
+  const client = rp.defaults({
+    baseUrl: 'http://api.example.com',
+    json: true
+  });
+
   try {
-    const response = await rp.put({
-      uri: 'https://api.example.com/users/123',
-      body: { name: 'Jane' },
-      json: true
-    });
-    return response;
-  } catch (error) {
-    console.error('PUT failed:', error);
-    throw error;
+    const users = await client('/users');
+    return users;
+  } catch (err: any) {
+    console.error('Error fetching users:', err);
+    return [];
   }
 }
 
-async function deleteDataWithTryCatch() {
+/**
+ * ✅ GOOD: Using simple: false (disables StatusCodeError)
+ * Note: With simple: false, you need to check response.statusCode manually
+ */
+async function withSimpleFalse() {
   try {
-    const response = await rp.delete('https://api.example.com/users/123');
-    return response;
-  } catch (error) {
-    console.error('DELETE failed:', error);
-    throw error;
+    const response = await rp({
+      uri: 'http://api.example.com/data',
+      simple: false,
+      resolveWithFullResponse: true
+    });
+
+    if (response.statusCode === 200) {
+      return response.body;
+    } else {
+      throw new Error(`Unexpected status: ${response.statusCode}`);
+    }
+  } catch (err: any) {
+    // Only network errors here (RequestError), not StatusCodeError
+    console.error('Network error:', err);
+    throw err;
   }
 }
 
-// Using promise .catch()
-function fetchWithPromiseCatch() {
-  return rp('https://api.example.com/data')
-    .then(response => JSON.parse(response))
-    .catch(error => {
-      console.error('Request failed:', error);
-      throw error;
+/**
+ * ✅ GOOD: Transform with error handling
+ */
+async function withTransform() {
+  try {
+    const users = await rp({
+      uri: 'http://api.example.com/users',
+      transform: (body) => {
+        try {
+          return JSON.parse(body);
+        } catch (e) {
+          throw new Error('Invalid JSON response');
+        }
+      }
     });
+    return users;
+  } catch (err: any) {
+    if (err.message === 'Invalid JSON response') {
+      console.error('Transform error:', err);
+    }
+    throw err;
+  }
+}
+
+/**
+ * ✅ GOOD: Promise.all with error handling
+ */
+async function fetchMultipleWithTryCatch() {
+  try {
+    const [users, posts, comments] = await Promise.all([
+      rp('http://api.example.com/users'),
+      rp('http://api.example.com/posts'),
+      rp('http://api.example.com/comments')
+    ]);
+    return { users, posts, comments };
+  } catch (err: any) {
+    console.error('One or more requests failed:', err);
+    throw err;
+  }
+}
+
+/**
+ * ✅ GOOD: Chained promise with .catch()
+ */
+function chainedWithCatch() {
+  return rp('http://api.example.com/data')
+    .then(data => JSON.parse(data))
+    .then(parsed => parsed.results)
+    .catch(err => {
+      console.error('Error in chain:', err);
+      return []; // Return default value
+    });
+}
+
+/**
+ * ✅ GOOD: Using .finally() for cleanup
+ */
+async function withFinally() {
+  let isLoading = true;
+  try {
+    const data = await rp('http://api.example.com/data');
+    return data;
+  } catch (err: any) {
+    console.error('Error:', err);
+    throw err;
+  } finally {
+    isLoading = false;
+  }
 }

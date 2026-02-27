@@ -3,7 +3,7 @@ semver: ">=1.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-27"
-status: production  # Event listener detection now supported by EventListenerAnalyzer
+status: draft  # Needs Phase 7 (real-world validation) to reach production
 description: "A streaming parser for HTML form data for Node.js"
 
 detection:

@@ -1,0 +1,89 @@
+package: "jsonschema"
+semver: ">=1.0.0"
+category: "validation"
+status: "draft"
+
+detection:
+  type_names:
+    - "Validator"
+    - "ValidatorResult"
+    - "ValidationError"
+  patterns:
+    - "require\\(['\"]jsonschema['\"]\\)"
+    - "from ['\"]jsonschema['\"]"
+    - "\\.validate\\("
+
+notes: |
+  IMPORTANT: This package has TWO error handling modes:
+
+  1. DEFAULT (return-value): Returns ValidatorResult object - ANALYZER CANNOT DETECT
+  2. OPTIONAL (throwing): With throwFirst/throwAll/throwError options - ANALYZER CAN DETECT
+
+  Most developers use the default return-value pattern, so analyzer detection rate
+  will be LOW (<30%). This contract only covers the throwing options.
+
+  For full coverage, analyzer needs enhancement to detect return-value checking patterns.
+
+functions:
+  - name: "validate"
+    patterns:
+      - "\\.validate\\("
+      - "validate\\("
+    postconditions:
+      - condition: must_handle_error
+        required_handling: try_catch
+        severity: ERROR
+        throws:
+          - type: "ValidatorResultError"
+            message: "Validation failed with one or more errors"
+            when: "options.throwFirst or options.throwAll is set"
+          - type: "ValidationError"
+            message: "Validation error thrown directly"
+            when: "options.throwError is set"
+        rationale: "When throwFirst, throwAll, or throwError options are enabled, validate() will throw on validation failure. Without try-catch, invalid data causes unhandled exceptions and application crashes."
+        source: "https://github.com/tdegrunt/jsonschema/blob/master/README.md#errors"
+
+      - condition: should_check_result
+        required_handling: result_check
+        severity: WARNING
+        returns:
+          - type: "ValidatorResult"
+            fields:
+              - name: "valid"
+                type: "boolean"
+              - name: "errors"
+                type: "ValidationError[]"
+        rationale: "Default behavior (without throw options) returns ValidatorResult. Developers should check result.valid and handle result.errors array. Failing to check allows invalid data to pass silently."
+        source: "https://github.com/tdegrunt/jsonschema/blob/master/README.md#usage"
+        analyzer_limitation: "Current analyzer cannot detect missing return-value checks. This postcondition is documented but not enforced."
+
+  - name: "Validator.validate"
+    patterns:
+      - "v\\.validate\\("
+      - "validator\\.validate\\("
+    postconditions:
+      - condition: must_handle_error
+        required_handling: try_catch
+        severity: ERROR
+        throws:
+          - type: "ValidatorResultError"
+            message: "Validation failed"
+            when: "options.throwFirst or options.throwAll is set"
+          - type: "ValidationError"
+            message: "Validation error"
+            when: "options.throwError is set"
+        rationale: "Same behavior as standalone validate() - throws when throw options are enabled"
+        source: "https://github.com/tdegrunt/jsonschema/blob/master/README.md#validator-class"
+
+  - name: "Validator.addSchema"
+    patterns:
+      - "\\.addSchema\\("
+    postconditions:
+      - condition: must_handle_error
+        required_handling: try_catch
+        severity: ERROR
+        throws:
+          - type: "SchemaError"
+            message: "Invalid schema definition"
+        rationale: "Adding an invalid or undefined schema causes SchemaError. Common when loading schemas from databases or external sources."
+        source: "https://github.com/tdegrunt/jsonschema/issues/290"

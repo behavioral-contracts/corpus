@@ -9,8 +9,7 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "moduleResolution": "node",
-    "types": ["node"],
-    "noEmit": true
+    "types": ["node"]
   },
   "include": ["*.ts"],
   "exclude": ["node_modules"]

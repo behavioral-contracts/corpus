@@ -2,15 +2,15 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "commonjs",
-    "lib": ["ES2020"],
-    "strict": true,
+    "lib": ["ES2020", "DOM"],
+    "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "moduleResolution": "node",
     "types": ["node"],
-    "noEmit": true
+    "noImplicitAny": false
   },
   "include": ["*.ts"],
   "exclude": ["node_modules"]
