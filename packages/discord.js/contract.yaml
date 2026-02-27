@@ -2,8 +2,8 @@ package: discord.js
 semver: ">=14.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
-last_verified: "2026-02-25"
-status: production
+last_verified: "2026-02-27"
+status: production  # Event listener detection now supported by EventListenerAnalyzer
 description: "A powerful JavaScript library for interacting with the Discord API"
 
 # Detection rules for analyzer integration
@@ -30,6 +30,7 @@ detection:
 
   # No factory methods for discord.js
   factory_methods: []
+  require_instance_tracking: true
 
   # Patterns to identify discord.js-specific usage in await expressions
   await_patterns:
@@ -48,6 +49,15 @@ detection:
     - .fetchOwner(
     - .createInvite(  # Channel/Guild operations
     - .fetchInvite(
+
+  # Required event listeners to prevent process crashes
+  required_event_listeners:
+    - event: "error"
+      required: true
+      severity: error
+    - event: "warn"
+      required: true
+      severity: warning
 
 functions:
   # ============================================================================

@@ -2,13 +2,23 @@ package: socket.io
 semver: ^4.0.0
 contract_version: "1.0.0"
 maintainer: "corpus-team"
-last_verified: "2026-02-25"
-status: production
+last_verified: "2026-02-27"
+status: production  # Event listener detection now supported by EventListenerAnalyzer
 
 detection:
+  class_names:
+    - Server
+    - Socket
   type_names:
     - Server
     - Socket
+  require_instance_tracking: true
+
+  # Required event listeners to prevent server crashes
+  required_event_listeners:
+    - event: "error"
+      required: true
+      severity: error
 
 functions:
   - name: emit

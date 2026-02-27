@@ -2,8 +2,25 @@ package: socket.io-client
 semver: ">=4.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
-last_verified: "2026-02-26"
-status: production  # Event-driven API limitation documented
+last_verified: "2026-02-27"
+status: production  # Event listener detection now supported by EventListenerAnalyzer
+
+detection:
+  factory_methods:
+    - io
+  require_instance_tracking: true
+
+  # Required event listeners to prevent crashes and silent failures
+  required_event_listeners:
+    - event: "connect_error"
+      required: true
+      severity: error
+    - event: "disconnect"
+      required: true
+      severity: warning
+    - event: "error"
+      required: true
+      severity: warning
 
 # CRITICAL SECURITY NOTES:
 # socket.io-client security vulnerabilities:
@@ -14,11 +31,11 @@ status: production  # Event-driven API limitation documented
 # MINIMUM VERSION: 4.0.0 (current LTS with active security maintenance)
 # RECOMMENDED VERSION: 4.x latest (v3.x legacy, v2.x/v1.x deprecated)
 #
-# EVENT-BASED API LIMITATION:
-# Socket.IO uses event listeners for error handling (.on('connect_error', handler))
-# Current analyzer detects try-catch patterns but NOT missing event listeners
-# This is a known limitation similar to ws and tedious packages
-# Contract serves as documentation; future analyzer may add event listener detection
+# EVENT LISTENER DETECTION NOW AVAILABLE (as of 2026-02-27):
+# The EventListenerAnalyzer can now detect missing event handlers:
+# - socket.on('connect_error', ...) - Missing listener for connection failures
+# - socket.on('disconnect', ...) - Missing listener for disconnection events
+# - socket.on('error', ...) - Missing listener for parser/transport errors
 #
 # Common production bugs:
 # 1. Missing connect_error handler - MOST COMMON (70-80% of codebases, causes silent failures!)

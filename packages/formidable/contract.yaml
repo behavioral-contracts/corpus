@@ -1,7 +1,18 @@
 package: "formidable"
-status: in-development
+status: production  # Event listener detection now supported by EventListenerAnalyzer
 description: "A Node.js module for parsing form data, especially file uploads"
 semver: ">=3.0.0"
+
+detection:
+  class_names:
+    - IncomingForm
+  require_instance_tracking: true
+
+  # Required event listeners to prevent process crashes
+  required_event_listeners:
+    - event: "error"
+      required: true
+      severity: error
 
 postconditions:
   - id: formidable-001

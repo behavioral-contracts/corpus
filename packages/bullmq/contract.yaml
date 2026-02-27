@@ -2,14 +2,28 @@ package: bullmq
 semver: ">=5.0.0 <6.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
-last_verified: "2026-02-25"
-status: production
+last_verified: "2026-02-27"
+status: production  # Event listener detection now supported by EventListenerAnalyzer
 
 detection:
+  class_names:
+    - Queue
+    - Worker
+    - QueueEvents
   type_names:
     - Queue
     - Worker
     - QueueEvents
+  require_instance_tracking: true
+
+  # Required event listeners to prevent production issues
+  required_event_listeners:
+    - event: "error"
+      required: true
+      severity: error
+    - event: "failed"
+      required: true
+      severity: error
 
 functions:
   - name: add
