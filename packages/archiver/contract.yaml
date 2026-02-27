@@ -2,11 +2,11 @@ package: archiver
 semver: ">=5.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
-last_verified: "2026-02-26"
-status: draft
+last_verified: "2026-02-27"
+status: production  # Event listener detection now supported by EventListenerAnalyzer
 
 # archiver: Streaming interface for archive generation (ZIP/TAR)
-# Event-driven error handling - MUST attach error and warning handlers
+# Event-driven error handling - NOW AUTOMATICALLY DETECTED
 #
 # Common production bugs:
 # 1. Missing error event handler - MOST COMMON (70% of codebases, causes process crashes!)
@@ -19,6 +19,15 @@ detection:
   type_names: ["Archiver"]
   factory_methods: ["archiver"]
   require_instance_tracking: true
+
+  # Required event listeners to prevent process crashes and data loss
+  required_event_listeners:
+    - event: "error"
+      required: true
+      severity: error
+    - event: "warning"
+      required: true
+      severity: error
 
 functions:
   - name: archiver

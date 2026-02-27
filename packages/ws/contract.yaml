@@ -2,8 +2,8 @@ package: ws
 semver: ">=8.17.1"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
-last_verified: "2026-02-26"
-status: draft  # BLOCKED: Event-driven error handling not detectable by analyzer
+last_verified: "2026-02-27"
+status: production  # Event listener detection now supported by EventListenerAnalyzer
 
 # CRITICAL SECURITY NOTE:
 # ws has 3 CVEs in versions < 8.17.1:
@@ -28,6 +28,12 @@ detection:
 
   # ws is event-driven, not await-based
   # Events: open, message, close, error, ping, pong
+
+  # Required event listeners to prevent process crashes
+  required_event_listeners:
+    - event: "error"
+      required: true
+      severity: error
 
 functions:
   - name: WebSocket

@@ -1,16 +1,23 @@
 import Queue from 'bull';
 
-const myQueue = new Queue('myQueue', 'redis://localhost:6379');
+/**
+ * Missing event handlers for Queue
+ * Should trigger 3 ERROR violations (failed, stalled, error listeners missing)
+ */
+function setupQueue() {
+  const myQueue = new Queue('myQueue', 'redis://localhost:6379');
 
-// Missing error handling in job processor
-myQueue.process(async (job) => {
-  // No try-catch - errors will cause job to fail
-  const result = await someAsyncOperation(job.data);
-  return result;
-});
+  // ❌ Missing: myQueue.on('failed', ...)
+  // ❌ Missing: myQueue.on('stalled', ...)
+  // ❌ Missing: myQueue.on('error', ...)
 
-// Missing failed event listener
-// Missing stalled event listener
+  // Missing error handling in job processor
+  myQueue.process(async (job) => {
+    // No try-catch - errors will cause job to fail
+    const result = await someAsyncOperation(job.data);
+    return result;
+  });
+}
 
 async function someAsyncOperation(data: any): Promise<any> {
   throw new Error('Operation failed');

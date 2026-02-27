@@ -3,22 +3,18 @@ semver: ">=3.0.0 <5.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-27"
-status: draft
+status: production  # Event listener detection now supported by EventListenerAnalyzer
 
-# ANALYZER LIMITATION - EVENT HANDLER DETECTION NOT SUPPORTED:
-# This contract requires event handler detection, which is not yet implemented in the analyzer.
-# The analyzer cannot detect missing event handlers:
+# Event handler detection NOW SUPPORTED (as of 2026-02-27):
+# The EventListenerAnalyzer can now detect missing event handlers:
 # - queue.on('failed', ...) - Missing listener for job failures
 # - queue.on('stalled', ...) - Missing listener for stalled jobs (CRITICAL - causes duplicate processing!)
 # - queue.on('error', ...) - Missing listener for Redis connection errors
 #
-# Contract provides value as:
-# - Documentation of critical bull bugs (SOURCES.md: 320+ lines)
-# - Manual code review checklist
-# - Specification for future analyzer enhancement
-#
-# When analyzer supports event handler detection, this contract can be promoted to production.
-# See: dev-notes/package-onboarding/bull/phase6-analyzer-check.md
+# Contract now provides automated detection of:
+# - Missing 'stalled' event listener (CRITICAL - 80-90% of codebases)
+# - Missing 'failed' event listener (VERY COMMON - 60-70% of codebases)
+# - Missing 'error' event listener (COMMON - causes crashes)
 #
 # bull: Redis-based queue for handling distributed jobs and messages
 # Job processors MUST handle errors + queues MUST have event listeners
@@ -34,7 +30,19 @@ detection:
   class_names: ["Queue"]
   type_names: []
   factory_methods: []
-  require_instance_tracking: false
+  require_instance_tracking: true
+
+  # Required event listeners to prevent production issues
+  required_event_listeners:
+    - event: "failed"
+      required: true
+      severity: error
+    - event: "stalled"
+      required: true
+      severity: error
+    - event: "error"
+      required: true
+      severity: error
 
 functions:
   - name: Queue.process
