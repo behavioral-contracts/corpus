@@ -1,8 +1,11 @@
 package: ajv
-semver: ">=8.0.0 <10.0.0"
+semver: ">=8.18.0 <10.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
-last_verified: "2026-02-26"
+last_verified: "2026-02-27"
+status: draft
+analyzer_limitation: "return_value_pattern"
+blocked_reason: "Analyzer cannot reliably detect missing return value checks. False positive rate 23%, detection rate 42% on fixtures. Requires dataflow analysis. See .onboarding/08-analyzer-limitations.md"
 
 functions:
   - name: validate

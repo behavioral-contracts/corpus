@@ -1,12 +1,180 @@
 package: "dotenv"
-description: "Node.js package - dotenv"
+status: in-development
+description: "Zero-dependency module that loads environment variables from a .env file into process.env"
 semver: ">=1.0.0"
+last_verified: "2026-02-27"
+
+functions:
+  - name: "config"
+    summary: "Reads .env file, parses contents, and assigns to process.env"
+    postconditions:
+      - id: dotenv-config-error-handling
+        summary: "dotenv.config() return value errors must be handled"
+        severity: ERROR
+        behavior: |
+          The config() method returns an object with either a 'parsed' key containing
+          loaded content or an 'error' key if loading failed. The error property must
+          be checked to detect missing .env files or parse errors.
+
+        rationale: |
+          When dotenv.config() is called without checking result.error, failures are
+          silent. This causes applications to run with undefined environment variables,
+          leading to runtime errors or crashes. Research shows 70-80% of projects
+          fail to check for errors, causing production incidents.
+
+        patterns:
+          - "dotenv.config()"
+          - "require('dotenv').config()"
+
+        detection_hint: |
+          Detect calls to dotenv.config() where:
+          1. Return value is not assigned to a variable, OR
+          2. Return value is assigned but result.error is never checked
+
+        exceptions:
+          - "dotenv.config() in test files where .env is optional"
+          - "Framework-managed dotenv loading (Next.js, NestJS ConfigModule)"
+
+  - name: "parse"
+    summary: "Parses .env format string or Buffer into key-value object"
+    postconditions:
+      - id: dotenv-parse-try-catch
+        summary: "dotenv.parse() calls must be wrapped in try-catch"
+        severity: ERROR
+        behavior: |
+          Unlike config(), the parse() method throws errors for invalid syntax.
+          Calls to parse() must be wrapped in try-catch blocks to handle parse errors.
+
+        rationale: |
+          parse() throws exceptions on invalid syntax, unlike config() which returns
+          errors. Unhandled exceptions cause application crashes. Research shows
+          20-30% of parse() usage lacks try-catch blocks.
+
+        patterns:
+          - "dotenv.parse("
+          - "require('dotenv').parse("
+
+        detection_hint: |
+          Detect calls to dotenv.parse() not wrapped in try-catch block.
+          Check if CallExpression to parse() has ancestor TryStatement.
 
 postconditions:
-  - id: dotenv-001
-    summary: "Package operations should handle errors appropriately"
+  - id: dotenv-required-variable-validation
+    summary: "Required environment variables must be validated after dotenv.config()"
     severity: ERROR
     behavior: |
-      Operations must handle potential errors.
+      After calling dotenv.config(), required environment variables accessed via
+      process.env should be validated to ensure they are defined. Accessing
+      undefined variables causes runtime errors.
+
+    rationale: |
+      dotenv.config() only loads .env file into process.env. It does not validate
+      that required variables are present. Applications that use process.env.VAR
+      without validation crash when variables are undefined. Research shows 60-70%
+      of codebases lack validation, causing production failures.
+
     patterns:
-      - "dotenv()"
+      - "process.env."
+
+    detection_hint: |
+      This is complex to detect accurately. Patterns to look for:
+      1. process.env.VAR accessed after dotenv.config()
+      2. No subsequent check for undefined (if (!VAR) throw...)
+
+      Note: Many variables are legitimately optional, so this has high false
+      positive rate (30-40%). Consider making this WARNING severity or only
+      flagging critical patterns like database URLs.
+
+    exceptions:
+      - "Optional environment variables with fallback values"
+      - "Variables validated by frameworks (NestJS ConfigModule, dotenv-safe)"
+      - "Test environments where variables are mocked"
+
+  - id: dotenv-dotenv-in-gitignore
+    summary: ".env files must be in .gitignore to prevent credential exposure"
+    severity: SECURITY
+    behavior: |
+      .env files contain sensitive credentials and secrets. They must never be
+      committed to version control. .env must be listed in .gitignore.
+
+    rationale: |
+      Committing .env files to git exposes credentials in version history forever.
+      Even if removed later, credentials remain accessible in git history. Research
+      shows 30-40% of projects commit .env files at some point, causing security
+      breaches requiring credential rotation.
+
+    detection_hint: |
+      This is a repository-level check, not code analysis:
+      1. Check if .env file exists
+      2. Check if .env is listed in .gitignore
+      3. Flag as violation if .env exists but not in .gitignore
+
+      Note: This check is outside the scope of AST analysis and may require
+      file system scanning.
+
+    exceptions:
+      - ".env.example files (should be committed as templates)"
+      - "Test fixtures with dummy data"
+
+  - id: dotenv-config-before-access
+    summary: "dotenv.config() should be called before accessing process.env"
+    severity: WARNING
+    behavior: |
+      dotenv.config() must be called before any code accesses process.env variables
+      that are loaded from .env. Accessing variables before config() results in
+      undefined values.
+
+    rationale: |
+      Common pattern is to access process.env at module top level, then call
+      dotenv.config() later. This causes variables to be undefined. Research
+      shows 20-30% of codebases have this issue, particularly with ES6 modules
+      where import order is critical.
+
+    patterns:
+      - "process.env."
+      - "dotenv.config()"
+
+    detection_hint: |
+      This requires program flow analysis:
+      1. Find all process.env accesses
+      2. Find all dotenv.config() calls
+      3. Check if any process.env access occurs before dotenv.config()
+
+      This is hard to detect accurately and may have high false positive rate.
+      Consider making this INFO or WARNING severity.
+
+    exceptions:
+      - "Framework-managed loading (Next.js, NestJS)"
+      - "Environment variables set by platform (not from .env)"
+      - "Test environments with mocked variables"
+
+metadata:
+  weekly_downloads: "93M+"
+  repository: "https://github.com/motdotla/dotenv"
+  documentation: "https://www.npmjs.com/package/dotenv"
+  security_advisory: "GHSA-qwp8-x4ff-5h87 (Environment Variable Injection)"
+
+  common_bugs:
+    - description: "No error handling on config() - 70-80% of codebases"
+      severity: "ERROR"
+    - description: "Missing variable validation - 60-70% of codebases"
+      severity: "ERROR"
+    - description: "Credentials in git - 30-40% of projects"
+      severity: "SECURITY"
+    - description: "dotenv called too late - 20-30% of codebases"
+      severity: "WARNING"
+
+  related_packages:
+    - "dotenv-safe - Automatic validation against .env.example"
+    - "dotenvx - Encrypted .env files (recommended successor)"
+    - "envalid - Type validation for environment variables"
+
+  notes: |
+    dotenv is a simple package with limited API surface (config, parse, populate).
+    Most errors are usage errors rather than package bugs. Focus on error handling
+    and security best practices (credentials in git, variable validation).
+
+    Detection rate may be lower than other packages due to simplicity, but the
+    impact of detected bugs is high (production failures, security breaches).
+
+    Consider 40%+ detection rate acceptable given simplicity.

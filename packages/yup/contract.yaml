@@ -3,6 +3,8 @@ semver: ">=0.32.0 <2.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
+status: in-development
+analyzer_limitation: "Current analyzer cannot detect validation calls on schema instances created by Yup.object(), Yup.string(), etc. Detection requires tracking methods on objects returned from factory functions. Contract is accurate but not enforceable with current analyzer capabilities. Expected detection rate: 0%."
 
 functions:
   - name: validate

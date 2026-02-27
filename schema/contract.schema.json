@@ -38,6 +38,17 @@
       "description": "ISO date when this contract was last verified against package documentation",
       "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
     },
+    "status": {
+      "type": "string",
+      "enum": [
+        "production",
+        "draft",
+        "in-development",
+        "deprecated"
+      ],
+      "description": "Quality and validation status of this contract",
+      "default": "production"
+    },
     "deprecated": {
       "type": "boolean",
       "description": "Whether this contract is deprecated"

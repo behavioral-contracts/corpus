@@ -1,4 +1,5 @@
 package: "formidable"
+status: in-development
 description: "A Node.js module for parsing form data, especially file uploads"
 semver: ">=3.0.0"
 

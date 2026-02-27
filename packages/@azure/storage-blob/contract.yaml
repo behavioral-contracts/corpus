@@ -1,4 +1,5 @@
 package: "@azure/storage-blob"
+status: in-development
 description: "Azure Blob Storage client library for JavaScript"
 semver: ">=12.0.0"
 

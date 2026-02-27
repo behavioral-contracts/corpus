@@ -1,25 +1,22 @@
-package: "simple-oauth2"
-description: "Node.js client library for OAuth 2.0 authorization framework"
-semver: ">=4.0.0"
+package: simple-oauth2
+semver: ">=1.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+status: draft
 
-postconditions:
-  - id: simple-oauth2-001
-    summary: "OAuth2 token operations must handle connection errors"
-    severity: ERROR
-    behavior: |
-      All OAuth2 client operations (getToken, refreshToken, revokeToken)
-      must be wrapped in try-catch blocks to handle connection errors,
-      authentication failures, and API errors.
-    patterns:
-      # AccessToken operations
-      - "client.authorizationCode.getToken()"
-      - "client.clientCredentials.getToken()"
-      - "client.ownerPassword.getToken()"
-      - "accessToken.refresh()"
-      - "accessToken.revoke()"
-      - "accessToken.revokeAll()"
+functions:
+  - name: main
+    import_path: "simple-oauth2"
+    description: "simple-oauth2 operations (DRAFT - needs comprehensive research)"
+    postconditions:
+      - id: error-handling-required
+        condition: "Any error condition"
+        throws: "Error"
+        required_handling: "Caller MUST handle errors with try-catch (DRAFT - needs detailed research)"
+        source: "https://www.npmjs.com/package/simple-oauth2"
+        severity: error
 
-      # Instance-based patterns
-      - "authCode.getToken()"
-      - "credentials.getToken()"
-      - "token.refresh()"
+# NOTE: This is a DRAFT contract created from an invalid contract.
+# It requires comprehensive validation through all 8 phases.
+# See dev-notes/package-onboarding/VALIDATION_TRACKER.md

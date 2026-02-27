@@ -1,4 +1,5 @@
 package: "bcrypt"
+status: in-development
 description: "A library to help you hash passwords"
 semver: ">=5.0.0"
 

@@ -1,4 +1,5 @@
 package: "passport-jwt"
+status: in-development
 description: "JWT authentication strategy for Passport"
 semver: ">=4.0.0"
 

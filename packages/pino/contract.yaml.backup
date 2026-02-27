@@ -1,0 +1,12 @@
+package: "pino"
+description: "Node.js package - pino"
+semver: ">=1.0.0"
+
+postconditions:
+  - id: pino-001
+    summary: "Operations must handle errors appropriately"
+    severity: ERROR
+    behavior: |
+      All async operations must be wrapped in try-catch blocks.
+    patterns:
+      - "pino()"

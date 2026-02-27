@@ -1,4 +1,5 @@
 package: "compression"
+status: in-development
 description: "Node.js package - compression"
 semver: ">=1.0.0"
 

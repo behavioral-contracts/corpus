@@ -1,8 +1,74 @@
 package: ioredis
-semver: ">=4.0.0 <6.0.0"
+semver: ">=4.27.8"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
-last_verified: "2026-02-24"
+last_verified: "2026-02-26"
+status: production
+
+# CRITICAL SECURITY NOTE:
+# ioredis has prototype pollution vulnerability in versions < 4.27.8:
+# - SNYK-JS-IOREDIS-1567196: Prototype Pollution
+# - Multiple high severity CVEs (7-8.9 CVSS)
+#
+# MINIMUM VERSION: 4.27.8 (prototype pollution fix)
+# RECOMMENDED VERSION: 5.9.3+ (latest stable)
+#
+# Common production bugs:
+# 1. Missing error event handler - VERY COMMON (causes process crashes)
+# 2. No reconnection logic for pub/sub - COMMON (broken subscriptions)
+# 3. Pipeline errors not checked - COMMON (silent failures)
+# 4. Generic catch blocks - VERY COMMON (wrong retry logic)
+
+detection:
+  class_names: ["Redis", "Cluster", "Command"]
+  type_names: ["Redis", "Cluster", "RedisOptions", "ClusterOptions"]
+  factory_methods: []
+  require_instance_tracking: true
+
+  await_patterns:
+    # Connection
+    - ".connect("
+
+    # String operations
+    - ".get("
+    - ".set("
+    - ".del("
+    - ".incr("
+    - ".decr("
+
+    # Hash operations
+    - ".hget("
+    - ".hset("
+    - ".hgetall("
+    - ".hdel("
+
+    # List operations
+    - ".lpush("
+    - ".rpush("
+    - ".lpop("
+    - ".rpop("
+    - ".lrange("
+    - ".brpop("
+    - ".blpop("
+
+    # Set operations
+    - ".sadd("
+    - ".smembers("
+    - ".srem("
+
+    # Sorted set operations
+    - ".zadd("
+    - ".zrange("
+    - ".zrem("
+
+    # Pub/Sub
+    - ".subscribe("
+    - ".publish("
+    - ".unsubscribe("
+
+    # Transactions and pipelines
+    - ".exec("
+    - ".eval("
 
 functions:
   - name: Redis
@@ -167,4 +233,156 @@ functions:
         required_handling: >
           Caller MUST use try-catch or .catch() on explicit connect() calls.
         source: "https://github.com/redis/ioredis#connect-to-redis"
+        severity: error
+
+  - name: hget
+    import_path: "ioredis"
+    description: "Get hash field value"
+
+    postconditions:
+      - id: wrong-type-error
+        condition: "Key exists but is not a hash"
+        throws: "ReplyError with message containing 'WRONGTYPE'"
+        required_handling: >
+          Caller MUST catch WRONGTYPE errors for hash operations.
+          This indicates key is not a hash - DO NOT retry.
+          Fix data model or use correct command for key type.
+        source: "https://redis.io/docs/latest/develop/clients/error-handling/"
+        severity: error
+
+      - id: unhandled-promise-rejection
+        condition: "Command promise rejected without catch handler"
+        throws: "UnhandledPromiseRejectionWarning"
+        required_handling: >
+          Caller MUST use try-catch or .catch() on all Redis commands.
+        source: "https://github.com/redis/ioredis/issues/433"
+        severity: error
+
+  - name: hset
+    import_path: "ioredis"
+    description: "Set hash field value"
+
+    postconditions:
+      - id: wrong-type-error
+        condition: "Key exists but is not a hash"
+        throws: "ReplyError with message containing 'WRONGTYPE'"
+        required_handling: >
+          Caller MUST catch WRONGTYPE errors.
+          Key exists with different type - DO NOT retry.
+        source: "https://redis.io/docs/latest/develop/clients/error-handling/"
+        severity: error
+
+      - id: unhandled-promise-rejection
+        condition: "Command promise rejected without catch handler"
+        throws: "UnhandledPromiseRejectionWarning"
+        required_handling: >
+          Caller MUST use try-catch or .catch() on all Redis commands.
+        source: "https://github.com/redis/ioredis/issues/433"
+        severity: error
+
+  - name: hgetall
+    import_path: "ioredis"
+    description: "Get all hash fields and values"
+
+    postconditions:
+      - id: wrong-type-error
+        condition: "Key exists but is not a hash"
+        throws: "ReplyError with message containing 'WRONGTYPE'"
+        required_handling: >
+          Caller MUST catch WRONGTYPE errors.
+          Key is not a hash - DO NOT retry.
+        source: "https://redis.io/docs/latest/develop/clients/error-handling/"
+        severity: error
+
+      - id: unhandled-promise-rejection
+        condition: "Command promise rejected without catch handler"
+        throws: "UnhandledPromiseRejectionWarning"
+        required_handling: >
+          Caller MUST use try-catch or .catch() on all Redis commands.
+        source: "https://github.com/redis/ioredis/issues/433"
+        severity: error
+
+  - name: lpush
+    import_path: "ioredis"
+    description: "Push value to head of list"
+
+    postconditions:
+      - id: wrong-type-error
+        condition: "Key exists but is not a list"
+        throws: "ReplyError with message containing 'WRONGTYPE'"
+        required_handling: >
+          Caller MUST catch WRONGTYPE errors.
+          Key exists with different type - DO NOT retry.
+        source: "https://redis.io/docs/latest/develop/clients/error-handling/"
+        severity: error
+
+      - id: unhandled-promise-rejection
+        condition: "Command promise rejected without catch handler"
+        throws: "UnhandledPromiseRejectionWarning"
+        required_handling: >
+          Caller MUST use try-catch or .catch() on all Redis commands.
+        source: "https://github.com/redis/ioredis/issues/433"
+        severity: error
+
+  - name: rpush
+    import_path: "ioredis"
+    description: "Push value to tail of list"
+
+    postconditions:
+      - id: wrong-type-error
+        condition: "Key exists but is not a list"
+        throws: "ReplyError with message containing 'WRONGTYPE'"
+        required_handling: >
+          Caller MUST catch WRONGTYPE errors.
+          Key exists with different type - DO NOT retry.
+        source: "https://redis.io/docs/latest/develop/clients/error-handling/"
+        severity: error
+
+      - id: unhandled-promise-rejection
+        condition: "Command promise rejected without catch handler"
+        throws: "UnhandledPromiseRejectionWarning"
+        required_handling: >
+          Caller MUST use try-catch or .catch() on all Redis commands.
+        source: "https://github.com/redis/ioredis/issues/433"
+        severity: error
+
+  - name: publish
+    import_path: "ioredis"
+    description: "Publish message to Redis channel"
+
+    postconditions:
+      - id: publish-error
+        condition: "Publish fails (connection lost, etc.)"
+        throws: "Network error or UnhandledPromiseRejectionWarning"
+        required_handling: >
+          Caller MUST catch publish errors with try-catch or .catch().
+          Network errors may be transient - implement retry logic.
+          Returns number of subscribers that received the message (may be 0).
+        source: "https://dev.to/franciscomendes10866/using-redis-pub-sub-with-node-js-13k3"
+        severity: error
+
+  - name: eval
+    import_path: "ioredis"
+    description: "Execute Lua script on Redis server"
+
+    postconditions:
+      - id: script-error
+        condition: "Lua script has syntax or runtime error"
+        throws: "ReplyError with script error details"
+        required_handling: >
+          Caller MUST catch Lua script errors.
+          Script syntax errors should NOT be retried - fix script.
+          Script runtime errors depend on logic - may or may not be retriable.
+        source: "https://redis.io/docs/latest/develop/clients/error-handling/"
+        severity: error
+
+      - id: script-timeout
+        condition: "Lua script exceeds execution time limit"
+        throws: "ReplyError with timeout message"
+        required_handling: >
+          Caller MUST catch script timeout errors.
+          Redis has lua-time-limit configuration (default 5 seconds).
+          Optimize script or increase limit if needed.
+          DO NOT retry immediately - may cause cascading timeouts.
+        source: "https://redis.io/docs/latest/develop/clients/error-handling/"
         severity: error

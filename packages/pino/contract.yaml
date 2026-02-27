@@ -1,12 +1,22 @@
-package: "pino"
-description: "Node.js package - pino"
+package: pino
 semver: ">=1.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-02-26"
+status: draft
 
-postconditions:
-  - id: pino-001
-    summary: "Operations must handle errors appropriately"
-    severity: ERROR
-    behavior: |
-      All async operations must be wrapped in try-catch blocks.
-    patterns:
-      - "pino()"
+functions:
+  - name: main
+    import_path: "pino"
+    description: "pino operations (DRAFT - needs comprehensive research)"
+    postconditions:
+      - id: error-handling-required
+        condition: "Any error condition"
+        throws: "Error"
+        required_handling: "Caller MUST handle errors with try-catch (DRAFT - needs detailed research)"
+        source: "https://www.npmjs.com/package/pino"
+        severity: error
+
+# NOTE: This is a DRAFT contract created from an invalid contract.
+# It requires comprehensive validation through all 8 phases.
+# See dev-notes/package-onboarding/VALIDATION_TRACKER.md

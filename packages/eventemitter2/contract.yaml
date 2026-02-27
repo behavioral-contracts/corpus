@@ -1,4 +1,5 @@
 package: "eventemitter2"
+status: in-development
 description: "Event emitter with namespaces, wildcards, and additional features"
 semver: ">=6.0.0"
 

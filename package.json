@@ -1,0 +1,31 @@
+{
+  "name": "@behavioral-contracts/corpus",
+  "version": "1.0.0",
+  "description": "Behavioral contracts for popular npm packages - YAML definitions of error handling requirements",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "files": [
+    "packages/**/*.yaml",
+    "packages/**/*.md",
+    "schema/",
+    "index.js",
+    "index.d.ts"
+  ],
+  "keywords": [
+    "behavioral-contracts",
+    "error-handling",
+    "static-analysis",
+    "code-quality",
+    "contracts"
+  ],
+  "author": "Caleb Gates",
+  "license": "CC-BY-4.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/behavioral-contracts/corpus.git"
+  },
+  "homepage": "https://behavioral-contracts.com",
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

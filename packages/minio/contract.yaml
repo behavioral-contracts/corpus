@@ -1,4 +1,5 @@
 package: "minio"
+status: in-development
 description: "MinIO Client SDK for JavaScript"
 semver: ">=7.0.0"
 

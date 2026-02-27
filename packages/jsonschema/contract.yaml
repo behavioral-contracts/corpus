@@ -1,4 +1,5 @@
 package: "jsonschema"
+status: in-development
 description: "Node.js package - jsonschema"
 semver: ">=1.0.0"
 

@@ -1,48 +1,146 @@
 package: sinon
-semver: ">=10.0.0 <20.0.0"
-contract_version: "1.0.0"
+semver: ">=1.0.0"
+contract_version: "2.0.0"
 maintainer: "corpus-team"
-last_verified: "2026-02-26"
+last_verified: "2026-02-27"
+status: production
 
 functions:
   - name: stub
     import_path: "sinon"
     description: "Creates a test stub that can replace functions and track calls"
     postconditions:
-      - id: stub-throws-configured
-        condition: "stub is configured to throw via stub.throws(error)"
-        throws: "Configured error object"
+      - id: stub-must-restore
+        condition: "sinon.stub(obj, 'method') is called"
+        throws: "TypeError: Attempted to wrap [method] which is already wrapped"
         required_handling: >
-          When a stub is configured to throw, calls to that stub will throw the configured error.
-          Test code MUST handle these thrown errors appropriately.
-          Use pattern: try { stubFunction(); } catch (e) { /* verify expected error */ }
+          MUST call stub.restore() in afterEach or finally block to clean up stubs.
+          Failure to restore causes "already wrapped" errors in subsequent tests.
+          Best practice: Use sandboxes with sandbox.restore() in afterEach.
+          Pattern: const sandbox = sinon.createSandbox(); afterEach(() => sandbox.restore());
+        source: "https://github.com/sinonjs/sinon/issues/1673"
+        severity: error
+
+      - id: stub-non-existent-property
+        condition: "sinon.stub is called on non-existent or non-function property"
+        throws: "TypeError: Attempted to wrap undefined property [name]"
+        required_handling: >
+          MUST verify property exists and is a function before stubbing.
+          Pattern: if (typeof obj.method === 'function') { sinon.stub(obj, 'method'); }
+        source: "https://github.com/sinonjs/sinon/issues/1762"
+        severity: error
+
+      - id: stub-returns-arg-invalid-index
+        condition: "stub.returnsArg(index) is called with index >= argument count"
+        throws: "TypeError: index unavailable"
+        required_handling: >
+          MUST ensure argument index exists before calling stub.returnsArg(index).
+          Note: Prior to v6.1.2 returns undefined; v6.1.2+ throws TypeError.
         source: "https://sinonjs.org/releases/latest/stubs/"
-        severity: info
+        severity: error
+
+      - id: stub-calls-arg-not-function
+        condition: "stub.callsArg(index) is called with non-function argument"
+        throws: "TypeError: index missing or not a function"
+        required_handling: >
+          MUST verify argument at index is a function before calling stub.callsArg(index).
+        source: "https://sinonjs.org/releases/latest/stubs/"
+        severity: error
+
+      - id: stub-yields-no-callback
+        condition: "stub.yields() is called but stub was never called with a function argument"
+        throws: "Error: stub was never called with a function argument"
+        required_handling: >
+          MUST ensure stub is called with at least one function argument before using yields().
+        source: "https://sinonjs.org/releases/latest/stubs/"
+        severity: error
+
+  - name: spy
+    import_path: "sinon"
+    description: "Creates a spy that wraps a function and tracks calls"
+    postconditions:
+      - id: spy-first-call-null-access
+        condition: "spy.firstCall is accessed when spy was never called"
+        throws: "TypeError: Cannot read property 'args' of null"
+        required_handling: >
+          MUST check spy.called before accessing spy.firstCall, spy.lastCall, or spy.getCall(n).
+          Best practice: Use spy.calledWith(arg) instead of direct call access.
+          Pattern: if (spy.called) { spy.firstCall.args }
+        source: "https://github.com/sinonjs/sinon/issues/1936"
+        severity: error
+
+      - id: spy-must-restore
+        condition: "sinon.spy(obj, 'method') is called"
+        throws: "TypeError: Attempted to wrap [method] which is already wrapped"
+        required_handling: >
+          MUST call spy.restore() in afterEach or finally block.
+          Use sandboxes for automatic cleanup: sandbox.spy(obj, 'method'); afterEach(() => sandbox.restore());
+        source: "https://github.com/sinonjs/sinon/issues/1775"
+        severity: error
 
   - name: mock
     import_path: "sinon"
-    description: "Creates a mock object with expectations"
+    description: "Creates a mock object with pre-programmed expectations"
     postconditions:
+      - id: mock-verify-not-called
+        condition: "mock.expects() is called but mock.verify() is never called"
+        throws: "Silent failure - expectations not enforced"
+        required_handling: >
+          MUST call mock.verify() or sandbox.verifyAndRestore() to enforce expectations.
+          Without verification, tests pass even when expectations are not met.
+          Pattern: afterEach(() => { mock.verify(); }) or sandbox.verifyAndRestore()
+        source: "https://sinonjs.org/releases/latest/mocks/"
+        severity: error
+
       - id: mock-verify-fails
         condition: "mock.verify() is called and expectations are not met"
         throws: "ExpectationError"
         required_handling: >
-          Mock verification throws ExpectationError when expectations are not met.
-          In test code, this is expected behavior. Ensure mock.verify() is called in test assertions.
+          This is expected behavior when expectations fail.
+          Ensure expectations match actual usage.
         source: "https://sinonjs.org/releases/latest/mocks/"
         severity: info
 
-  - name: fake
+  - name: useFakeTimers
     import_path: "sinon"
-    description: "Creates a fake function with configured behavior"
+    description: "Replaces global timer functions with fake implementations"
     postconditions:
-      - id: fake-throws-configured
-        condition: "fake is configured to throw via fake.throws(error)"
-        throws: "Configured error object"
+      - id: fake-timers-must-restore
+        condition: "sinon.useFakeTimers() is called"
+        throws: "Test hangs, setTimeout/setInterval never fire in subsequent tests"
         required_handling: >
-          Fakes configured to throw will throw on invocation. Test code should handle appropriately.
-        source: "https://sinonjs.org/releases/latest/fakes/"
-        severity: info
+          MUST call clock.restore() in afterEach or finally block.
+          Failure to restore causes timer pollution and test hangs.
+          Pattern: let clock; beforeEach(() => clock = sinon.useFakeTimers()); afterEach(() => clock.restore());
+        source: "https://sinonjs.org/releases/latest/fake-timers/"
+        severity: error
+
+  - name: createSandbox
+    import_path: "sinon"
+    description: "Creates a sandbox for managing test doubles with automatic cleanup"
+    postconditions:
+      - id: sandbox-must-restore
+        condition: "sinon.createSandbox() is called"
+        throws: "Test pollution, 'already wrapped' errors in subsequent tests"
+        required_handling: >
+          MUST call sandbox.restore() in afterEach or finally block.
+          Sandboxes simplify cleanup but still require explicit restoration.
+          Pattern: const sandbox = sinon.createSandbox(); afterEach(() => sandbox.restore());
+        source: "https://sinonjs.org/releases/latest/sandbox/"
+        severity: error
+
+  - name: createStubInstance
+    import_path: "sinon"
+    description: "Creates a stub instance without invoking constructor"
+    postconditions:
+      - id: create-stub-instance-double-use
+        condition: "sinon.createStubInstance is called twice on same constructor without cleanup"
+        throws: "TypeError: Attempted to wrap [method] which is already wrapped"
+        required_handling: >
+          MUST restore or use different sandbox between createStubInstance calls.
+          Pattern: Use sandbox.createStubInstance() and restore sandbox between uses.
+        source: "https://github.com/sinonjs/sinon/issues/852"
+        severity: error
 
 # Category: testing
 # npm: https://www.npmjs.com/package/sinon

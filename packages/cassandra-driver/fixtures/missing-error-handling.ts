@@ -97,3 +97,44 @@ async function multipleQueriesWithoutErrorHandling(client: Client) {
 async function shutdownWithoutErrorHandling(client: Client) {
   await client.shutdown();
 }
+
+/**
+ * ❌ Stream without error listener
+ * Should trigger ERROR violation - critical bug!
+ */
+function streamWithoutErrorListener(client: Client) {
+  const stream = client.stream('SELECT * FROM users');
+
+  stream.on('readable', function() {
+    let row;
+    while (row = this.read()) {
+      console.log('Row:', row);
+    }
+  });
+
+  stream.on('end', function() {
+    console.log('Stream ended');
+  });
+
+  // MISSING: No 'error' event listener - will crash on error!
+  return stream;
+}
+
+/**
+ * ❌ eachRow without error checking in endCallback
+ * Should trigger ERROR violation
+ */
+function eachRowWithoutErrorHandling(client: Client) {
+  client.eachRow(
+    'SELECT * FROM users',
+    [],
+    { prepare: true },
+    function rowCallback(n, row) {
+      console.log('Row', n, ':', row);
+    },
+    function endCallback(err, result) {
+      // MISSING: No error checking!
+      console.log('eachRow completed, total rows:', result.rowLength);
+    }
+  );
+}

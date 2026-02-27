@@ -1,4 +1,5 @@
 package: "cookie-parser"
+status: in-development
 description: "Node.js package - cookie-parser"
 semver: ">=1.0.0"
 

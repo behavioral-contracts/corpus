@@ -1,0 +1,6 @@
+{
+  "name": "fixtures-@google-cloud-storage",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Test fixtures for @google-cloud/storage behavioral contract"
+}

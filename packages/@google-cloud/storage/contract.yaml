@@ -1,4 +1,5 @@
 package: "@google-cloud/storage"
+status: in-development
 description: "Google Cloud Storage client library for Node.js"
 semver: ">=7.0.0"
 

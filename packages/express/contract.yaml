@@ -3,6 +3,7 @@ semver: ">=4.0.0 <6.0.0"
 contract_version: 1.0.0
 maintainer: behavioral-contracts
 last_verified: "2026-02-24"
+status: production
 description: |
   Behavioral contracts for Express.js focusing on async error handling in route handlers
   and middleware. Express 4.x requires explicit error forwarding via next(err), while

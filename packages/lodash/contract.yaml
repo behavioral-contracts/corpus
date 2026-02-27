@@ -3,6 +3,7 @@ semver: ">=4.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
+status: draft
 
 functions:
   - name: template
@@ -28,3 +29,87 @@ functions:
         required_handling: "Caller MUST check if result is Error using _.isError()"
         source: "https://lodash.com/docs/#attempt"
         severity: warning
+
+  - name: merge
+    import_path: "lodash"
+    description: "Recursively merges own and inherited enumerable properties"
+
+    postconditions:
+      - id: prototype-pollution
+        condition: "source objects contain __proto__, constructor, or prototype keys"
+        throws: "Prototype pollution vulnerability"
+        required_handling: "Caller MUST validate input objects to exclude __proto__, constructor, and prototype keys when merging untrusted data"
+        source: "https://github.com/lodash/lodash/security/advisories (CVE-2019-10744)"
+        severity: error
+
+  - name: mergeWith
+    import_path: "lodash"
+    description: "Like merge but accepts customizer to control merging"
+
+    postconditions:
+      - id: prototype-pollution
+        condition: "source objects contain __proto__, constructor, or prototype keys"
+        throws: "Prototype pollution vulnerability"
+        required_handling: "Caller MUST validate input objects to exclude __proto__, constructor, and prototype keys when merging untrusted data"
+        source: "https://github.com/lodash/lodash/security/advisories (CVE-2019-10744)"
+        severity: error
+
+  - name: defaultsDeep
+    import_path: "lodash"
+    description: "Recursively assigns default properties"
+
+    postconditions:
+      - id: prototype-pollution
+        condition: "source objects contain __proto__, constructor, or prototype keys"
+        throws: "Prototype pollution vulnerability"
+        required_handling: "Caller MUST validate input objects to exclude __proto__, constructor, and prototype keys when using with untrusted data"
+        source: "https://github.com/lodash/lodash/security/advisories (CVE-2019-10744)"
+        severity: error
+
+  - name: setWith
+    import_path: "lodash"
+    description: "Sets value at path of object with customizer"
+
+    postconditions:
+      - id: prototype-pollution
+        condition: "path contains __proto__, constructor, or prototype"
+        throws: "Prototype pollution vulnerability"
+        required_handling: "Caller MUST validate paths to exclude __proto__, constructor, and prototype when using with untrusted input"
+        source: "https://github.com/lodash/lodash/security/advisories (CVE-2019-10744)"
+        severity: error
+
+  - name: zipObjectDeep
+    import_path: "lodash"
+    description: "Creates object with deep property paths"
+
+    postconditions:
+      - id: prototype-pollution
+        condition: "property paths contain __proto__, constructor, or prototype"
+        throws: "Prototype pollution vulnerability"
+        required_handling: "Caller MUST validate property paths to exclude __proto__, constructor, and prototype when using with untrusted input"
+        source: "https://security.snyk.io/vuln/SNYK-JS-LODASH-590103 (CVE-2020-8203)"
+        severity: error
+
+  - name: unset
+    import_path: "lodash"
+    description: "Removes property at path of object"
+
+    postconditions:
+      - id: prototype-pollution
+        condition: "path contains __proto__, constructor, or prototype"
+        throws: "Prototype pollution vulnerability allowing prototype method deletion"
+        required_handling: "Caller MUST validate paths to exclude __proto__, constructor, and prototype when using with untrusted input. Upgrade to lodash 4.17.23+"
+        source: "https://github.com/lodash/lodash/security/advisories/GHSA-xxjr-mmjv-4gpg (CVE-2025-13465)"
+        severity: error
+
+  - name: omit
+    import_path: "lodash"
+    description: "Creates object with specified properties omitted"
+
+    postconditions:
+      - id: prototype-pollution
+        condition: "property paths contain __proto__, constructor, or prototype"
+        throws: "Prototype pollution vulnerability allowing prototype method deletion"
+        required_handling: "Caller MUST validate property paths to exclude __proto__, constructor, and prototype when using with untrusted input. Upgrade to lodash 4.17.23+"
+        source: "https://github.com/lodash/lodash/security/advisories/GHSA-xxjr-mmjv-4gpg (CVE-2025-13465)"
+        severity: error

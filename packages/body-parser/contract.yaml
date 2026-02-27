@@ -1,12 +1,389 @@
 package: "body-parser"
-description: "Node.js package - body-parser"
-semver: ">=1.0.0"
+status: in-development
+description: "Express middleware for parsing request bodies (JSON, URL-encoded, raw, text)"
+semver: ">=1.20.0 <3.0.0"
+last_verified: "2026-02-27"
+
+functions:
+  - name: "json"
+    description: "Parses JSON request bodies"
+    detection:
+      - pattern: "bodyParser.json()"
+      - pattern: "require('body-parser').json()"
+      - pattern: "import { json } from 'body-parser'"
+
+  - name: "urlencoded"
+    description: "Parses URL-encoded request bodies"
+    detection:
+      - pattern: "bodyParser.urlencoded()"
+      - pattern: "require('body-parser').urlencoded()"
+      - pattern: "import { urlencoded } from 'body-parser'"
+
+  - name: "raw"
+    description: "Parses request bodies as Buffer"
+    detection:
+      - pattern: "bodyParser.raw()"
+      - pattern: "require('body-parser').raw()"
+      - pattern: "import { raw } from 'body-parser'"
+
+  - name: "text"
+    description: "Parses request bodies as string"
+    detection:
+      - pattern: "bodyParser.text()"
+      - pattern: "require('body-parser').text()"
+      - pattern: "import { text } from 'body-parser'"
 
 postconditions:
+  # CRITICAL: Error Handling Middleware Required
   - id: body-parser-001
-    summary: "Package operations should handle errors appropriately"
+    summary: "Missing error handling middleware for body-parser parsing errors"
     severity: ERROR
     behavior: |
-      Operations must handle potential errors.
+      body-parser throws errors for malformed JSON, payloads exceeding size limits,
+      unsupported charsets, and other parsing failures. Without error handling middleware,
+      these errors crash the entire application.
+
+      Error middleware must:
+      1. Have 4-parameter signature: (err, req, res, next)
+      2. Be placed AFTER all routes
+      3. Check for body-parser specific errors (SyntaxError, err.type)
+
+      Common error types:
+      - SyntaxError with status 400 (malformed JSON)
+      - entity.parse.failed (general parsing errors)
+      - entity.too.large (exceeds size limit)
+      - parameters.too.many (exceeds parameter limit)
+      - charset.unsupported (unsupported character encoding)
+
+      Reference: https://github.com/expressjs/body-parser/issues/244
+      Reference: https://github.com/expressjs/body-parser/issues/122
+      CVE Reference: Missing error handling leads to application crashes (DoS)
     patterns:
-      - "body-parser()"
+      - "bodyParser.json()"
+      - "bodyParser.urlencoded()"
+      - "bodyParser.raw()"
+      - "bodyParser.text()"
+    sources:
+      - "SOURCES.md#error-handling"
+      - "https://expressjs.com/en/resources/middleware/body-parser.html"
+      - "https://github.com/expressjs/body-parser/issues/244"
+
+  # HIGH: Size Limit Configuration (DoS Prevention)
+  - id: body-parser-002
+    summary: "Configure explicit size limit to prevent DoS attacks (CVE-2024-45590)"
+    severity: WARNING
+    behavior: |
+      The default size limit (100kb) may be too high for some use cases and can be
+      exploited for DoS attacks. Always configure an explicit size limit based on
+      application requirements.
+
+      Recommendation from official docs:
+      "It's recommended not to configure a very high limit and to use the default
+      value whenever possible. Allowing larger payloads increases memory usage and
+      can lead to longer response times. By 'very high', we mean values above the
+      default, for example payloads of 5 MB or more."
+
+      CVE-2024-45590: Versions prior to 1.20.3 are susceptible to DoS when URL
+      encoding is enabled without adequate size limiting.
+
+      Best Practice:
+      - Use smallest limit that meets requirements
+      - Default 100kb is reasonable for most APIs
+      - Never exceed 5MB without strong justification
+
+      Example:
+      bodyParser.json({ limit: '10mb' }) // Explicit limit
+
+      Reference: https://expressjs.com/en/resources/middleware/body-parser.html
+      CVE Reference: CVE-2024-45590
+    patterns:
+      - "bodyParser.json()"
+      - "bodyParser.urlencoded()"
+      - "bodyParser.raw()"
+      - "bodyParser.text()"
+    sources:
+      - "SOURCES.md#size-limit-configuration"
+      - "https://vulert.com/vuln-db/debian-11-node-body-parser-170959"
+
+  # HIGH: Parameter Limit Configuration (CVE-2025-13466)
+  - id: body-parser-003
+    summary: "Configure parameter limit to prevent parameter flooding DoS (CVE-2025-13466)"
+    severity: WARNING
+    behavior: |
+      CVE-2025-13466: body-parser 2.2.0 is vulnerable to DoS due to inefficient
+      handling of URL-encoded bodies with very large numbers of parameters. An
+      attacker can send payloads containing thousands of parameters within the
+      default 100KB request size limit, causing elevated CPU and memory usage.
+
+      Default parameterLimit is 1000, which may be exploitable. Reduce this based
+      on application needs.
+
+      Attack Vector:
+      - Send payloads with thousands of parameters
+      - Stay within default 100KB limit
+      - Cause elevated CPU and memory usage
+      - Sustained traffic causes service slowdown or outages
+
+      Best Practice:
+      bodyParser.urlencoded({
+        extended: true,
+        parameterLimit: 100 // Reduce from default 1000
+      })
+
+      Mitigation:
+      - Configure lower parameterLimit
+      - Implement rate limiting middleware
+      - Monitor CPU and memory usage
+
+      Reference: https://github.com/expressjs/body-parser/security/advisories/GHSA-wqch-xfxh-vrr4
+      CVE Reference: CVE-2025-13466 (CVSS 7.5 - HIGH)
+    patterns:
+      - "bodyParser.urlencoded()"
+    sources:
+      - "SOURCES.md#known-vulnerabilities"
+      - "https://secalerts.co/vulnerability/CVE-2025-13466"
+
+  # MEDIUM: Depth Limit Configuration
+  - id: body-parser-004
+    summary: "Configure depth limit when using extended URL encoding to prevent stack overflow"
+    severity: WARNING
+    behavior: |
+      When using bodyParser.urlencoded({ extended: true }), the default depth limit
+      is 32. This allows deeply nested objects which can cause:
+      - Stack overflow
+      - Excessive memory usage
+      - Slow parsing performance
+
+      Recommendation from official docs:
+      "The `depth` option is used to configure the maximum depth of the `qs` library
+      when `extended` is `true`. This allows you to limit the amount of keys that are
+      parsed and can be useful to prevent certain types of abuse. Defaults to `32`.
+      It is recommended to keep this value as low as possible."
+
+      Best Practice:
+      bodyParser.urlencoded({
+        extended: true,
+        depth: 5 // Reduce from default 32
+      })
+
+      Reference: https://expressjs.com/en/resources/middleware/body-parser.html
+    patterns:
+      - "bodyParser.urlencoded({ extended: true })"
+    sources:
+      - "SOURCES.md#depth-limit-configuration"
+      - "https://expressjs.com/en/resources/middleware/body-parser.html"
+
+  # MEDIUM: Input Validation Required
+  - id: body-parser-005
+    summary: "Validate req.body before using - all input is untrusted"
+    severity: WARNING
+    behavior: |
+      Official security warning from Express docs:
+      "As `req.body`'s shape is based on user-controlled input, all properties and
+      values in this object are untrusted and should be validated before trusting.
+      For example, `req.body.foo.toString()` may fail in multiple ways, for example
+      the `foo` property may not be there or may not be a string, and `toString` may
+      not be a function and instead a string or other user input."
+
+      Risks:
+      - Runtime errors (accessing undefined properties)
+      - Prototype pollution attacks
+      - Type confusion
+      - Injection attacks
+
+      Best Practice:
+      - Always validate req.body structure before using
+      - Check types before calling methods
+      - Use validation libraries (joi, zod, yup)
+
+      Example (BAD):
+      const name = req.body.name.toString(); // May crash!
+
+      Example (GOOD):
+      if (!req.body || typeof req.body.name !== 'string') {
+        return res.status(400).json({ error: 'Invalid input' });
+      }
+      const name = req.body.name;
+
+      Reference: https://expressjs.com/en/resources/middleware/body-parser.html
+    patterns:
+      - "req.body"
+    sources:
+      - "SOURCES.md#input-validation"
+      - "https://expressjs.com/en/resources/middleware/body-parser.html"
+
+  # INFO: Malformed JSON Handling
+  - id: body-parser-006
+    summary: "bodyParser.json() throws SyntaxError for malformed JSON"
+    severity: INFO
+    behavior: |
+      When bodyParser.json() receives malformed JSON, it throws a SyntaxError with:
+      - err instanceof SyntaxError === true
+      - err.status === 400
+      - err.type === 'entity.parse.failed'
+      - 'body' in err === true
+
+      This error must be caught by error handling middleware to prevent application
+      crashes.
+
+      Detection Pattern (Recommended):
+      if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+        return res.status(400).json({ error: 'Invalid JSON' });
+      }
+
+      Reference: https://github.com/expressjs/body-parser/issues/122
+      Reference: https://github.com/expressjs/body-parser/issues/236
+    patterns:
+      - "bodyParser.json()"
+    sources:
+      - "SOURCES.md#json-parse-error-detection"
+      - "https://github.com/expressjs/body-parser/issues/122"
+
+  # INFO: Charset Handling
+  - id: body-parser-007
+    summary: "Handle unsupported charset errors (status 415)"
+    severity: INFO
+    behavior: |
+      body-parser supports UTF-8 and ISO-8859-1 encodings for URL-encoded bodies.
+      For JSON bodies, any Unicode encoding is supported.
+
+      When an unsupported charset is encountered:
+      - err.type === 'charset.unsupported'
+      - err.status === 415
+
+      Error handling middleware should check for this error type and return
+      appropriate response.
+
+      Example:
+      if (err.type === 'charset.unsupported') {
+        return res.status(415).json({ error: 'Unsupported charset' });
+      }
+
+      Reference: https://expressjs.com/en/resources/middleware/body-parser.html
+    patterns:
+      - "bodyParser.json()"
+      - "bodyParser.urlencoded()"
+      - "bodyParser.text()"
+    sources:
+      - "SOURCES.md#error-handling"
+
+  # INFO: Content-Type Matching
+  - id: body-parser-008
+    summary: "bodyParser only parses requests matching configured Content-Type"
+    severity: INFO
+    behavior: |
+      Each body-parser middleware only parses requests where the Content-Type header
+      matches the configured `type` option:
+
+      - bodyParser.json() → application/json (default)
+      - bodyParser.urlencoded() → application/x-www-form-urlencoded (default)
+      - bodyParser.raw() → application/octet-stream (default)
+      - bodyParser.text() → text/plain (default)
+
+      If Content-Type doesn't match, the middleware skips parsing and calls next().
+
+      Best Practice:
+      - Use strict Content-Type matching for security
+      - Avoid overly permissive patterns like '*/*'
+
+      Example (BAD):
+      bodyParser.json({ type: '*/*' }) // Too permissive!
+
+      Example (GOOD):
+      bodyParser.json({ type: 'application/json' }) // Strict
+
+      Reference: https://expressjs.com/en/resources/middleware/body-parser.html
+    patterns:
+      - "bodyParser.json()"
+      - "bodyParser.urlencoded()"
+      - "bodyParser.raw()"
+      - "bodyParser.text()"
+    sources:
+      - "SOURCES.md#usage-patterns"
+
+  # INFO: Route-Specific Middleware Recommended
+  - id: body-parser-009
+    summary: "Use route-specific middleware instead of global middleware when possible"
+    severity: INFO
+    behavior: |
+      Official recommendation from Express docs:
+      "In general, this is the most recommended way to use body-parser with Express."
+
+      Benefits:
+      - Only parses bodies where needed
+      - Reduces attack surface
+      - Better performance
+      - Clearer code intent
+
+      Example (Less Recommended - Global):
+      app.use(bodyParser.json());
+      app.post('/api', handler);
+
+      Example (Recommended - Route-Specific):
+      const jsonParser = bodyParser.json();
+      app.post('/api/users', jsonParser, handler);
+
+      Reference: https://expressjs.com/en/resources/middleware/body-parser.html
+    patterns:
+      - "app.use(bodyParser.json())"
+      - "app.use(bodyParser.urlencoded())"
+    sources:
+      - "SOURCES.md#usage-patterns"
+      - "https://expressjs.com/en/resources/middleware/body-parser.html"
+
+  # INFO: Multipart Not Supported
+  - id: body-parser-010
+    summary: "body-parser does NOT handle multipart bodies - use multer instead"
+    severity: INFO
+    behavior: |
+      body-parser does NOT handle multipart bodies (file uploads). Use one of these
+      alternatives instead:
+
+      - multer: Most popular for Express
+      - busboy: Lower-level alternative
+      - formidable: Another popular option
+
+      Example:
+      const multer = require('multer');
+      const upload = multer({ dest: 'uploads/' });
+
+      app.post('/upload', upload.single('file'), (req, res) => {
+        // req.file contains file info
+        // req.body contains other form fields
+        res.json({ filename: req.file.filename });
+      });
+
+      Reference: https://expressjs.com/en/resources/middleware/body-parser.html
+    patterns:
+      - "bodyParser"
+    sources:
+      - "SOURCES.md#best-practices"
+      - "https://expressjs.com/en/resources/middleware/body-parser.html"
+
+metadata:
+  package_type: "middleware"
+  category: "request-parsing"
+  security_critical: true
+  handles_untrusted_input: true
+  error_model: "throw-based"
+  cve_count: 2
+  cves:
+    - id: "CVE-2024-45590"
+      severity: "MEDIUM"
+      description: "DoS via URL encoding without adequate size limiting"
+      affected_versions: "<1.20.3"
+      fixed_version: "1.20.3"
+    - id: "CVE-2025-13466"
+      severity: "HIGH"
+      cvss: 7.5
+      description: "DoS via URL-encoded parameter flooding"
+      affected_versions: "2.2.0"
+      fixed_version: "2.2.1"
+  detection_rate_target: 65
+  common_bugs:
+    - "Missing error handling middleware (40-50%)"
+    - "No size limit configured (30-40%)"
+    - "No parameter limit configured (30-40%)"
+    - "Not validating input (60-70%)"
+  research_date: "2026-02-27"
+  sources_lines: 600

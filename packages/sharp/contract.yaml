@@ -2,7 +2,8 @@ package: sharp
 semver: ">=0.30.0 <1.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
-last_verified: "2026-02-26"
+last_verified: "2026-02-27"
+status: production
 
 detection:
   type_names:

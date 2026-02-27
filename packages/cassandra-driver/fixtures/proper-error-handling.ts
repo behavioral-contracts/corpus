@@ -121,3 +121,50 @@ async function deleteWithErrorHandling(client: Client, userId: string) {
     throw error;
   }
 }
+
+/**
+ * ✅ Proper error handling for stream - MUST listen for 'error' event
+ */
+function streamWithErrorHandling(client: Client) {
+  const stream = client.stream('SELECT * FROM users');
+
+  stream.on('readable', function() {
+    let row;
+    while (row = this.read()) {
+      console.log('Row:', row);
+    }
+  });
+
+  stream.on('end', function() {
+    console.log('Stream ended');
+  });
+
+  // CRITICAL: Must handle error event
+  stream.on('error', function(err) {
+    console.error('Stream error:', err);
+  });
+
+  return stream;
+}
+
+/**
+ * ✅ Proper error handling for eachRow - MUST check error in endCallback
+ */
+function eachRowWithErrorHandling(client: Client) {
+  client.eachRow(
+    'SELECT * FROM users',
+    [],
+    { prepare: true },
+    function rowCallback(n, row) {
+      console.log('Row', n, ':', row);
+    },
+    function endCallback(err, result) {
+      // CRITICAL: Must check error parameter
+      if (err) {
+        console.error('eachRow error:', err);
+        return;
+      }
+      console.log('eachRow completed, total rows:', result.rowLength);
+    }
+  );
+}

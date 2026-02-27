@@ -2,7 +2,8 @@ package: moment
 semver: ">=2.29.0 <3.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
-last_verified: "2026-02-26"
+last_verified: "2026-02-27"
+status: production
 
 functions:
   - name: moment
@@ -34,7 +35,24 @@ functions:
         source: "https://momentjs.com/docs/#/parsing/utc/"
         severity: error
 
+  - name: locale
+    import_path: "moment"
+    description: "Sets or gets the current locale"
+    postconditions:
+      - id: locale-path-traversal
+        condition: "user-provided locale string passed without validation"
+        vulnerability: "CVE-2022-24785"
+        required_handling: >
+          When using user input to set locale, MUST validate against an allowlist.
+          Vulnerable versions (1.0.1-2.29.1) allow path traversal via locale strings
+          containing dot-dot sequences (/../). Patched in version 2.29.2.
+          Use pattern: const allowed = ['en','fr','de']; if (allowed.includes(userLocale)) moment.locale(userLocale);
+        source: "https://nvd.nist.gov/vuln/detail/CVE-2022-24785"
+        severity: error
+        cve: "CVE-2022-24785"
+
 # Category: utilities
 # npm: https://www.npmjs.com/package/moment
 # Repository: https://github.com/moment/moment
 # Note: Moment.js is in maintenance mode (no new features), but still widely used
+# Security: CVE-2022-24785 (path traversal), CVE-2022-31129 (ReDoS)

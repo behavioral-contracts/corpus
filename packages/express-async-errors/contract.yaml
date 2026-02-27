@@ -1,4 +1,5 @@
 package: "express-async-errors"
+status: in-development
 description: "Express middleware - express-async-errors"
 semver: ">=1.0.0"
 

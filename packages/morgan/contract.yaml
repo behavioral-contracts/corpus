@@ -1,4 +1,5 @@
 package: "morgan"
+status: in-development
 description: "Node.js package - morgan"
 semver: ">=1.0.0"
 

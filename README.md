@@ -165,18 +165,50 @@ Every contract must:
 
 ## License
 
-**Creative Commons Attribution 4.0 International (CC BY 4.0)**
+**Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)**
 
 This corpus is open and free to use. Anyone can:
-- Use contracts in their tools
-- Adapt contracts for their needs
-- Share contracts with others
+- ✅ Use contracts in their tools (commercial or non-commercial)
+- ✅ Adapt contracts for their needs
+- ✅ Share contracts with others
+- ✅ Fork and modify the corpus
 
-**You must:** Give credit to this corpus.
+**You must:**
+- 📝 Give credit to this corpus (attribution)
+- 🔄 Share modifications under the same license (ShareAlike)
 
-**You cannot:** Claim contracts are your own original work.
+**You cannot:**
+- ❌ Create proprietary forks (must stay open)
+- ❌ Claim contracts are your own original work
 
-This licensing makes the corpus a **public standard**, not a proprietary database.
+### Why CC BY-SA 4.0?
+
+**The ShareAlike clause prevents vendor lock-in:**
+
+If Sentry (or any competitor) forks our corpus:
+- ✅ They must keep it open source
+- ✅ They must share improvements back
+- ✅ They cannot build proprietary contract database
+- ✅ The community benefits from all improvements
+
+**What this means:**
+- Individual developers: Use freely, forever ✅
+- Companies: Use in CI/CD, tooling, products ✅
+- SaaS providers: Use contracts in your service ✅
+- Forks: Must stay open and share-alike ✅
+
+**Example:**
+```
+✅ ALLOWED: Building a SaaS tool that uses these contracts
+✅ ALLOWED: Forking to add your own contracts
+✅ ALLOWED: Selling services based on these contracts
+❌ NOT ALLOWED: Forking and making it proprietary
+❌ NOT ALLOWED: Taking contracts and not crediting source
+```
+
+**This is the same license Wikipedia uses.** It ensures the standard stays open while allowing commercial use.
+
+See [LICENSE](./LICENSE) for full legal text.
 
 ---
 

@@ -1,0 +1,38 @@
+# Exclude all node_modules (never package these)
+**/node_modules/
+
+# Exclude test fixtures (for development only)
+**/fixtures/
+
+# Exclude test repositories
+test-repos/
+
+# Exclude git files
+.git/
+.gitignore
+.gitattributes
+
+# Exclude development files
+*.log
+*.tmp
+.DS_Store
+
+# Exclude CI/CD files
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Exclude editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Keep only what's needed:
+# ✅ packages/*/contract.yaml
+# ✅ packages/*/SOURCES.md
+# ✅ schema/
+# ✅ index.js
+# ✅ index.d.ts
+# ✅ README.md
+# ✅ LICENSE

@@ -3,6 +3,7 @@ semver: ">=3.0.0"
 contract_version: 1.0.0
 maintainer: behavioral-contracts
 last_verified: 2026-02-24
+status: production
 
 description: |
   Zod is a TypeScript-first schema validation library. The parse() and parseAsync()

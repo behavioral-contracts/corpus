@@ -1,4 +1,5 @@
 package: "express-validator"
+status: in-development
 description: "Node.js package - express-validator"
 semver: ">=1.0.0"
 

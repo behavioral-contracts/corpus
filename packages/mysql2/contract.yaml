@@ -1,8 +1,26 @@
 package: mysql2
-semver: ">=2.0.0"
+semver: ">=3.9.8"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
+status: production
+
+# CRITICAL SECURITY NOTE:
+# mysql2 has 5 CRITICAL CVEs in versions < 3.9.8:
+# - CVE-2024-21508 (CVSS 9.8): RCE via supportBigNumbers validation
+# - CVE-2024-21511 (CVSS 9.8): Code injection via timezone parameter
+# - CVE-2024-21509 (CVSS 8.1): Prototype poisoning in results
+# - CVE-2024-21512 (CVSS 8.2): Prototype pollution via nestTables
+# - CVE-2024-21507 (CVSS 6.5): Cache poisoning via keyFromFields
+#
+# MINIMUM VERSION: 3.9.8 (released May 26, 2024)
+# ALL USERS MUST UPGRADE IMMEDIATELY
+#
+# Common production bugs:
+# 1. Connection leaks (forgot connection.release() in finally block) - MOST COMMON
+# 2. SQL injection (using query() instead of execute() for params)
+# 3. Multiple release() calls causing crashes
+# 4. pool.end() called while queries still running
 
 detection:
   class_names: ["Connection", "Pool", "PoolConnection"]
@@ -45,6 +63,7 @@ functions:
   - name: query
     import_path: "mysql2/promise"
     description: "Executes SQL query without prepared statements"
+
     postconditions:
       - id: syntax-error
         condition: "SQL syntax error"
@@ -88,6 +107,16 @@ functions:
         source: "https://dev.mysql.com/doc/mysql-errors/8.0/en/server-error-reference.html"
         severity: error
 
+    edge_cases:
+      - id: sql-injection-risk
+        description: >
+          NEVER use query() with string concatenation or template literals for user input.
+          Example VULNERABLE code: query(`SELECT * FROM users WHERE id = ${userId}`)
+          This creates SQL injection vulnerability. ALWAYS use execute() with parameters
+          instead: execute('SELECT * FROM users WHERE id = ?', [userId])
+        source: "https://github.com/sidorares/node-mysql2/discussions/1601"
+        severity: warning
+
   - name: execute
     import_path: "mysql2/promise"
     description: "Executes prepared statement (parameterized query)"
@@ -120,6 +149,15 @@ functions:
         source: "https://github.com/sidorares/node-mysql2"
         severity: error
 
+    edge_cases:
+      - id: prepared-statement-safety
+        description: >
+          execute() uses MySQL prepared statements which prevent SQL injection
+          by design. Parameters are sent separately from SQL query, making injection
+          impossible. This is the recommended method for all queries with user input.
+        source: "https://github.com/sidorares/node-mysql2"
+        severity: info
+
   - name: getConnection
     import_path: "mysql2/promise"
     description: "Gets connection from pool"
@@ -145,6 +183,30 @@ functions:
           Implement retry with exponential backoff.
         source: "https://github.com/sidorares/node-mysql2"
         severity: error
+
+    edge_cases:
+      - id: connection-leak-prevention
+        description: >
+          MOST COMMON PRODUCTION BUG: Forgetting to call connection.release()
+          causes pool exhaustion. ALWAYS use try-finally pattern:
+          const conn = await pool.getConnection();
+          try {
+            await conn.query(...);
+          } finally {
+            conn.release(); // CRITICAL - must always execute
+          }
+          Failure to release leads to "Pool is closed" errors and application hangs.
+        source: "https://github.com/sidorares/node-mysql2/issues/1486"
+        severity: warning
+
+      - id: multiple-release-calls
+        description: >
+          Calling connection.release() multiple times on the same connection
+          causes "Error: connection already released" and crashes. Only call
+          release() once per getConnection(). Use boolean flag if needed to
+          track release state.
+        source: "https://github.com/sidorares/node-mysql2/issues/1234"
+        severity: warning
 
   - name: beginTransaction
     import_path: "mysql2/promise"

@@ -1,4 +1,5 @@
 package: "axios-retry"
+status: in-development
 description: "Node.js package - axios-retry"
 semver: ">=1.0.0"
 

@@ -3,6 +3,7 @@ semver: ">=4.0.0 <6.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-24"
+status: production
 
 functions:
   - name: readFile

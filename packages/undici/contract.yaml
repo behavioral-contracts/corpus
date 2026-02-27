@@ -3,6 +3,9 @@ semver: ">=5.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
+status: production
+category: http-client
+description: Official Node.js HTTP/1.1 client implementing the Fetch API standard
 
 detection:
   factory_methods:
@@ -26,8 +29,16 @@ functions:
     description: "Makes HTTP request using Fetch API (similar to browser fetch)"
     postconditions:
       - id: network-error-handling
-        condition: "network failure, DNS error, timeout, connection refused"
-        throws: "Promise rejection with TypeError or network error"
+        condition: "network failure, DNS error, timeout, connection refused, certificate errors"
+        throws: "TypeError with 'fetch failed' message and cause property containing underlying error (UND_ERR_SOCKET, etc.)"
         required_handling: "Use try-catch (async/await) or .catch() (promises)"
-        source: "https://www.npmjs.com/package/undici"
+        source: "https://undici.nodejs.org/"
         severity: error
+        notes: >
+          Per Fetch standard, HTTP error status codes (4xx, 5xx) do NOT throw.
+          Only network-level failures throw TypeError. Developers must check response.ok
+          for HTTP errors AND wrap in try-catch for network errors.
+        cve_references:
+          - CVE-2026-22036: Unbounded decompression can cause resource exhaustion
+          - CVE-2025-47279: Bad certificate data causes DoS
+          - CVE-2024-24750: Resource exhaustion on external URLs

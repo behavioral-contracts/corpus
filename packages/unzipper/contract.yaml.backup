@@ -1,0 +1,24 @@
+package: "unzipper"
+description: "Cross-platform unzip using streams"
+semver: ">=0.10.0"
+
+postconditions:
+  - id: unzipper-001
+    summary: "Unzip streams must handle extraction errors"
+    severity: ERROR
+    behavior: |
+      All unzipper extraction operations must have error handlers attached
+      (either via .on('error') or .promise().catch()) to handle corrupt ZIP
+      files, I/O errors, and invalid data.
+    patterns:
+      # Extract operations
+      - "unzipper.Extract()"
+      - "stream.pipe(unzipper.Extract())"
+
+      # Parse operations
+      - "unzipper.Parse()"
+      - "stream.pipe(unzipper.Parse())"
+
+      # Open operations
+      - "unzipper.Open.file()"
+      - "unzipper.Open.buffer()"

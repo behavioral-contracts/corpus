@@ -34,6 +34,7 @@ semver: <string>                # semver range this contract applies to
 contract_version: <string>      # semver version of this contract itself
 maintainer: <string>            # GitHub username or team
 last_verified: <string>         # ISO date when contract was last verified against docs
+status: <production|draft|deprecated>  # quality and validation status (default: production)
 
 functions:
   - name: <string>              # function name
@@ -44,6 +45,62 @@ functions:
     postconditions: []          # what happens AFTER the call (returns/throws)
     edge_cases: []              # known sharp edges and gotchas
 ```
+
+---
+
+## Contract Status
+
+The `status` field indicates the quality and validation level of a contract:
+
+```yaml
+status: production  # fully validated, production-ready
+```
+
+**Status values:**
+
+- **`production`** (default): Contract has been fully validated through all phases:
+  - Comprehensive documentation research
+  - CVE and security analysis
+  - Real-world usage analysis in production codebases
+  - Analyzer testing with detection rates calculated
+  - False positive validation
+  - Analyzer limitations documented
+  - **Included by default** in verify-cli analysis
+
+- **`draft`**: Contract structure is valid but has NOT been fully validated:
+  - May be based on minimal research (quick documentation scan)
+  - Has NOT been tested against verify-cli analyzer
+  - Detection rates unknown
+  - False positives not checked
+  - Analyzer limitations not documented
+  - **Use with caution** - may have inaccuracies
+  - **Excluded by default** - use `--include-drafts` flag to include
+
+- **`in-development`**: Contract is incomplete or broken:
+  - May have incomplete or placeholder content
+  - May not pass schema validation
+  - Actively being developed or refactored
+  - **Excluded by default** - use `--include-drafts` flag to include
+  - **Skipped silently** to avoid errors during development
+
+- **`deprecated`**: Contract is no longer maintained (see Deprecation section below)
+  - **Excluded by default** - use `--include-deprecated` flag to include
+
+**When to use draft status:**
+- Initial contract creation before full validation
+- Rapid prototyping of contract corpus
+- Placeholder contracts pending comprehensive research
+
+**Promoting draft to production:**
+
+To promote a draft contract to production status:
+1. Complete comprehensive documentation research (Phase 2)
+2. Perform CVE/security analysis (Phase 3)
+3. Analyze real-world usage patterns (Phase 4)
+4. Test contract with verify-cli analyzer (Phase 7)
+5. Calculate detection rates and validate for false positives
+6. Document analyzer limitations (Phase 8)
+7. Update `status: production` and `last_verified` date
 
 ---
 

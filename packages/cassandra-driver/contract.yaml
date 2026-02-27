@@ -1,8 +1,9 @@
 package: cassandra-driver
-semver: ">=4.0.0"
+semver: ">=4.0.0 <5.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
+status: production
 
 detection:
   class_names: ["Client", "Mapper", "ResultSet"]
@@ -174,6 +175,38 @@ functions:
           Typically safe to ignore, but log for investigation.
         source: "https://docs.datastax.com/en/developer/nodejs-driver/4.6/getting-started/"
         severity: warning
+
+  - name: stream
+    import_path: "cassandra-driver"
+    description: "Returns readable stream for query results"
+    postconditions:
+      - id: stream-error
+        condition: "Query execution fails during streaming"
+        throws: "ResponseError emitted via 'error' event"
+        required_handling: >
+          Caller MUST listen for 'error' event on stream.
+          Without error listener, unhandled error will crash process.
+          Errors can occur during query execution or while reading rows.
+          Handle NoHostAvailableError, OperationTimedOutError, ResponseError.
+        source: "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/queries/"
+        severity: error
+
+  - name: eachRow
+    import_path: "cassandra-driver"
+    description: "Processes query results row-by-row via callback"
+    postconditions:
+      - id: row-callback-error
+        condition: "Query fails or row processing throws error"
+        throws: "Error passed to endCallback parameter"
+        required_handling: >
+          Caller MUST check error parameter in endCallback.
+          Errors include:
+          - NoHostAvailableError: Connection failure
+          - OperationTimedOutError: Query timeout
+          - ResponseError: Server-side query error
+          If row callback throws, eachRow stops and calls endCallback with error.
+        source: "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/queries/"
+        severity: error
 
 edge_cases:
   - id: prepared-statements

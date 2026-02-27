@@ -1,4 +1,5 @@
 package: "passport-local"
+status: in-development
 description: "Username and password authentication strategy for Passport"
 semver: ">=1.0.0"
 

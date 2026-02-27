@@ -1,4 +1,5 @@
 package: "express-session"
+status: in-development
 description: "Express middleware - express-session"
 semver: ">=1.0.0"
 

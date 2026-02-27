@@ -1,9 +1,9 @@
 # ioredis Behavioral Contract - Sources
 
 **Package:** ioredis (Redis client for Node.js)
-**Version Range:** >=4.0.0 <6.0.0
-**Last Verified:** 2026-02-24
-**Research Thread:** dev-notes/findings/0013-ioredis-research-findings.md
+**Version Range:** >=4.27.8 (minimum for prototype pollution fix)
+**Last Verified:** 2026-02-26
+**Research Thread:** dev-notes/package-onboarding/ioredis/0001-research-ioredis.md
 
 ---
 
@@ -93,17 +93,36 @@
 
 ## CVE Analysis
 
-19. **CVE-2025-49844: RediShell Remote Code Execution**
+19. **CVE-2025-49844: RediShell Remote Code Execution (Redis Server)**
     https://nvd.nist.gov/vuln/detail/CVE-2025-49844
-    **Scope:** Redis server vulnerability, not client-side
+    https://redis.io/blog/security-advisory-cve-2025-49844/
+    **Scope:** Redis server vulnerability (CVSS 10.0), not client-side
     **Relevance:** None - server security is separate concern
+    **Fixed in:** Redis versions 6.2.20, 7.2.11, 7.4.6, 8.0.4, 8.2.2
 
-20. **CVE-2025-21605: DoS via Unbounded Buffers**
+20. **CVE-2025-21605: DoS via Unbounded Buffers (Redis Server)**
     https://nvd.nist.gov/vuln/detail/CVE-2025-21605
     **Scope:** Redis server memory exhaustion
     **Relevance:** None - server-side only
 
-**Conclusion:** No CVEs affecting ioredis client library behavior. All vulnerabilities are Redis server-side.
+21. **SNYK-JS-IOREDIS-1567196: Prototype Pollution (ioredis Client)**
+    https://security.snyk.io/package/npm/ioredis
+    https://security.snyk.io/vuln/SNYK-JS-IOREDIS-1567196
+    **Scope:** ioredis client vulnerability
+    **Relevance:** HIGH - Affects client library
+    **Fixed in:** ioredis 4.27.8+
+    **Severity:** High (7-8.9 CVSS)
+
+22. **Snyk Security Database - ioredis Vulnerabilities**
+    https://security.snyk.io/package/npm/ioredis
+    Multiple high severity vulnerabilities documented
+    **Latest safe version:** 5.9.3 (as of 2026-02-26)
+
+**Conclusion:**
+- ioredis client has prototype pollution vulnerability in versions < 4.27.8
+- MINIMUM VERSION: 4.27.8
+- RECOMMENDED VERSION: 5.9.3+ (latest stable)
+- Redis server CVEs do not affect client behavior but should inform deployment security
 
 ---
 

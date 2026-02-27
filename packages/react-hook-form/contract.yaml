@@ -3,6 +3,7 @@ semver: ^7.0.0
 contract_version: 1.0.0
 maintainer: behavioral-contracts
 last_verified: 2026-02-24
+status: production
 
 description: |
   React Hook Form is a performant, flexible, and extensible forms library with easy-to-use validation.

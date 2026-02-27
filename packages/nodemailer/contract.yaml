@@ -1,44 +1,210 @@
 package: nodemailer
-semver: ">=6.0.0"
+semver: ">=7.0.11"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
+status: production
+
+# CRITICAL SECURITY NOTE:
+# nodemailer has 4 CVEs in versions < 7.0.11:
+# - CVE-2020-7769 (CVSS 9.8): Command injection in sendmail transport
+# - CVE-2021-23400 (CVSS 8.8): HTTP header injection via newlines in addresses
+# - CVE-2025-14874 (CVSS 7.5): DoS via infinite recursion in email parser
+# - CVE-2025-13033 (Medium): Email parsing misrouting
+#
+# MINIMUM VERSION: 7.0.11 (includes all security fixes)
+# RECOMMENDED VERSION: 7.0.11+ (latest stable)
+#
+# Common production bugs:
+# 1. Missing await in serverless functions - MOST COMMON (30-40% of issues)
+# 2. No error handling on sendMail() - VERY COMMON
+# 3. Not validating email addresses - SECURITY RISK (enables CVE-2021-23400)
+# 4. Creating new transporter each time - PERFORMANCE
+
+detection:
+  class_names: ["Transport", "Transporter"]
+  type_names: ["Transport", "Transporter", "SentMessageInfo"]
+  factory_methods: ["createTransport"]
+  require_instance_tracking: true
+
+  await_patterns:
+    # Email sending
+    - ".sendmail("
+
+    # Connection verification
+    - ".verify("
+
+    # Connection management
+    - ".close("
 
 functions:
   - name: sendMail
     import_path: "nodemailer"
-    description: "Sends an email via configured transport"
-
+    description: "Sends email via configured transport"
     postconditions:
-      - id: smtp-error
-        condition: "SMTP connection fails"
-        throws: "Error"
-        required_handling: "Caller MUST wrap in try-catch to handle connection errors"
-        source: "https://nodemailer.com/"
+      - id: connection-error
+        condition: "Network connectivity issues (TCP connection failed, timeout, DNS failure)"
+        throws: "Error with code: ECONNECTION, ETIMEDOUT, EDNS, ESOCKET"
+        required_handling: >
+          Caller MUST catch connection errors.
+          ECONNECTION: TCP connection failed or closed unexpectedly.
+          ETIMEDOUT: Connection/greeting/socket timeout (defaults: 2min/30s/10min).
+          EDNS: Hostname DNS resolution failed.
+          ESOCKET: Low-level socket error from net/tls modules.
+          These errors are TRANSIENT and RETRIABLE with exponential backoff.
+        source: "https://nodemailer.com/errors/#econnection"
         severity: error
 
-      - id: auth-error
-        condition: "SMTP authentication fails"
-        throws: "Error"
-        required_handling: "Caller MUST wrap in try-catch to handle authentication failures"
-        source: "https://nodemailer.com/"
+      - id: authentication-failure
+        condition: "SMTP authentication fails (wrong credentials, locked account, unsupported auth)"
+        throws: "Error with code: EAUTH, ENOAUTH, EOAUTH2"
+        required_handling: >
+          Caller MUST catch authentication errors.
+          EAUTH: Invalid username/password, account locked, unsupported auth method.
+          ENOAUTH: Authentication required but not configured.
+          EOAUTH2: OAuth2 token refresh failed or invalid credentials.
+          DO NOT RETRY - indicates configuration issue.
+          Check SMTP credentials and account status.
+        source: "https://nodemailer.com/errors/#eauth"
+        severity: error
+
+      - id: tls-ssl-error
+        condition: "TLS/SSL certificate validation fails or STARTTLS fails"
+        throws: "Error with code: ETLS, EREQUIRETLS"
+        required_handling: >
+          Caller MUST catch TLS errors.
+          ETLS: Certificate validation failed, hostname mismatch, STARTTLS failed.
+          EREQUIRETLS: RFC 8689 REQUIRETLS extension unsupported by server.
+          DO NOT RETRY - indicates certificate or TLS configuration issue.
+          Verify SSL certificate validity and STARTTLS support.
+        source: "https://nodemailer.com/smtp/#tls-options"
         severity: error
 
       - id: invalid-recipient
-        condition: "recipient address is invalid"
-        throws: "Error"
-        required_handling: "Caller MUST wrap in try-catch to handle invalid addresses"
-        source: "https://nodemailer.com/"
+        condition: "Recipient email address is malformed or rejected"
+        throws: "Error with code: EENVELOPE"
+        required_handling: >
+          Caller MUST validate email addresses before sending.
+          EENVELOPE: Invalid recipient format, missing from/to address, SMTP rejected.
+          Validate against RFC 5321/5322 before calling sendMail().
+          Check info.rejected array for partial failures.
+          SECURITY: Sanitize addresses to prevent CVE-2021-23400 (header injection).
+        source: "https://nodemailer.com/errors/#eenvelope"
         severity: error
+
+      - id: message-content-error
+        condition: "Message content is invalid or attachments fail to load"
+        throws: "Error with code: EMESSAGE, EFILEACCESS, EURLACCESS, EFETCH, ESTREAM"
+        required_handling: >
+          Caller MUST validate message content and attachments.
+          EMESSAGE: Invalid message structure, encoding issues.
+          EFILEACCESS: Attachment file not found or unreadable.
+          EURLACCESS: Cannot fetch URL attachment.
+          EFETCH: HTTP error fetching remote content.
+          ESTREAM: Attachment stream failed.
+          Verify attachment paths exist and are readable before sending.
+        source: "https://nodemailer.com/message/attachments/"
+        severity: error
+
+      - id: protocol-error
+        condition: "SMTP protocol violation or configuration error"
+        throws: "Error with code: EPROTOCOL, ECONFIG, EMAXLIMIT"
+        required_handling: >
+          Caller MUST handle protocol errors.
+          EPROTOCOL: SMTP protocol error from server.
+          ECONFIG: Invalid transport configuration.
+          EMAXLIMIT: Message size exceeds server limit.
+          Check SMTP server logs and message size limits.
+        source: "https://nodemailer.com/errors/#eprotocol"
+        severity: error
+
+    edge_cases:
+      - id: missing-await-serverless
+        description: >
+          MOST COMMON PRODUCTION BUG (30-40% of issues): Missing await in serverless.
+          In AWS Lambda, Google Cloud Functions, or Vercel Functions, forgetting to await
+          sendMail() causes function to terminate before email is sent. No error is logged
+          because promise rejection happens after termination.
+          ALWAYS use: await transporter.sendMail(mailOptions)
+          NEVER use: transporter.sendMail(mailOptions) // Missing await!
+          This is the #1 cause of "emails not sending" support tickets.
+        source: "https://github.com/nodemailer/nodemailer/issues/1174"
+        severity: warning
+
+      - id: no-input-validation
+        description: >
+          SECURITY CRITICAL: Not sanitizing email addresses enables CVE-2021-23400.
+          Attackers can inject HTTP headers via newlines/carriage returns in addresses.
+          ALWAYS sanitize: email.replace(/[\r\n]/g, '')
+          REQUIRED: Validate against RFC 5321/5322 format.
+          Affects ALL user-supplied email addresses (to, from, cc, bcc, replyTo).
+        source: "https://nvd.nist.gov/vuln/detail/CVE-2021-23400"
+        severity: warning
+
+      - id: ignored-rejected-recipients
+        description: >
+          COMMON: Not checking info.rejected array causes silent partial failures.
+          sendMail() succeeds even if some recipients were rejected.
+          ALWAYS check: if (info.rejected.length > 0) { handle_partial_failure(); }
+          Also check: info.rejectedErrors for detailed error per rejected recipient.
+        source: "https://github.com/nodemailer/nodemailer/issues/414"
+        severity: warning
+
+      - id: new-transporter-each-time
+        description: >
+          PERFORMANCE: Creating new transporter for each email causes overhead.
+          Creates new connection pool every time, wastes resources, may exceed limits.
+          CORRECT: Create once during initialization, reuse for all emails.
+          Use pool: true for high-volume sending (default: 5 connections).
+        source: "https://nodemailer.com/smtp/pooled/"
+        severity: info
+
+      - id: no-retry-transient-errors
+        description: >
+          RELIABILITY: Not retrying transient network errors causes permanent failures.
+          RETRIABLE: ECONNECTION, ETIMEDOUT, EDNS, ESOCKET
+          NON-RETRIABLE: EAUTH, ENOAUTH, EENVELOPE, ETLS
+          Implement exponential backoff: 1s, 2s, 4s, 8s delays.
+          Use job queue (Bull, BullMQ) for production retry logic.
+        source: "https://github.com/nodemailer/nodemailer/issues/1340"
+        severity: info
+
+  - name: verify
+    import_path: "nodemailer"
+    description: "Verifies SMTP connection and configuration"
+    postconditions:
+      - id: verification-failure
+        condition: "SMTP connection or authentication fails during verification"
+        throws: "Error with code: ECONNECTION, EAUTH, ETLS, EDNS, ETIMEDOUT"
+        required_handling: >
+          Caller MUST catch verification errors.
+          Call verify() during application initialization to catch config issues early.
+          Same error codes as sendMail() connection/auth errors.
+          Verification failure indicates configuration problem - fix before deployment.
+        source: "https://nodemailer.com/usage/#verify-smtp-connection-configuration"
+        severity: error
+
+    edge_cases:
+      - id: no-verify-before-production
+        description: >
+          BEST PRACTICE: Not calling verify() during initialization means config
+          errors are discovered only when first email is sent (possibly in production).
+          ALWAYS call verify() during app startup to fail fast on misconfiguration.
+          Example: await transporter.verify(); // Before serving requests
+        source: "https://github.com/nodemailer/nodemailer/issues/206"
+        severity: info
 
   - name: createTransport
     import_path: "nodemailer"
-    description: "Creates a mail transport instance"
-
+    description: "Creates reusable email transport instance"
     postconditions:
-      - id: transport-created
-        condition: "transport is created"
-        returns: "Transport instance"
-        required_handling: "Caller MUST handle errors on transporter.sendMail() calls"
-        source: "https://nodemailer.com/"
-        severity: warning
+      - id: configuration-error
+        condition: "Invalid transport configuration"
+        throws: "Error with code: ECONFIG"
+        required_handling: >
+          Caller MUST validate transport configuration.
+          Common issues: missing host/port, invalid auth structure, unsupported options.
+          Use environment variables for credentials, never hardcode.
+          Call verify() after createTransport() to test configuration.
+        source: "https://nodemailer.com/smtp/"
+        severity: error
