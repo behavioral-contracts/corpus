@@ -2,5 +2,20 @@
   "permissions": {
     "allow": [],
     "deny": []
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/validate-contract.sh",
+            "async": true,
+            "timeout": 10
+          }
+        ]
+      }
+    ]
   }
 }
