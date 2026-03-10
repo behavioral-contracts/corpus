@@ -42,6 +42,7 @@ functions:
       - id: locale-path-traversal
         condition: "user-provided locale string passed without validation"
         vulnerability: "CVE-2022-24785"
+        throws: "Path traversal vulnerability — unvalidated locale string may traverse to arbitrary files"
         required_handling: >
           When using user input to set locale, MUST validate against an allowlist.
           Vulnerable versions (1.0.1-2.29.1) allow path traversal via locale strings
