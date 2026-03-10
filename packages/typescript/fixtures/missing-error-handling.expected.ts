@@ -14,7 +14,7 @@ export const expected: ExpectedViolations = {
       "id": "readFile-error-violations",
       "description": "ERROR violations in readFile",
       "functionName": "readFile",
-      "minViolations": 10,
+      "minViolations": 17,
       "expectedClauses": [
         "file-not-found",
         "permission-denied"
@@ -29,7 +29,7 @@ export const expected: ExpectedViolations = {
       "id": "readDirectory-error-violations",
       "description": "ERROR violations in readDirectory",
       "functionName": "readDirectory",
-      "minViolations": 10,
+      "minViolations": 14,
       "expectedClauses": [
         "directory-not-found",
         "permission-denied"
@@ -58,8 +58,8 @@ export const expected: ExpectedViolations = {
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 24,
-      "max": 24
+      "min": 35,
+      "max": 35
     },
     "expectedWarningCount": {
       "min": 0,

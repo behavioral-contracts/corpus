@@ -11,6 +11,20 @@ export const expected: ExpectedViolations = {
   "fixtures": "proper-error-handling.ts",
   "expectations": [
     {
+      "id": "constructEvent-error-violations",
+      "description": "ERROR violations in constructEvent",
+      "functionName": "constructEvent",
+      "minViolations": 1,
+      "expectedClauses": [
+        "signature-verification-failed"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        94,
+        94
+      ]
+    },
+    {
       "id": "create-warning-violations",
       "description": "WARNING violations in create",
       "functionName": "create",
@@ -41,8 +55,8 @@ export const expected: ExpectedViolations = {
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 0,
-      "max": 0
+      "min": 1,
+      "max": 1
     },
     "expectedWarningCount": {
       "min": 3,

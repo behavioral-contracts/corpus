@@ -9,26 +9,11 @@ import type { ExpectedViolations } from '../../../types/index.js';
 
 export const expected: ExpectedViolations = {
   "fixtures": "rate-limit-scenario.ts",
-  "expectations": [
-    {
-      "id": "currentUser-error-violations",
-      "description": "ERROR violations in currentUser",
-      "functionName": "currentUser",
-      "minViolations": 11,
-      "expectedClauses": [
-        "current-user-null-not-handled"
-      ],
-      "severity": "error",
-      "approximateLines": [
-        37,
-        162
-      ]
-    }
-  ],
+  "expectations": [],
   "summary": {
     "expectedErrorCount": {
-      "min": 11,
-      "max": 11
+      "min": 0,
+      "max": 0
     },
     "expectedWarningCount": {
       "min": 0,

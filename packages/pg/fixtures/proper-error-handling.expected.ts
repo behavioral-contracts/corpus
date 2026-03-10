@@ -11,24 +11,24 @@ export const expected: ExpectedViolations = {
   "fixtures": "proper-error-handling.ts",
   "expectations": [
     {
-      "id": "Client-login-error-violations",
-      "description": "ERROR violations in Client.login",
-      "functionName": "Client.login",
-      "minViolations": 4,
+      "id": "Pool-error-violations",
+      "description": "ERROR violations in Pool",
+      "functionName": "Pool",
+      "minViolations": 3,
       "expectedClauses": [
-        "discord-client-login-no-try-catch"
+        "missing-error-listener"
       ],
       "severity": "error",
       "approximateLines": [
-        30,
-        111
+        38,
+        119
       ]
     }
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 4,
-      "max": 4
+      "min": 3,
+      "max": 3
     },
     "expectedWarningCount": {
       "min": 0,

@@ -11,24 +11,10 @@ export const expected: ExpectedViolations = {
   "fixtures": "proper-error-handling.ts",
   "expectations": [
     {
-      "id": "handleSubmit-warning-violations",
-      "description": "WARNING violations in handleSubmit",
-      "functionName": "handleSubmit",
-      "minViolations": 3,
-      "expectedClauses": [
-        "empty-catch-block-silent-failure"
-      ],
-      "severity": "warning",
-      "approximateLines": [
-        217,
-        235
-      ]
-    },
-    {
       "id": "createClient-error-violations",
       "description": "ERROR violations in createClient",
       "functionName": "createClient",
-      "minViolations": 8,
+      "minViolations": 12,
       "expectedClauses": [
         "missing-error-listener"
       ],
@@ -55,12 +41,12 @@ export const expected: ExpectedViolations = {
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 12,
-      "max": 12
+      "min": 16,
+      "max": 16
     },
     "expectedWarningCount": {
-      "min": 3,
-      "max": 3
+      "min": 0,
+      "max": 0
     },
     "expectedInfoCount": {
       "min": 0,

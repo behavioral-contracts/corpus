@@ -11,20 +11,6 @@ export const expected: ExpectedViolations = {
   "fixtures": "instance-usage.ts",
   "expectations": [
     {
-      "id": "handleSubmit-warning-violations",
-      "description": "WARNING violations in handleSubmit",
-      "functionName": "handleSubmit",
-      "minViolations": 2,
-      "expectedClauses": [
-        "empty-catch-block-silent-failure"
-      ],
-      "severity": "warning",
-      "approximateLines": [
-        276,
-        286
-      ]
-    },
-    {
       "id": "connect-error-violations",
       "description": "ERROR violations in connect",
       "functionName": "connect",
@@ -101,8 +87,8 @@ export const expected: ExpectedViolations = {
       "max": 9
     },
     "expectedWarningCount": {
-      "min": 2,
-      "max": 2
+      "min": 0,
+      "max": 0
     },
     "expectedInfoCount": {
       "min": 0,

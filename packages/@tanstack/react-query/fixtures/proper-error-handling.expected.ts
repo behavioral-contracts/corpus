@@ -9,11 +9,54 @@ import type { ExpectedViolations } from '../../../types/index.js';
 
 export const expected: ExpectedViolations = {
   "fixtures": "proper-error-handling.ts",
-  "expectations": [],
+  "expectations": [
+    {
+      "id": "useQuery-error-violations",
+      "description": "ERROR violations in useQuery",
+      "functionName": "useQuery",
+      "minViolations": 4,
+      "expectedClauses": [
+        "query-error-unhandled"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        19,
+        329
+      ]
+    },
+    {
+      "id": "useMutation-error-violations",
+      "description": "ERROR violations in useMutation",
+      "functionName": "useMutation",
+      "minViolations": 3,
+      "expectedClauses": [
+        "mutation-error-unhandled"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        109,
+        193
+      ]
+    },
+    {
+      "id": "useInfiniteQuery-error-violations",
+      "description": "ERROR violations in useInfiniteQuery",
+      "functionName": "useInfiniteQuery",
+      "minViolations": 1,
+      "expectedClauses": [
+        "infinite-query-error-unhandled"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        233,
+        233
+      ]
+    }
+  ],
   "summary": {
     "expectedErrorCount": {
-      "min": 0,
-      "max": 0
+      "min": 8,
+      "max": 8
     },
     "expectedWarningCount": {
       "min": 0,

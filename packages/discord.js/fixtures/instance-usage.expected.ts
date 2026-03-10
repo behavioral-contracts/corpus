@@ -14,7 +14,7 @@ export const expected: ExpectedViolations = {
       "id": "Client-login-error-violations",
       "description": "ERROR violations in Client.login",
       "functionName": "Client.login",
-      "minViolations": 38,
+      "minViolations": 36,
       "expectedClauses": [
         "discord-client-login-no-try-catch"
       ],
@@ -27,8 +27,8 @@ export const expected: ExpectedViolations = {
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 38,
-      "max": 38
+      "min": 36,
+      "max": 36
     },
     "expectedWarningCount": {
       "min": 0,

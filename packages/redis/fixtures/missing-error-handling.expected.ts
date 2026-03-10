@@ -14,7 +14,7 @@ export const expected: ExpectedViolations = {
       "id": "createClient-error-violations",
       "description": "ERROR violations in createClient",
       "functionName": "createClient",
-      "minViolations": 9,
+      "minViolations": 19,
       "expectedClauses": [
         "missing-error-listener"
       ],
@@ -83,8 +83,8 @@ export const expected: ExpectedViolations = {
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 22,
-      "max": 22
+      "min": 32,
+      "max": 32
     },
     "expectedWarningCount": {
       "min": 0,

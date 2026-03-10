@@ -25,28 +25,42 @@ export const expected: ExpectedViolations = {
       ]
     },
     {
-      "id": "handleSubmit-warning-violations",
-      "description": "WARNING violations in handleSubmit",
-      "functionName": "handleSubmit",
-      "minViolations": 9,
+      "id": "Client-error-violations",
+      "description": "ERROR violations in Client",
+      "functionName": "Client",
+      "minViolations": 1,
       "expectedClauses": [
-        "empty-catch-block-silent-failure"
+        "missing-error-listener"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        18,
+        18
+      ]
+    },
+    {
+      "id": "Client-warning-violations",
+      "description": "WARNING violations in Client",
+      "functionName": "Client",
+      "minViolations": 1,
+      "expectedClauses": [
+        "missing-warn-listener"
       ],
       "severity": "warning",
       "approximateLines": [
-        36,
-        384
+        18,
+        18
       ]
     }
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 3,
-      "max": 3
+      "min": 4,
+      "max": 4
     },
     "expectedWarningCount": {
-      "min": 9,
-      "max": 9
+      "min": 1,
+      "max": 1
     },
     "expectedInfoCount": {
       "min": 0,

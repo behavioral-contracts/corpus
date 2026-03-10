@@ -11,17 +11,31 @@ export const expected: ExpectedViolations = {
   "fixtures": "missing-error-handling.ts",
   "expectations": [
     {
-      "id": "handleSubmit-warning-violations",
-      "description": "WARNING violations in handleSubmit",
-      "functionName": "handleSubmit",
-      "minViolations": 1,
+      "id": "useSignIn-warning-violations",
+      "description": "WARNING violations in useSignIn",
+      "functionName": "useSignIn",
+      "minViolations": 3,
       "expectedClauses": [
-        "empty-catch-block-silent-failure"
+        "use-signin-no-error-state"
       ],
       "severity": "warning",
       "approximateLines": [
-        108,
-        108
+        76,
+        120
+      ]
+    },
+    {
+      "id": "useClerk-error-violations",
+      "description": "ERROR violations in useClerk",
+      "functionName": "useClerk",
+      "minViolations": 4,
+      "expectedClauses": [
+        "use-clerk-outside-provider"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        203,
+        217
       ]
     },
     {
@@ -66,30 +80,16 @@ export const expected: ExpectedViolations = {
         68,
         228
       ]
-    },
-    {
-      "id": "useClerk-error-violations",
-      "description": "ERROR violations in useClerk",
-      "functionName": "useClerk",
-      "minViolations": 2,
-      "expectedClauses": [
-        "use-clerk-outside-provider"
-      ],
-      "severity": "error",
-      "approximateLines": [
-        203,
-        217
-      ]
     }
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 17,
-      "max": 17
+      "min": 19,
+      "max": 19
     },
     "expectedWarningCount": {
-      "min": 1,
-      "max": 1
+      "min": 3,
+      "max": 3
     },
     "expectedInfoCount": {
       "min": 0,

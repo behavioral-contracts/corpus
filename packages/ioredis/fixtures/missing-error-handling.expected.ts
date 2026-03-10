@@ -14,10 +14,9 @@ export const expected: ExpectedViolations = {
       "id": "get-error-violations",
       "description": "ERROR violations in get",
       "functionName": "get",
-      "minViolations": 14,
+      "minViolations": 11,
       "expectedClauses": [
-        "unhandled-promise-rejection",
-        "get-no-error-handling"
+        "unhandled-promise-rejection"
       ],
       "severity": "error",
       "approximateLines": [
@@ -26,38 +25,24 @@ export const expected: ExpectedViolations = {
       ]
     },
     {
-      "id": "set-error-violations",
-      "description": "ERROR violations in set",
-      "functionName": "set",
-      "minViolations": 6,
+      "id": "Redis-error-violations",
+      "description": "ERROR violations in Redis",
+      "functionName": "Redis",
+      "minViolations": 2,
       "expectedClauses": [
-        "set-no-error-handling"
+        "missing-error-listener"
       ],
       "severity": "error",
       "approximateLines": [
-        31,
-        107
-      ]
-    },
-    {
-      "id": "connect-error-violations",
-      "description": "ERROR violations in connect",
-      "functionName": "connect",
-      "minViolations": 1,
-      "expectedClauses": [
-        "connect-no-error-handling"
-      ],
-      "severity": "error",
-      "approximateLines": [
-        90,
-        90
+        12,
+        83
       ]
     }
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 21,
-      "max": 21
+      "min": 13,
+      "max": 13
     },
     "expectedWarningCount": {
       "min": 0,

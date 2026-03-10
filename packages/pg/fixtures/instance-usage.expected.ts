@@ -11,43 +11,24 @@ export const expected: ExpectedViolations = {
   "fixtures": "instance-usage.ts",
   "expectations": [
     {
-      "id": "Client-login-error-violations",
-      "description": "ERROR violations in Client.login",
-      "functionName": "Client.login",
-      "minViolations": 5,
+      "id": "Pool-error-violations",
+      "description": "ERROR violations in Pool",
+      "functionName": "Pool",
+      "minViolations": 1,
       "expectedClauses": [
-        "discord-client-login-no-try-catch"
+        "missing-error-listener"
       ],
       "severity": "error",
       "approximateLines": [
-        77,
-        113
-      ]
-    },
-    {
-      "id": "query-error-violations",
-      "description": "ERROR violations in query",
-      "functionName": "query",
-      "minViolations": 12,
-      "expectedClauses": [
-        "syntax-error",
-        "unique-violation",
-        "foreign-key-violation",
-        "not-null-violation",
-        "connection-error",
-        "undefined-table"
-      ],
-      "severity": "error",
-      "approximateLines": [
-        129,
-        138
+        120,
+        120
       ]
     }
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 17,
-      "max": 17
+      "min": 1,
+      "max": 1
     },
     "expectedWarningCount": {
       "min": 0,

@@ -1,0 +1,81 @@
+package: resend
+semver: ">=3.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-03-09"
+status: draft
+
+detection:
+  class_names:
+    - "Resend"
+  await_patterns:
+    - "emails.send("
+    - "batch.send("
+
+functions:
+  - name: send
+    import_path: "resend"
+    description: >
+      Sends a single transactional email via the Resend API. Returns { data, error } — does NOT
+      throw exceptions. Resend SDK v2+ catches all network/API errors and returns them in the
+      error field. Callers must check result.error to detect failures.
+
+    postconditions:
+      - id: send-no-error-check
+        condition: >
+          emails.send() called without checking result.error — API failure, rate limit, invalid
+          address, or network error returns { data: null, error: ErrorResponse } silently
+        throws: >
+          Does not throw. Returns { data: null, error: { name, message, statusCode } } on failure.
+          Unchecked: email silently not sent with no visible error in application.
+        required_handling: >
+          Caller MUST check result.error after every emails.send() call. Two acceptable patterns:
+
+          Pattern 1 — destructure and check:
+            const { data, error } = await resend.emails.send({...});
+            if (error) { handle error; }
+
+          Pattern 2 — assign and check:
+            const result = await resend.emails.send({...});
+            if (result.error) { handle error; }
+
+          Pattern 3 — try-catch (also acceptable, defensive):
+            try {
+              const result = await resend.emails.send({...});
+              if (result.error) { handle error; }
+            } catch (err) { handle unexpected error; }
+
+          DO NOT return result to caller without checking result.error first.
+          DO NOT access result.data without checking result.error first.
+        source: "https://resend.com/docs/api-reference/introduction#errors"
+        severity: error
+
+  - name: send
+    import_path: "resend"
+    namespace: "batch"
+    description: >
+      Sends multiple emails in a single API request. Returns { data, error } — same result
+      pattern as emails.send(). All emails in the batch fail atomically if the request fails.
+
+    postconditions:
+      - id: batch-send-no-error-check
+        condition: >
+          batch.send() called without checking result.error — entire batch silently fails
+          if API call returns an error
+        throws: >
+          Does not throw. Returns { data: null, error: ErrorResponse } on failure.
+          All emails in batch are unsent if error is unchecked.
+        required_handling: >
+          Caller MUST check result.error after every batch.send() call.
+          Batch failures affect all emails — no partial success.
+          Log error with batch size and recipient count for debugging.
+        source: "https://resend.com/docs/api-reference/emails/send-batch-emails"
+        severity: error
+
+notes:
+  - "Resend SDK v2+ returns { data, error } — it does NOT throw exceptions for API failures"
+  - "Unlike Stripe/Twilio, try-catch alone is insufficient — must check result.error"
+  - "Network errors are caught by SDK and returned as error.name = 'application_error'"
+  - "Rate limit: 2 emails/second on free tier, 100/second on paid. Returns error.statusCode=429"
+  - "Domain verification required: unverified from address returns error.name = 'invalid_from_address'"
+  - "Idempotency: re-sending same email creates a new email_id — no built-in deduplication"

@@ -11,6 +11,20 @@ export const expected: ExpectedViolations = {
   "fixtures": "proper-error-handling.ts",
   "expectations": [
     {
+      "id": "validateRequest-error-violations",
+      "description": "ERROR violations in validateRequest",
+      "functionName": "validateRequest",
+      "minViolations": 2,
+      "expectedClauses": [
+        "webhook-no-signature-validation"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        153,
+        160
+      ]
+    },
+    {
       "id": "create-error-violations",
       "description": "ERROR violations in create",
       "functionName": "create",
@@ -23,26 +37,12 @@ export const expected: ExpectedViolations = {
         125,
         125
       ]
-    },
-    {
-      "id": "validateRequest-error-violations",
-      "description": "ERROR violations in validateRequest",
-      "functionName": "validateRequest",
-      "minViolations": 1,
-      "expectedClauses": [
-        "webhook-no-signature-validation"
-      ],
-      "severity": "error",
-      "approximateLines": [
-        153,
-        153
-      ]
     }
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 2,
-      "max": 2
+      "min": 3,
+      "max": 3
     },
     "expectedWarningCount": {
       "min": 0,

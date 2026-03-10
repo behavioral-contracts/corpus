@@ -14,7 +14,7 @@ export const expected: ExpectedViolations = {
       "id": "useQuery-error-violations",
       "description": "ERROR violations in useQuery",
       "functionName": "useQuery",
-      "minViolations": 3,
+      "minViolations": 8,
       "expectedClauses": [
         "query-error-unhandled"
       ],
@@ -28,7 +28,7 @@ export const expected: ExpectedViolations = {
       "id": "useMutation-error-violations",
       "description": "ERROR violations in useMutation",
       "functionName": "useMutation",
-      "minViolations": 6,
+      "minViolations": 11,
       "expectedClauses": [
         "mutation-error-unhandled",
         "mutation-optimistic-update-rollback"
@@ -43,21 +43,21 @@ export const expected: ExpectedViolations = {
       "id": "useInfiniteQuery-error-violations",
       "description": "ERROR violations in useInfiniteQuery",
       "functionName": "useInfiniteQuery",
-      "minViolations": 1,
+      "minViolations": 2,
       "expectedClauses": [
         "infinite-query-error-unhandled"
       ],
       "severity": "error",
       "approximateLines": [
-        202,
+        197,
         202
       ]
     }
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 10,
-      "max": 10
+      "min": 21,
+      "max": 21
     },
     "expectedWarningCount": {
       "min": 0,

@@ -11,39 +11,10 @@ export const expected: ExpectedViolations = {
   "fixtures": "instance-usage.ts",
   "expectations": [
     {
-      "id": "handleSubmit-warning-violations",
-      "description": "WARNING violations in handleSubmit",
-      "functionName": "handleSubmit",
-      "minViolations": 1,
-      "expectedClauses": [
-        "empty-catch-block-silent-failure"
-      ],
-      "severity": "warning",
-      "approximateLines": [
-        166,
-        166
-      ]
-    },
-    {
-      "id": "readFile-error-violations",
-      "description": "ERROR violations in readFile",
-      "functionName": "readFile",
-      "minViolations": 22,
-      "expectedClauses": [
-        "file-not-found",
-        "permission-denied"
-      ],
-      "severity": "error",
-      "approximateLines": [
-        21,
-        213
-      ]
-    },
-    {
       "id": "readDirectory-error-violations",
       "description": "ERROR violations in readDirectory",
       "functionName": "readDirectory",
-      "minViolations": 12,
+      "minViolations": 15,
       "expectedClauses": [
         "directory-not-found",
         "permission-denied"
@@ -52,6 +23,21 @@ export const expected: ExpectedViolations = {
       "approximateLines": [
         69,
         210
+      ]
+    },
+    {
+      "id": "readFile-error-violations",
+      "description": "ERROR violations in readFile",
+      "functionName": "readFile",
+      "minViolations": 31,
+      "expectedClauses": [
+        "file-not-found",
+        "permission-denied"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        21,
+        213
       ]
     },
     {
@@ -72,12 +58,12 @@ export const expected: ExpectedViolations = {
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 38,
-      "max": 38
+      "min": 50,
+      "max": 50
     },
     "expectedWarningCount": {
-      "min": 1,
-      "max": 1
+      "min": 0,
+      "max": 0
     },
     "expectedInfoCount": {
       "min": 0,

@@ -14,39 +14,25 @@ export const expected: ExpectedViolations = {
       "id": "useQuery-error-violations",
       "description": "ERROR violations in useQuery",
       "functionName": "useQuery",
-      "minViolations": 1,
+      "minViolations": 5,
       "expectedClauses": [
         "query-error-unhandled"
       ],
       "severity": "error",
       "approximateLines": [
-        276,
-        276
-      ]
-    },
-    {
-      "id": "handleSubmit-warning-violations",
-      "description": "WARNING violations in handleSubmit",
-      "functionName": "handleSubmit",
-      "minViolations": 2,
-      "expectedClauses": [
-        "empty-catch-block-silent-failure"
-      ],
-      "severity": "warning",
-      "approximateLines": [
-        125,
-        141
+        179,
+        308
       ]
     }
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 1,
-      "max": 1
+      "min": 5,
+      "max": 5
     },
     "expectedWarningCount": {
-      "min": 2,
-      "max": 2
+      "min": 0,
+      "max": 0
     },
     "expectedInfoCount": {
       "min": 0,

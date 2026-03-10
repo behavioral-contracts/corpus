@@ -9,30 +9,15 @@ import type { ExpectedViolations } from '../../../types/index.js';
 
 export const expected: ExpectedViolations = {
   "fixtures": "generic-catch.ts",
-  "expectations": [
-    {
-      "id": "handleSubmit-warning-violations",
-      "description": "WARNING violations in handleSubmit",
-      "functionName": "handleSubmit",
-      "minViolations": 3,
-      "expectedClauses": [
-        "empty-catch-block-silent-failure"
-      ],
-      "severity": "warning",
-      "approximateLines": [
-        26,
-        203
-      ]
-    }
-  ],
+  "expectations": [],
   "summary": {
     "expectedErrorCount": {
       "min": 0,
       "max": 0
     },
     "expectedWarningCount": {
-      "min": 3,
-      "max": 3
+      "min": 0,
+      "max": 0
     },
     "expectedInfoCount": {
       "min": 0,

@@ -9,11 +9,40 @@ import type { ExpectedViolations } from '../../../types/index.js';
 
 export const expected: ExpectedViolations = {
   "fixtures": "proper-error-handling.ts",
-  "expectations": [],
+  "expectations": [
+    {
+      "id": "readFile-error-violations",
+      "description": "ERROR violations in readFile",
+      "functionName": "readFile",
+      "minViolations": 3,
+      "expectedClauses": [
+        "file-not-found"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        17,
+        144
+      ]
+    },
+    {
+      "id": "readDirectory-error-violations",
+      "description": "ERROR violations in readDirectory",
+      "functionName": "readDirectory",
+      "minViolations": 2,
+      "expectedClauses": [
+        "directory-not-found"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        37,
+        169
+      ]
+    }
+  ],
   "summary": {
     "expectedErrorCount": {
-      "min": 0,
-      "max": 0
+      "min": 5,
+      "max": 5
     },
     "expectedWarningCount": {
       "min": 0,

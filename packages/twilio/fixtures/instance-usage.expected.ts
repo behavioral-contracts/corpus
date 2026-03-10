@@ -24,12 +24,26 @@ export const expected: ExpectedViolations = {
         32,
         172
       ]
+    },
+    {
+      "id": "twilio-error-violations",
+      "description": "ERROR violations in twilio",
+      "functionName": "twilio",
+      "minViolations": 3,
+      "expectedClauses": [
+        "hardcoded-credentials"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        56,
+        159
+      ]
     }
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 13,
-      "max": 13
+      "min": 16,
+      "max": 16
     },
     "expectedWarningCount": {
       "min": 0,

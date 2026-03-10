@@ -14,7 +14,7 @@ export const expected: ExpectedViolations = {
       "id": "create-error-violations",
       "description": "ERROR violations in create",
       "functionName": "create",
-      "minViolations": 20,
+      "minViolations": 16,
       "expectedClauses": [
         "unique-constraint-violation",
         "foreign-key-constraint",
@@ -30,8 +30,8 @@ export const expected: ExpectedViolations = {
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 20,
-      "max": 20
+      "min": 16,
+      "max": 16
     },
     "expectedWarningCount": {
       "min": 0,

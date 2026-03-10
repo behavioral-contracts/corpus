@@ -23,6 +23,14 @@ maintainer: "corpus-team"
 last_verified: "2026-02-27"
 status: production
 
+# Mocha hook functions (it, before, after, etc.) are called synchronously — the async
+# callback they receive is run later by the Mocha runtime, not at the call site.
+# require_await_detection: true tells the analyzer to only fire violations when the
+# call itself is awaited (e.g. `await it(...)`), which eliminates all false positives
+# from normal Mocha usage where hooks are called without await.
+detection:
+  require_await_detection: true
+
 functions:
   - name: it
     import_path: "mocha"

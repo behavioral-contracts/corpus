@@ -11,29 +11,43 @@ export const expected: ExpectedViolations = {
   "fixtures": "instance-usage.ts",
   "expectations": [
     {
+      "id": "safeParse-warning-violations",
+      "description": "WARNING violations in safeParse",
+      "functionName": "safeParse",
+      "minViolations": 1,
+      "expectedClauses": [
+        "safe-parse-success-check"
+      ],
+      "severity": "warning",
+      "approximateLines": [
+        33,
+        33
+      ]
+    },
+    {
       "id": "parse-error-violations",
       "description": "ERROR violations in parse",
       "functionName": "parse",
-      "minViolations": 2,
+      "minViolations": 4,
       "expectedClauses": [
         "parse-validation-error",
         "parse-type-coercion-error"
       ],
       "severity": "error",
       "approximateLines": [
-        112,
+        47,
         112
       ]
     }
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 2,
-      "max": 2
+      "min": 4,
+      "max": 4
     },
     "expectedWarningCount": {
-      "min": 0,
-      "max": 0
+      "min": 1,
+      "max": 1
     },
     "expectedInfoCount": {
       "min": 0,

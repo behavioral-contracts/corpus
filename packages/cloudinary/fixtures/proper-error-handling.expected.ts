@@ -14,7 +14,7 @@ export const expected: ExpectedViolations = {
       "id": "upload-stream-error-violations",
       "description": "ERROR violations in upload_stream",
       "functionName": "upload_stream",
-      "minViolations": 1,
+      "minViolations": 2,
       "expectedClauses": [
         "upload-stream-missing-error-handling"
       ],
@@ -27,8 +27,8 @@ export const expected: ExpectedViolations = {
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 1,
-      "max": 1
+      "min": 2,
+      "max": 2
     },
     "expectedWarningCount": {
       "min": 0,

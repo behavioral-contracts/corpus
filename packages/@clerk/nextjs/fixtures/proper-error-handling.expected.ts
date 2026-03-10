@@ -11,6 +11,34 @@ export const expected: ExpectedViolations = {
   "fixtures": "proper-error-handling.ts",
   "expectations": [
     {
+      "id": "useSignIn-warning-violations",
+      "description": "WARNING violations in useSignIn",
+      "functionName": "useSignIn",
+      "minViolations": 1,
+      "expectedClauses": [
+        "use-signin-no-error-state"
+      ],
+      "severity": "warning",
+      "approximateLines": [
+        91,
+        91
+      ]
+    },
+    {
+      "id": "useClerk-error-violations",
+      "description": "ERROR violations in useClerk",
+      "functionName": "useClerk",
+      "minViolations": 4,
+      "expectedClauses": [
+        "use-clerk-outside-provider"
+      ],
+      "severity": "error",
+      "approximateLines": [
+        202,
+        223
+      ]
+    },
+    {
       "id": "clerkMiddleware-error-violations",
       "description": "ERROR violations in clerkMiddleware",
       "functionName": "clerkMiddleware",
@@ -52,30 +80,16 @@ export const expected: ExpectedViolations = {
         57,
         57
       ]
-    },
-    {
-      "id": "useClerk-error-violations",
-      "description": "ERROR violations in useClerk",
-      "functionName": "useClerk",
-      "minViolations": 2,
-      "expectedClauses": [
-        "use-clerk-outside-provider"
-      ],
-      "severity": "error",
-      "approximateLines": [
-        202,
-        223
-      ]
     }
   ],
   "summary": {
     "expectedErrorCount": {
-      "min": 7,
-      "max": 7
+      "min": 9,
+      "max": 9
     },
     "expectedWarningCount": {
-      "min": 0,
-      "max": 0
+      "min": 1,
+      "max": 1
     },
     "expectedInfoCount": {
       "min": 0,
