@@ -408,3 +408,133 @@ functions:
         required_handling: "Caller MUST wrap in try-catch"
         source: "https://mongoosejs.com/docs/api/model.html#model_Model-countDocuments"
         severity: error
+
+  # Model.updateMany - Update multiple documents
+  - name: updateMany
+    import_path: "mongoose"
+    description: "Updates all documents matching the filter"
+
+    postconditions:
+      - id: connection-error-no-try-catch
+        condition: "Database connection failed"
+        throws: "MongooseError"
+        required_handling: "Caller MUST wrap in try-catch"
+        source: "https://mongoosejs.com/docs/api/model.html#model_Model-updateMany"
+        severity: error
+
+  # Model.replaceOne - Replace a document
+  - name: replaceOne
+    import_path: "mongoose"
+    description: "Replaces the first document matching the filter"
+
+    postconditions:
+      - id: connection-error-no-try-catch
+        condition: "Database connection failed"
+        throws: "MongooseError"
+        required_handling: "Caller MUST wrap in try-catch"
+        source: "https://mongoosejs.com/docs/api/model.html#model_Model-replaceOne"
+        severity: error
+
+  # Model.findOneAndReplace - Find and replace a document
+  - name: findOneAndReplace
+    import_path: "mongoose"
+    description: "Finds a document and replaces it"
+
+    postconditions:
+      - id: connection-error-no-try-catch
+        condition: "Database connection failed"
+        throws: "MongooseError"
+        required_handling: "Caller MUST wrap in try-catch"
+        source: "https://mongoosejs.com/docs/api/model.html#model_Model-findOneAndReplace"
+        severity: error
+
+  # Model.deleteMany - Delete multiple documents
+  - name: deleteMany
+    import_path: "mongoose"
+    description: "Deletes all documents matching the filter"
+
+    postconditions:
+      - id: connection-error-no-try-catch
+        condition: "Database connection failed"
+        throws: "MongooseError"
+        required_handling: "Caller MUST wrap in try-catch"
+        source: "https://mongoosejs.com/docs/api/model.html#model_Model-deleteMany"
+        severity: error
+
+  # Model.findOneAndDelete - Find and delete a document
+  - name: findOneAndDelete
+    import_path: "mongoose"
+    description: "Finds a document and deletes it"
+
+    postconditions:
+      - id: connection-error-no-try-catch
+        condition: "Database connection failed"
+        throws: "MongooseError"
+        required_handling: "Caller MUST wrap in try-catch"
+        source: "https://mongoosejs.com/docs/api/model.html#model_Model-findOneAndDelete"
+        severity: error
+
+  # Model.estimatedDocumentCount - Estimate total documents
+  - name: estimatedDocumentCount
+    import_path: "mongoose"
+    description: "Returns an estimate of the number of documents in the collection"
+
+    postconditions:
+      - id: connection-error-no-try-catch
+        condition: "Database connection failed"
+        throws: "MongooseError"
+        required_handling: "Caller MUST wrap in try-catch"
+        source: "https://mongoosejs.com/docs/api/model.html#model_Model-estimatedDocumentCount"
+        severity: error
+
+  # Model.exists - Check if documents exist
+  - name: exists
+    import_path: "mongoose"
+    description: "Returns true if at least one document matches the filter"
+
+    postconditions:
+      - id: connection-error-no-try-catch
+        condition: "Database connection failed"
+        throws: "MongooseError"
+        required_handling: "Caller MUST wrap in try-catch"
+        source: "https://mongoosejs.com/docs/api/model.html#model_Model-exists"
+        severity: error
+
+  # Model.distinct - Get distinct values
+  - name: distinct
+    import_path: "mongoose"
+    description: "Returns an array of distinct values for the given field"
+
+    postconditions:
+      - id: connection-error-no-try-catch
+        condition: "Database connection failed"
+        throws: "MongooseError"
+        required_handling: "Caller MUST wrap in try-catch"
+        source: "https://mongoosejs.com/docs/api/model.html#model_Model-distinct"
+        severity: error
+
+  # Model.bulkWrite - Perform bulk write operations
+  - name: bulkWrite
+    import_path: "mongoose"
+    description: "Sends multiple insertOne, updateOne, updateMany, replaceOne, deleteOne, and/or deleteMany operations to MongoDB"
+
+    postconditions:
+      - id: connection-error-no-try-catch
+        condition: "Database connection failed or bulk operation error"
+        throws: "MongooseError or BulkWriteError"
+        required_handling: "Caller MUST wrap in try-catch"
+        source: "https://mongoosejs.com/docs/api/model.html#model_Model-bulkWrite"
+        severity: error
+
+  # Document.validate - Validate document
+  - name: validate
+    import_path: "mongoose"
+    description: "Validates the document against the schema"
+
+    postconditions:
+      - id: validation-error-no-try-catch
+        condition: "Document fails schema validation"
+        throws: "ValidationError"
+        required_handling: "Caller MUST wrap in try-catch. ValidationError contains field-specific errors."
+        source: "https://mongoosejs.com/docs/api/document.html#document_Document-validate"
+        severity: error
