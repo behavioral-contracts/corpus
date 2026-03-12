@@ -3,13 +3,16 @@ semver: ">=4.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-27"
-status: draft
+status: deprecated
+evidence_quality: confirmed
+deprecated: true
+deprecated_reason: "The request package is unmaintained since February 2020. Use axios, node-fetch, or undici instead."
+deprecated_date: "2020-02-11"
 
 functions:
   - name: default
     import_path: "request-promise"
-    description: "Makes HTTP request and returns a Promise (DEPRECATED package)"
-
+    description: "See postconditions for behavioral contract details."
     postconditions:
       - id: http-error-4xx-5xx
         condition: "response status is 4xx or 5xx and options.simple is true (default)"
@@ -17,7 +20,8 @@ functions:
         required_handling: >
           Caller MUST catch StatusCodeError and check err.statusCode to handle HTTP errors.
           Default behavior (simple: true) throws on non-2xx status codes.
-        source: "https://github.com/request/request-promise"
+        sources:
+          - "https://github.com/request/request-promise"
         severity: error
 
       - id: network-failure
@@ -26,42 +30,39 @@ functions:
         required_handling: >
           Caller MUST catch RequestError to handle network failures.
           Check err.cause for underlying error details (ECONNREFUSED, ENOTFOUND, ETIMEDOUT, etc.).
-        source: "https://github.com/request/request-promise"
+        sources:
+          - "https://github.com/request/request-promise"
         severity: error
+
+    edge_cases:
+      - id: simple-false-disables-statuscodeerror
+        description: "Setting options.simple = false disables StatusCodeError. Non-2xx responses resolve normally."
+        sources:
+          - "https://github.com/request/request-promise"
+        severity: info
 
   - name: get
     import_path: "request-promise"
-    description: "Makes an HTTP GET request using rp.get() method"
-
+    description: "See postconditions for behavioral contract details."
     postconditions:
       - id: http-error-4xx-5xx
         condition: "response status is 4xx or 5xx and options.simple is true (default)"
         throws: "StatusCodeError with statusCode, error, options, and response properties"
         required_handling: >
           Caller MUST catch StatusCodeError when using rp.get().
-        source: "https://github.com/request/request-promise"
+        sources:
+          - "https://github.com/request/request-promise"
         severity: error
 
   - name: post
     import_path: "request-promise"
-    description: "Makes an HTTP POST request using rp.post() method"
-
+    description: "See postconditions for behavioral contract details."
     postconditions:
       - id: http-error-4xx-5xx
         condition: "response status is 4xx or 5xx and options.simple is true (default)"
         throws: "StatusCodeError with statusCode, error, options, and response properties"
         required_handling: >
           Caller MUST catch StatusCodeError when using rp.post().
-        source: "https://github.com/request/request-promise"
+        sources:
+          - "https://github.com/request/request-promise"
         severity: error
-
-edge_cases:
-  - id: deprecated-package
-    description: "request-promise is DEPRECATED since Feb 11, 2020. Underlying request package no longer maintained."
-    source: "https://github.com/request/request-promise"
-    severity: warning
-
-  - id: simple-false-disables-statuscodeerror
-    description: "Setting options.simple = false disables StatusCodeError. Non-2xx responses resolve normally."
-    source: "https://github.com/request/request-promise"
-    severity: info

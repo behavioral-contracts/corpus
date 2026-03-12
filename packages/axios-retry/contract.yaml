@@ -3,32 +3,20 @@ semver: ">=1.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-27"
-status: draft
+status: production
+evidence_quality: confirmed
 
-# SPECIAL CASE: axios-retry is a configuration/wrapper library
+# SPECIAL CASE: axios-retry is a configuration/wrapper library.
 # It does not introduce new error-throwing functions.
 # After retries are exhausted, the underlying axios error is re-thrown.
-# Users must still handle axios errors - see the axios contract.
-
-detection:
-  # axios-retry is used to configure axios instances
-  # The actual errors come from axios methods, not from axios-retry
-  await_patterns:
-    - "axios.get("
-    - "axios.post("
-    - "axios.put("
-    - "axios.delete("
-    - "axios.patch("
-    - "client.get("
-    - "client.post("
+# Users must still handle axios errors — see the axios contract.
 
 functions:
   # axios-retry() is a configuration function - it doesn't throw
   # The errors users need to handle come from the underlying axios methods
   - name: "axiosRetry"
     import_path: "axios-retry"
-    description: "Configuration function that adds retry logic to axios instance. Does not throw errors itself."
-
+    description: "See postconditions for behavioral contract details."
     postconditions:
       - id: axios-retry-config-only
         condition: "This function configures retry behavior but does not throw errors"
@@ -40,14 +28,14 @@ functions:
           After retries are exhausted, axios will throw - users must still use try-catch.
 
           See the axios behavioral contract for specific error handling requirements.
-        source: "https://github.com/softonic/axios-retry"
+        sources:
+          - "https://github.com/softonic/axios-retry#usage"
         severity: info
 
   # Document that axios methods still require error handling
   - name: "axios.get/post/put/delete (with retry)"
     import_path: "axios"
-    description: "When using axios-retry, axios HTTP methods still throw errors after retries are exhausted"
-
+    description: "See postconditions for behavioral contract details."
     postconditions:
       - id: axios-retry-exhausted
         condition: "All retry attempts have been exhausted"
@@ -59,5 +47,6 @@ functions:
           After the final retry fails, the error is re-thrown exactly as axios would throw it.
 
           The retry logic is transparent to error handling - try-catch is still required.
-        source: "https://github.com/softonic/axios-retry#usage"
+        sources:
+          - "https://github.com/softonic/axios-retry#usage"
         severity: error

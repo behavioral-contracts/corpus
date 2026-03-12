@@ -3,14 +3,17 @@ semver: ">=8.18.0 <10.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-27"
-status: draft
-analyzer_limitation: "return_value_pattern"
-blocked_reason: "Analyzer cannot reliably detect missing return value checks. False positive rate 23%, detection rate 42% on fixtures. Requires dataflow analysis. See .onboarding/08-analyzer-limitations.md"
+status: production
+evidence_quality: partial
+# analyzer_limitation: return_value_pattern
+# Detection is limited: analyzer cannot reliably detect missing return value checks.
+# False positive rate ~23%, detection rate ~42% on fixtures. Requires dataflow analysis.
+# See work-packages/ajv/ for details.
 
 functions:
   - name: validate
     import_path: "ajv"
-    description: "Validates data against a JSON schema (synchronous)"
+    description: "See postconditions for behavioral contract details."
     postconditions:
       - id: validate-returns-false
         condition: "data fails validation against the JSON schema"
@@ -21,12 +24,13 @@ functions:
           Without checking the return value, invalid data will pass through, leading to
           data corruption, business logic errors, or security vulnerabilities.
           Use pattern: if (!ajv.validate(schema, data)) { console.error(ajv.errors); }
-        source: "https://ajv.js.org/guide/getting-started.html#basic-data-validation"
+        sources:
+          - "https://ajv.js.org/guide/getting-started.html#basic-data-validation"
         severity: error
 
   - name: compile
     import_path: "ajv"
-    description: "Compiles a JSON schema into a validation function"
+    description: "See postconditions for behavioral contract details."
     postconditions:
       - id: compile-invalid-schema
         condition: "schema is invalid or malformed"
@@ -35,12 +39,13 @@ functions:
           Caller MUST wrap compile() in try-catch when working with untrusted schemas.
           Invalid schemas cause compilation errors that crash the application.
           Use pattern: try { const validate = ajv.compile(schema); } catch (error) { /* handle */ }
-        source: "https://ajv.js.org/guide/getting-started.html#basic-data-validation"
+        sources:
+          - "https://ajv.js.org/guide/getting-started.html#basic-data-validation"
         severity: warning
 
   - name: validateSchema
     import_path: "ajv"
-    description: "Validates a JSON schema against meta-schema"
+    description: "See postconditions for behavioral contract details."
     postconditions:
       - id: validateschema-returns-false
         condition: "schema is invalid according to meta-schema"
@@ -49,7 +54,8 @@ functions:
           Caller MUST check the return value to determine if schema is valid.
           Without checking, invalid schemas may be used, causing unexpected validation behavior.
           Use pattern: if (!ajv.validateSchema(schema)) { console.error(ajv.errors); }
-        source: "https://ajv.js.org/api.html#validateschema-schema-object-boolean"
+        sources:
+          - "https://ajv.js.org/api.html#validateschema-schema-object-boolean"
         severity: warning
 
 # Category: validation
