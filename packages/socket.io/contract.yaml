@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-27"
 status: production  # Event listener detection now supported by EventListenerAnalyzer
+evidence_quality: stub
 
 detection:
   class_names:
@@ -32,8 +33,8 @@ functions:
         required_handling: "Register 'error' event listener or wrap emit in try-catch when using acknowledgement callbacks"
         severity: warning
         rationale: "Emit can fail if client disconnected or data serialization fails"
-        source: "https://socket.io/docs/v4/emitting-events/"
-
+        sources:
+          - "https://socket.io/docs/v4/emitting-events/"
   - name: on
     import_path: "socket.io"
     description: "Registers event handler"
@@ -45,4 +46,5 @@ functions:
         required_handling: "Wrap all async operations inside event handlers with try-catch blocks"
         severity: error
         rationale: "Unhandled errors in event handlers crash the server"
-        source: "https://socket.io/docs/v4/listening-to-events/"
+        sources:
+          - "https://socket.io/docs/v4/listening-to-events/"

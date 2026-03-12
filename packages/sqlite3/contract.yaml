@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
 status: production
+evidence_quality: stub
 
 # CRITICAL SECURITY NOTE:
 # sqlite3 has 1 CVE in versions < 5.0.3:
@@ -46,7 +47,8 @@ functions:
           Caller MUST validate SQL syntax before execution.
           DO NOT retry - indicates SQL syntax error.
           Error message contains details about syntax issue.
-        source: "https://github.com/TryGhost/node-sqlite3/wiki/API"
+        sources:
+          - "https://github.com/TryGhost/node-sqlite3/wiki/API"
         severity: error
 
       - id: constraint-violation
@@ -58,7 +60,8 @@ functions:
           - FOREIGN KEY: foreign key constraint violation
           - NOT NULL: required field missing
           DO NOT retry without fixing data.
-        source: "https://www.sqlite.org/rescode.html"
+        sources:
+          - "https://www.sqlite.org/rescode.html"
         severity: error
 
       - id: database-locked
@@ -69,7 +72,8 @@ functions:
           SQLite uses file-level locking.
           Implement retry with exponential backoff.
           Consider using WAL mode for better concurrency.
-        source: "https://www.sqlite.org/lockingv3.html"
+        sources:
+          - "https://www.sqlite.org/lockingv3.html"
         severity: error
 
       - id: table-not-found
@@ -78,7 +82,8 @@ functions:
         required_handling: >
           Caller MUST verify table exists before executing queries.
           DO NOT retry - indicates schema mismatch or missing migration.
-        source: "https://github.com/TryGhost/node-sqlite3/wiki/API"
+        sources:
+          - "https://github.com/TryGhost/node-sqlite3/wiki/API"
         severity: error
 
       - id: disk-full
@@ -88,7 +93,8 @@ functions:
           Caller MUST handle disk full errors.
           Check available disk space.
           Alert operations - this is a system-level issue.
-        source: "https://www.sqlite.org/rescode.html"
+        sources:
+          - "https://www.sqlite.org/rescode.html"
         severity: error
 
   - name: get
@@ -101,7 +107,8 @@ functions:
         required_handling: >
           Caller MUST validate SQL syntax.
           DO NOT retry - fix SQL syntax.
-        source: "https://github.com/TryGhost/node-sqlite3/wiki/API"
+        sources:
+          - "https://github.com/TryGhost/node-sqlite3/wiki/API"
         severity: error
 
       - id: database-locked
@@ -110,7 +117,8 @@ functions:
         required_handling: >
           Caller MUST handle database locked errors.
           Implement retry with exponential backoff.
-        source: "https://www.sqlite.org/lockingv3.html"
+        sources:
+          - "https://www.sqlite.org/lockingv3.html"
         severity: error
 
   - name: all
@@ -123,7 +131,8 @@ functions:
         required_handling: >
           Caller MUST validate SQL syntax.
           DO NOT retry - fix SQL syntax.
-        source: "https://github.com/TryGhost/node-sqlite3/wiki/API"
+        sources:
+          - "https://github.com/TryGhost/node-sqlite3/wiki/API"
         severity: error
 
       - id: database-locked
@@ -132,7 +141,8 @@ functions:
         required_handling: >
           Caller MUST handle database locked errors.
           Implement retry with exponential backoff.
-        source: "https://www.sqlite.org/lockingv3.html"
+        sources:
+          - "https://www.sqlite.org/lockingv3.html"
         severity: error
 
       - id: memory-error
@@ -142,7 +152,8 @@ functions:
           Caller MUST handle out of memory errors.
           Use pagination for large result sets.
           Consider using each() iterator instead of all().
-        source: "https://www.sqlite.org/rescode.html"
+        sources:
+          - "https://www.sqlite.org/rescode.html"
         severity: error
 
   - name: exec
@@ -156,7 +167,8 @@ functions:
           Caller MUST validate SQL syntax.
           exec() does not support parameterized queries.
           NEVER use with user input - SQL injection risk.
-        source: "https://github.com/TryGhost/node-sqlite3/wiki/API"
+        sources:
+          - "https://github.com/TryGhost/node-sqlite3/wiki/API"
         severity: error
 
       - id: constraint-violation
@@ -165,7 +177,8 @@ functions:
         required_handling: >
           Caller MUST handle constraint violations.
           DO NOT retry without fixing data.
-        source: "https://www.sqlite.org/rescode.html"
+        sources:
+          - "https://www.sqlite.org/rescode.html"
         severity: error
 
   - name: prepare
@@ -178,7 +191,8 @@ functions:
         required_handling: >
           Caller MUST validate SQL syntax.
           DO NOT retry - fix SQL syntax.
-        source: "https://github.com/TryGhost/node-sqlite3/wiki/API"
+        sources:
+          - "https://github.com/TryGhost/node-sqlite3/wiki/API"
         severity: error
 
     edge_cases:
@@ -189,7 +203,8 @@ functions:
           WRONG: db.run(sql, (err) => { console.log('Done'); }); // Ignores err!
           CORRECT: db.run(sql, (err) => { if (err) throw err; console.log('Done'); });
           This is the #1 cause of silent data corruption in SQLite apps.
-        source: "https://github.com/TryGhost/node-sqlite3/issues/796"
+        sources:
+          - "https://github.com/TryGhost/node-sqlite3/issues/796"
         severity: warning
 
       - id: sql-injection-string-concatenation
@@ -199,7 +214,8 @@ functions:
           CORRECT: db.run('INSERT INTO users VALUES (?, ?)', [username, password]);
           NEVER use exec() with user input - it doesn't support parameters.
           This is the #1 security vulnerability in SQLite apps.
-        source: "https://www.sqlite.org/lang_expr.html#varparam"
+        sources:
+          - "https://www.sqlite.org/lang_expr.html#varparam"
         severity: warning
 
       - id: transaction-rollback-missing
@@ -208,7 +224,8 @@ functions:
           Results in partial writes and data corruption.
           ALWAYS wrap transactions: BEGIN -> operations -> COMMIT or ROLLBACK on error.
           Consider using serialize() to ensure order.
-        source: "https://www.sqlite.org/lang_transaction.html"
+        sources:
+          - "https://www.sqlite.org/lang_transaction.html"
         severity: warning
 
       - id: foreign-keys-not-enabled
@@ -217,7 +234,8 @@ functions:
           Most developers don't know this - leads to data integrity violations.
           MUST run: PRAGMA foreign_keys = ON before any FK operations.
           Run this immediately after opening database.
-        source: "https://www.sqlite.org/foreignkeys.html"
+        sources:
+          - "https://www.sqlite.org/foreignkeys.html"
         severity: info
 
       - id: prepared-statements-not-finalized
@@ -226,16 +244,19 @@ functions:
           Results in resource leaks and SQLITE_MISUSE errors.
           ALWAYS call stmt.finalize() when done with prepared statement.
           Or use db.run/get/all which auto-finalize.
-        source: "https://github.com/TryGhost/node-sqlite3/wiki/API#statementfinalizecallback"
+        sources:
+          - "https://github.com/TryGhost/node-sqlite3/wiki/API#statementfinalizecallback"
         severity: info
 
 edge_cases:
   - id: callback-vs-promise
     description: "sqlite3 uses callbacks by default. Must promisify or use wrapper like sqlite for promises."
-    source: "https://github.com/TryGhost/node-sqlite3/wiki/API"
+    sources:
+      - "https://github.com/TryGhost/node-sqlite3/wiki/API"
     severity: warning
 
   - id: wal-mode-for-concurrency
     description: "Enable WAL mode for better concurrency: PRAGMA journal_mode=WAL"
-    source: "https://www.sqlite.org/wal.html"
+    sources:
+      - "https://www.sqlite.org/wal.html"
     severity: warning

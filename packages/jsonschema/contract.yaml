@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-03-05"
 status: production
+evidence_quality: stub
 
 functions:
   - name: validate
@@ -18,7 +19,8 @@ functions:
           Caller MUST wrap validate() calls with throwFirst option in try-catch.
           When throwFirst is set, the validator will throw ValidatorResultError at the first validation error.
           Without try-catch, invalid data causes unhandled exceptions and application crashes.
-        source: "https://github.com/tdegrunt/jsonschema/blob/master/README.md"
+        sources:
+          - "https://github.com/tdegrunt/jsonschema/blob/master/README.md"
         severity: error
 
       - id: validate-throw-all
@@ -28,7 +30,8 @@ functions:
           Caller MUST wrap validate() calls with throwAll option in try-catch.
           When throwAll is set, the validator will collect all validation errors and then throw ValidatorResultError.
           Without try-catch, invalid data causes unhandled exceptions.
-        source: "https://github.com/tdegrunt/jsonschema/blob/master/README.md"
+        sources:
+          - "https://github.com/tdegrunt/jsonschema/blob/master/README.md"
         severity: error
 
       - id: validate-throw-error
@@ -38,7 +41,8 @@ functions:
           Caller MUST wrap validate() calls with throwError option in try-catch.
           When throwError is set, the validator will throw ValidationError immediately at the first failure.
           Without try-catch, invalid data causes unhandled exceptions.
-        source: "https://github.com/tdegrunt/jsonschema/blob/master/README.md"
+        sources:
+          - "https://github.com/tdegrunt/jsonschema/blob/master/README.md"
         severity: error
 
   - name: "Validator.validate"
@@ -52,7 +56,8 @@ functions:
         required_handling: >
           Caller MUST wrap Validator.validate() calls with throw options in try-catch.
           Same behavior as standalone validate() - throws when throwFirst, throwAll, or throwError options are enabled.
-        source: "https://github.com/tdegrunt/jsonschema/blob/master/README.md"
+        sources:
+          - "https://github.com/tdegrunt/jsonschema/blob/master/README.md"
         severity: error
 
   - name: addSchema
@@ -66,11 +71,13 @@ functions:
         required_handling: >
           Caller MUST wrap addSchema() calls in try-catch, especially when loading schemas from external sources.
           Invalid or undefined schemas cause SchemaError, common when loading from databases or HTTP endpoints.
-        source: "https://github.com/tdegrunt/jsonschema/issues/290"
+        sources:
+          - "https://github.com/tdegrunt/jsonschema/issues/290"
         severity: error
 
     edge_cases:
       - id: undefined-schema-property
         description: "Setting a schema property to undefined causes TypeError during validation"
-        source: "https://github.com/tdegrunt/jsonschema/issues/60"
+        sources:
+          - "https://github.com/tdegrunt/jsonschema/issues/60"
         severity: warning

@@ -4,16 +4,14 @@ contract_version: 1.0.0
 maintainer: behavioral-contracts
 last_verified: 2026-02-24
 status: production
-
+evidence_quality: stub
 description: |
   React Hook Form is a performant, flexible, and extensible forms library with easy-to-use validation.
   This contract focuses on error handling requirements for async form submissions, context usage, and validation errors.
-
 functions:
   - name: handleSubmit
     import_path: react-hook-form
     description: Form submission handler that validates form and executes onSubmit callback
-
     postconditions:
       - id: async-submit-unhandled-error
         condition: |
@@ -41,7 +39,8 @@ functions:
             };
         source: https://react-hook-form.com/docs/useform/handlesubmit
         severity: error
-
+        sources:
+          - https://react-hook-form.com/docs/useform/handlesubmit
       - id: empty-catch-block-silent-failure
         condition: |
           WITHIN a handleSubmit onSubmit callback function, try-catch exists but catch block is empty,
@@ -79,7 +78,8 @@ functions:
             catch (error) { logger.error(error); }                  // ✅ OK for servers
         source: https://react-hook-form.com/advanced-usage
         severity: info
-
+        sources:
+          - https://react-hook-form.com/advanced-usage
       - id: server-validation-error-not-displayed
         condition: |
           Server/API returns validation errors but setError() is not called to display them to users
@@ -107,11 +107,11 @@ functions:
             });
         source: https://react-hook-form.com/docs/useform/seterror
         severity: warning
-
+        sources:
+          - https://react-hook-form.com/docs/useform/seterror
   - name: useFormContext
     import_path: react-hook-form
     description: Hook to access form context in deeply nested components
-
     postconditions:
       - id: missing-form-provider
         condition: useFormContext() called in component tree without FormProvider wrapper
@@ -146,7 +146,8 @@ functions:
             }
         source: https://react-hook-form.com/docs/useformcontext
         severity: error
-
+        sources:
+          - https://react-hook-form.com/docs/useformcontext
       - id: useformcontext-property-access-error
         condition: |
           Destructuring properties from useFormContext without null check when FormProvider might be missing
@@ -166,11 +167,11 @@ functions:
             if (!control) return null; // or throw error
         source: https://react-hook-form.com/docs/useformcontext
         severity: error
-
+        sources:
+          - https://react-hook-form.com/docs/useformcontext
   - name: useFieldArray
     import_path: react-hook-form
     description: Hook to manage dynamic form field arrays
-
     postconditions:
       - id: unhandled-field-array-operations
         condition: |
@@ -195,7 +196,8 @@ functions:
             };
         source: https://react-hook-form.com/docs/usefieldarray
         severity: warning
-
+        sources:
+          - https://react-hook-form.com/docs/usefieldarray
 notes: |
   Common anti-patterns observed in real codebases:
 

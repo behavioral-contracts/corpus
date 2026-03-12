@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-25"
 status: production
+evidence_quality: stub
 
 detection:
   type_names:
@@ -20,7 +21,8 @@ functions:
         condition: "RPC call fails (network down, rate limit, invalid address, node error)"
         throws: "Error with RPC error details and error code"
         required_handling: "Caller MUST wrap provider.getBalance() in try-catch to handle RPC errors. Network failures, rate limits, and invalid addresses crash application if unhandled."
-        source: "https://docs.ethers.org/v6/api/providers/#Provider-getBalance"
+        sources:
+          - "https://docs.ethers.org/v6/api/providers/#Provider-getBalance"
         severity: error
 
   - name: sendTransaction
@@ -31,13 +33,15 @@ functions:
         condition: "transaction fails (insufficient gas, nonce error, network error, reverted)"
         throws: "Error with transaction failure details (gas estimation, nonce, revert reason)"
         required_handling: "Caller MUST wrap sendTransaction() in try-catch to handle transaction errors. Gas estimation failures, nonce conflicts, and reverted transactions crash application if unhandled. Check error.code for specific error types."
-        source: "https://docs.ethers.org/v6/api/providers/#Signer-sendTransaction"
+        sources:
+          - "https://docs.ethers.org/v6/api/providers/#Signer-sendTransaction"
         severity: error
 
 edge_cases:
   - id: transaction-wait-errors
     description: "Use receipt = await tx.wait() to wait for confirmation - can throw if transaction reverts on-chain. Must wrap in try-catch to handle revert errors and get revert reason."
-    source: "https://docs.ethers.org/v6/api/providers/#TransactionResponse-wait"
+    sources:
+      - "https://docs.ethers.org/v6/api/providers/#TransactionResponse-wait"
     severity: error
 
 # Category: blockchain

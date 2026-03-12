@@ -3,7 +3,8 @@ semver: ">=3.5.3"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-27"
-status: draft
+status: production
+evidence_quality: confirmed
 
 functions:
   - name: parse
@@ -19,5 +20,6 @@ functions:
           Without error handling, the server will crash when: maxFileSize exceeded (default 200MB),
           maxFields exceeded (default 1000), invalid multipart data is received, filesystem errors occur,
           or filter function validation fails. Promise-based (v3+): try { const [fields, files] = await form.parse(req); } catch (err) { /* handle */ }
-        source: "https://github.com/node-formidable/formidable/blob/master/README.md"
+        sources:
+          - "https://github.com/node-formidable/formidable/blob/master/README.md"
         severity: error

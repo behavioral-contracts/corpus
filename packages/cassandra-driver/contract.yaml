@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
 status: production
+evidence_quality: stub
 
 detection:
   class_names: ["Client", "Mapper", "ResultSet"]
@@ -41,7 +42,8 @@ functions:
           - Authentication failure
           Check error.innerErrors for details on each contact point.
           Implement retry with exponential backoff.
-        source: "https://docs.datastax.com/en/developer/nodejs-driver/4.6/getting-started/"
+        sources:
+          - "https://docs.datastax.com/en/developer/nodejs-driver/4.6/getting-started/"
         severity: error
 
       - id: authentication-failure
@@ -51,7 +53,8 @@ functions:
           Caller MUST handle authentication errors.
           DO NOT retry with same credentials.
           Verify username/password in connection config.
-        source: "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/auth/"
+        sources:
+          - "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/auth/"
         severity: error
 
   - name: execute
@@ -67,7 +70,8 @@ functions:
           - 0x2000: Syntax error
           - 0x2200: Invalid query
           DO NOT retry - fix CQL syntax.
-        source: "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/error-handling/"
+        sources:
+          - "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/error-handling/"
         severity: error
 
       - id: unavailable
@@ -81,7 +85,8 @@ functions:
           1. Retry with exponential backoff
           2. Lower consistency level (if acceptable)
           3. Check cluster health
-        source: "https://docs.datastax.com/en/cassandra-oss/3.x/cassandra/dml/dmlAboutDataConsistency.html"
+        sources:
+          - "https://docs.datastax.com/en/cassandra-oss/3.x/cassandra/dml/dmlAboutDataConsistency.html"
         severity: error
 
       - id: timeout
@@ -95,7 +100,8 @@ functions:
           - Overloaded cluster
           - Network issues
           Consider retry with exponential backoff for transient issues.
-        source: "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/error-handling/"
+        sources:
+          - "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/error-handling/"
         severity: error
 
       - id: write-timeout
@@ -106,7 +112,8 @@ functions:
           Write acknowledged by coordinator but timeout waiting for replicas.
           Data may or may not be written (non-idempotent risk).
           Implement idempotent retries or check if write succeeded.
-        source: "https://docs.datastax.com/en/cassandra-oss/3.x/cassandra/dml/dmlAboutDataConsistency.html"
+        sources:
+          - "https://docs.datastax.com/en/cassandra-oss/3.x/cassandra/dml/dmlAboutDataConsistency.html"
         severity: error
 
       - id: read-timeout
@@ -116,7 +123,8 @@ functions:
           Caller MUST handle read timeout errors.
           Timeout waiting for replicas to respond.
           May be transient - implement retry logic.
-        source: "https://docs.datastax.com/en/cassandra-oss/3.x/cassandra/dml/dmlAboutDataConsistency.html"
+        sources:
+          - "https://docs.datastax.com/en/cassandra-oss/3.x/cassandra/dml/dmlAboutDataConsistency.html"
         severity: error
 
       - id: overloaded
@@ -126,7 +134,8 @@ functions:
           Caller MUST handle overloaded errors.
           Coordinator cannot handle more requests.
           Implement retry with exponential backoff and jitter.
-        source: "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/error-handling/"
+        sources:
+          - "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/error-handling/"
         severity: error
 
       - id: invalid-query
@@ -135,7 +144,8 @@ functions:
         required_handling: >
           Caller MUST verify schema exists before querying.
           DO NOT retry - indicates schema mismatch.
-        source: "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/error-handling/"
+        sources:
+          - "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/error-handling/"
         severity: error
 
   - name: batch
@@ -150,7 +160,8 @@ functions:
           Entire batch fails if any statement fails.
           Check error code to determine failure reason.
           Note: Cassandra batches are NOT transactions across partitions.
-        source: "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/batch/"
+        sources:
+          - "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/batch/"
         severity: error
 
       - id: write-timeout
@@ -160,7 +171,8 @@ functions:
           Caller MUST handle batch write timeouts.
           Batch may be partially applied (non-atomic across partitions).
           Implement idempotent retry logic.
-        source: "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/batch/"
+        sources:
+          - "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/batch/"
         severity: error
 
   - name: shutdown
@@ -173,7 +185,8 @@ functions:
         required_handling: >
           Caller SHOULD handle shutdown errors.
           Typically safe to ignore, but log for investigation.
-        source: "https://docs.datastax.com/en/developer/nodejs-driver/4.6/getting-started/"
+        sources:
+          - "https://docs.datastax.com/en/developer/nodejs-driver/4.6/getting-started/"
         severity: warning
 
   - name: stream
@@ -188,7 +201,8 @@ functions:
           Without error listener, unhandled error will crash process.
           Errors can occur during query execution or while reading rows.
           Handle NoHostAvailableError, OperationTimedOutError, ResponseError.
-        source: "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/queries/"
+        sources:
+          - "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/queries/"
         severity: error
 
   - name: eachRow
@@ -205,16 +219,19 @@ functions:
           - OperationTimedOutError: Query timeout
           - ResponseError: Server-side query error
           If row callback throws, eachRow stops and calls endCallback with error.
-        source: "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/queries/"
+        sources:
+          - "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/queries/"
         severity: error
 
 edge_cases:
   - id: prepared-statements
     description: "Always use prepared statements for repeated queries. Improves performance and prevents injection."
-    source: "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/prepared-statements/"
+    sources:
+      - "https://docs.datastax.com/en/developer/nodejs-driver/4.6/features/prepared-statements/"
     severity: warning
 
   - id: consistency-levels
     description: "Choose appropriate consistency level. QUORUM for strong consistency, ONE for performance."
-    source: "https://docs.datastax.com/en/cassandra-oss/3.x/cassandra/dml/dmlConfigConsistency.html"
+    sources:
+      - "https://docs.datastax.com/en/cassandra-oss/3.x/cassandra/dml/dmlConfigConsistency.html"
     severity: warning

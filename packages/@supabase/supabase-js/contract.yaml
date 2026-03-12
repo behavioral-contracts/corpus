@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-24"
 status: production
+evidence_quality: stub
 
 detection:
   factory_methods:
@@ -22,7 +23,8 @@ functions:
           Caller MUST validate password strength before signup.
           Display user-friendly error with password requirements.
           DO NOT retry without user changing password.
-        source: "https://supabase.com/docs/guides/auth/debugging/error-codes"
+        sources:
+          - "https://supabase.com/docs/guides/auth/debugging/error-codes"
         severity: error
 
       - id: user-already-exists
@@ -32,7 +34,8 @@ functions:
           Caller MUST handle duplicate user gracefully.
           Provide clear error message to user.
           Consider redirecting to login page.
-        source: "https://supabase.com/docs/guides/auth/debugging/error-codes"
+        sources:
+          - "https://supabase.com/docs/guides/auth/debugging/error-codes"
         severity: error
 
       - id: rate-limit-exceeded
@@ -43,7 +46,8 @@ functions:
           Implement exponential backoff.
           Show user-friendly message about trying again later.
           DO NOT automatically retry - may indicate abuse.
-        source: "https://supabase.com/docs/guides/auth/troubleshooting"
+        sources:
+          - "https://supabase.com/docs/guides/auth/troubleshooting"
         severity: error
 
       - id: server-error
@@ -54,13 +58,15 @@ functions:
           Retry with exponential backoff.
           Check logs for database triggers or SMTP issues.
           Alert operations if persistent.
-        source: "https://supabase.com/docs/guides/troubleshooting/resolving-500-status-authentication-errors-7bU5U8"
+        sources:
+          - "https://supabase.com/docs/guides/troubleshooting/resolving-500-status-authentication-errors-7bU5U8"
         severity: error
 
     edge_cases:
       - id: email-confirmation
         description: "By default, users must confirm email before login. Handle unconfirmed state gracefully."
-        source: "https://supabase.com/docs/guides/auth/troubleshooting"
+        sources:
+          - "https://supabase.com/docs/guides/auth/troubleshooting"
         severity: warning
 
   - name: signInWithPassword
@@ -76,7 +82,8 @@ functions:
           DO NOT specify whether email or password was wrong (security).
           Implement rate limiting to prevent brute force attacks.
           Consider account lockout after multiple failures.
-        source: "https://supabase.com/docs/guides/auth/debugging/error-codes"
+        sources:
+          - "https://supabase.com/docs/guides/auth/debugging/error-codes"
         severity: error
 
       - id: rate-limit-exceeded
@@ -86,7 +93,8 @@ functions:
           Handle rate limit errors with user-friendly message.
           This often indicates potential abuse.
           Consider CAPTCHA or additional verification.
-        source: "https://supabase.com/docs/guides/auth/debugging/error-codes"
+        sources:
+          - "https://supabase.com/docs/guides/auth/debugging/error-codes"
         severity: error
 
       - id: user-not-confirmed
@@ -95,14 +103,16 @@ functions:
         required_handling: >
           Redirect user to email confirmation flow.
           Provide option to resend confirmation email.
-        source: "https://supabase.com/docs/guides/auth/troubleshooting"
+        sources:
+          - "https://supabase.com/docs/guides/auth/troubleshooting"
         severity: error
 
       - id: server-error
         condition: "Auth server error (500)"
         throws: "AuthApiError with status 500"
         required_handling: "Retry with exponential backoff. Check database and SMTP provider health."
-        source: "https://supabase.com/docs/guides/troubleshooting/resolving-500-status-authentication-errors-7bU5U8"
+        sources:
+          - "https://supabase.com/docs/guides/troubleshooting/resolving-500-status-authentication-errors-7bU5U8"
         severity: error
 
   - name: from
@@ -116,7 +126,8 @@ functions:
         required_handling: >
           Verify table name is correct.
           Ensure migrations have been applied.
-        source: "https://supabase.com/docs/guides/database/tables"
+        sources:
+          - "https://supabase.com/docs/guides/database/tables"
         severity: error
 
   - name: select
@@ -133,7 +144,8 @@ functions:
           CRITICAL: Ensure RLS policies are configured for all tables.
           Using anon or authenticated role without RLS is a MAJOR security risk.
           Return empty result or access denied message to user.
-        source: "https://supabase.com/docs/guides/troubleshooting/database-api-42501-errors"
+        sources:
+          - "https://supabase.com/docs/guides/troubleshooting/database-api-42501-errors"
         severity: error
 
       - id: column-access-denied
@@ -143,7 +155,8 @@ functions:
           Avoid using select * if column-level RLS is configured.
           Explicitly select only columns user should access.
           Handle 42501 errors by selecting subset of columns.
-        source: "https://supabase.com/docs/guides/troubleshooting/database-api-42501-errors"
+        sources:
+          - "https://supabase.com/docs/guides/troubleshooting/database-api-42501-errors"
         severity: error
 
       - id: connection-error
@@ -153,18 +166,21 @@ functions:
           Implement retry with exponential backoff.
           Check database health status.
           Alert operations if persistent.
-        source: "https://supabase.com/docs/reference/javascript/v1"
+        sources:
+          - "https://supabase.com/docs/reference/javascript/v1"
         severity: error
 
     edge_cases:
       - id: service-role-bypasses-rls
         description: "Client initialized with service_role key ALWAYS bypasses RLS. NEVER use service_role in client-side code."
-        source: "https://supabase.com/docs/guides/troubleshooting/why-is-my-service-role-key-client-getting-rls-errors-or-not-returning-data-7_1K9z"
+        sources:
+          - "https://supabase.com/docs/guides/troubleshooting/why-is-my-service-role-key-client-getting-rls-errors-or-not-returning-data-7_1K9z"
         severity: warning
 
       - id: rls-not-enabled-by-default
         description: "RLS is NOT enabled by default on new tables. Always enable RLS and create policies."
-        source: "https://supabase.com/docs/guides/database/postgres/row-level-security"
+        sources:
+          - "https://supabase.com/docs/guides/database/postgres/row-level-security"
         severity: warning
 
   - name: insert
@@ -179,7 +195,8 @@ functions:
           Ensure RLS policies allow INSERT for user's role.
           Check if user is authenticated if policy requires it.
           Return clear error about insufficient permissions.
-        source: "https://supabase.com/docs/guides/troubleshooting/database-api-42501-errors"
+        sources:
+          - "https://supabase.com/docs/guides/troubleshooting/database-api-42501-errors"
         severity: error
 
       - id: unique-constraint-violation
@@ -189,7 +206,8 @@ functions:
           Handle duplicate key violations gracefully.
           Check if record already exists before inserting.
           Return user-friendly error message.
-        source: "https://supabase.com/docs/reference/javascript/v1"
+        sources:
+          - "https://supabase.com/docs/reference/javascript/v1"
         severity: error
 
       - id: foreign-key-violation
@@ -198,20 +216,23 @@ functions:
         required_handling: >
           Verify referenced records exist before insert.
           DO NOT retry without fixing data integrity issue.
-        source: "https://supabase.com/docs/reference/javascript/v1"
+        sources:
+          - "https://supabase.com/docs/reference/javascript/v1"
         severity: error
 
       - id: connection-error
         condition: "Database connection failed"
         throws: "Network error"
         required_handling: "Retry with exponential backoff"
-        source: "https://supabase.com/docs/reference/javascript/v1"
+        sources:
+          - "https://supabase.com/docs/reference/javascript/v1"
         severity: error
 
     edge_cases:
       - id: returning-minimal-for-rls
         description: "If RLS blocks select after insert, set returning: 'minimal' to avoid error"
-        source: "https://supabase.com/docs/guides/troubleshooting/why-is-my-service-role-key-client-getting-rls-errors-or-not-returning-data-7_1K9z"
+        sources:
+          - "https://supabase.com/docs/guides/troubleshooting/why-is-my-service-role-key-client-getting-rls-errors-or-not-returning-data-7_1K9z"
         severity: warning
 
   - name: update
@@ -226,7 +247,8 @@ functions:
           Ensure RLS policies allow UPDATE for user.
           Verify user owns the record if policy checks ownership.
           Return insufficient permissions error.
-        source: "https://supabase.com/docs/guides/troubleshooting/database-api-42501-errors"
+        sources:
+          - "https://supabase.com/docs/guides/troubleshooting/database-api-42501-errors"
         severity: error
 
       - id: record-not-found
@@ -236,14 +258,16 @@ functions:
           Check if returned data array is empty.
           This may indicate record doesn't exist or RLS filters it out.
           Distinguish between "not found" and "no permission".
-        source: "https://supabase.com/docs/reference/javascript/v1"
+        sources:
+          - "https://supabase.com/docs/reference/javascript/v1"
         severity: warning
 
       - id: unique-constraint-violation
         condition: "Update would violate unique constraint (23505)"
         throws: "Error with code '23505'"
         required_handling: "Check for conflicts before updating. DO NOT retry."
-        source: "https://supabase.com/docs/reference/javascript/v1"
+        sources:
+          - "https://supabase.com/docs/reference/javascript/v1"
         severity: error
 
   - name: delete
@@ -257,7 +281,8 @@ functions:
         required_handling: >
           Ensure RLS policies allow DELETE for user.
           Verify user owns the record if policy checks ownership.
-        source: "https://supabase.com/docs/guides/troubleshooting/database-api-42501-errors"
+        sources:
+          - "https://supabase.com/docs/guides/troubleshooting/database-api-42501-errors"
         severity: error
 
       - id: foreign-key-violation
@@ -266,7 +291,8 @@ functions:
         required_handling: >
           Delete dependent records first or use CASCADE.
           Return error about dependent records to user.
-        source: "https://supabase.com/docs/reference/javascript/v1"
+        sources:
+          - "https://supabase.com/docs/reference/javascript/v1"
         severity: error
 
   - name: rpc
@@ -281,7 +307,8 @@ functions:
           Verify function name is correct.
           Ensure function is created in database.
           DO NOT retry without fixing function name.
-        source: "https://supabase.com/docs/reference/javascript/v1"
+        sources:
+          - "https://supabase.com/docs/reference/javascript/v1"
         severity: error
 
       - id: permission-denied
@@ -290,7 +317,8 @@ functions:
         required_handling: >
           Grant EXECUTE permission on function to appropriate role.
           Check if user is authenticated if required.
-        source: "https://supabase.com/docs/guides/troubleshooting/database-api-42501-errors"
+        sources:
+          - "https://supabase.com/docs/guides/troubleshooting/database-api-42501-errors"
         severity: error
 
       - id: rpc-error
@@ -300,11 +328,13 @@ functions:
           Check function logs for specific error.
           Handle business logic errors from function.
           May include constraint violations, custom errors, etc.
-        source: "https://supabase.com/docs/reference/javascript/v1"
+        sources:
+          - "https://supabase.com/docs/reference/javascript/v1"
         severity: error
 
     edge_cases:
       - id: security-definer
         description: "Functions with SECURITY DEFINER run with creator's permissions, bypassing RLS. Use cautiously."
-        source: "https://supabase.com/docs/guides/database/postgres/row-level-security"
+        sources:
+          - "https://supabase.com/docs/guides/database/postgres/row-level-security"
         severity: warning

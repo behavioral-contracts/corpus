@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-27"
 status: production  # Event listener detection now supported by EventListenerAnalyzer
+evidence_quality: stub
 
 # CRITICAL SECURITY NOTE:
 # ws has 3 CVEs in versions < 8.17.1:
@@ -48,7 +49,8 @@ functions:
           Without error handler, unhandled 'error' events crash the entire Node.js process.
           CRITICAL: This is the #1 production bug (60% of codebases).
           Always add: ws.on('error', (error) => { handle_error(error); })
-        source: "https://github.com/websockets/ws/issues/246"
+        sources:
+          - "https://github.com/websockets/ws/issues/246"
         severity: error
 
       - id: connection-error
@@ -59,7 +61,8 @@ functions:
           Common errors: ECONNREFUSED, ENOTFOUND, ETIMEDOUT, ECONNRESET.
           Error event is emitted before close event.
           Implement reconnection logic with exponential backoff.
-        source: "https://github.com/websockets/ws/blob/master/doc/ws.md#event-error"
+        sources:
+          - "https://github.com/websockets/ws/blob/master/doc/ws.md#event-error"
         severity: error
 
       - id: protocol-violation
@@ -70,7 +73,8 @@ functions:
           Usually indicates server or client implementation bug.
           Close code 1002 means protocol error.
           DO NOT RETRY - fix implementation.
-        source: "https://tools.ietf.org/html/rfc6455#section-7.4.1"
+        sources:
+          - "https://tools.ietf.org/html/rfc6455#section-7.4.1"
         severity: error
 
       - id: missing-close-handler
@@ -82,7 +86,8 @@ functions:
           Code 1006 indicates abnormal close (connection lost) - SHOULD reconnect.
           Code 1000 indicates normal close - DO NOT reconnect.
           Remove event listeners in close handler to prevent memory leaks.
-        source: "https://websocket.org/reference/close-codes/"
+        sources:
+          - "https://websocket.org/reference/close-codes/"
         severity: warning
 
     edge_cases:
@@ -96,7 +101,8 @@ functions:
           setTimeout(reconnect, delay + jitter);
           Reset attempt counter on successful connection.
           Include max retry limit (e.g., 10 attempts).
-        source: "https://dev.to/hexshift/robust-websocket-reconnection-strategies-in-javascript-with-exponential-backoff-40n1"
+        sources:
+          - "https://dev.to/hexshift/robust-websocket-reconnection-strategies-in-javascript-with-exponential-backoff-40n1"
         severity: warning
 
       - id: no-heartbeat
@@ -106,7 +112,8 @@ functions:
           SERVER: Send ping every 30s, terminate if no pong received.
           CLIENT: Monitor ping timing, reconnect if heartbeat timeout exceeded.
           Use ws.isAlive pattern with pong event handler.
-        source: "https://oneuptime.com/blog/post/2026-02-24-websocket-heartbeat-ping-pong/view"
+        sources:
+          - "https://oneuptime.com/blog/post/2026-02-24-websocket-heartbeat-ping-pong/view"
         severity: warning
 
   - name: send
@@ -122,7 +129,8 @@ functions:
           CORRECT: ws.on('open', () => { ws.send(data); })
           CORRECT: if (ws.readyState === WebSocket.OPEN) { ws.send(data); }
           WRONG: ws.send(data); // Immediately after new WebSocket() - crashes!
-        source: "https://github.com/websockets/ws/issues/1170"
+        sources:
+          - "https://github.com/websockets/ws/issues/1170"
         severity: error
 
       - id: backpressure-exceeded
@@ -134,7 +142,8 @@ functions:
           Wait for drain event before resuming.
           WITHOUT backpressure handling: memory leak, OOM crash.
           Example: if (ws.bufferedAmount > 1024*1024) { pause_sending(); }
-        source: "https://skylinecodes.substack.com/p/backpressure-in-websocket-streams"
+        sources:
+          - "https://skylinecodes.substack.com/p/backpressure-in-websocket-streams"
         severity: warning
 
       - id: message-too-large
@@ -145,7 +154,8 @@ functions:
           Configure maxPayload appropriately (default 100 MiB may be too high).
           Connection closes with code 1009 (message too big).
           Split large messages into chunks or use chunking protocol.
-        source: "https://github.com/websockets/ws/issues/1543"
+        sources:
+          - "https://github.com/websockets/ws/issues/1543"
         severity: error
 
     edge_cases:
@@ -159,7 +169,8 @@ functions:
             }
           });
           Without check: errors thrown for every closed connection.
-        source: "https://github.com/websockets/ws/blob/master/doc/ws.md#how-to-broadcast-a-message-to-all-clients"
+        sources:
+          - "https://github.com/websockets/ws/blob/master/doc/ws.md#how-to-broadcast-a-message-to-all-clients"
         severity: warning
 
   - name: WebSocketServer
@@ -173,7 +184,8 @@ functions:
           Caller MUST attach error event handler to server.
           Common errors: EADDRINUSE (port in use), EACCES (permission denied).
           Without handler, errors crash the process.
-        source: "https://github.com/websockets/ws/blob/master/doc/ws.md#event-error-1"
+        sources:
+          - "https://github.com/websockets/ws/blob/master/doc/ws.md#event-error-1"
         severity: error
 
       - id: client-error-before-connection
@@ -183,7 +195,8 @@ functions:
           Caller SHOULD handle wsClientError for errors during handshake.
           Prevents crashes from malformed upgrade requests.
           This event is emitted BEFORE connection event.
-        source: "https://github.com/websockets/ws/blob/master/doc/ws.md#event-wsclienterror"
+        sources:
+          - "https://github.com/websockets/ws/blob/master/doc/ws.md#event-wsclienterror"
         severity: warning
 
       - id: no-origin-validation
@@ -198,7 +211,8 @@ functions:
               return allowedOrigins.includes(info.origin);
             }
           });
-        source: "https://owasp.org/www-community/vulnerabilities/Cross-Site_WebSocket_Hijacking"
+        sources:
+          - "https://owasp.org/www-community/vulnerabilities/Cross-Site_WebSocket_Hijacking"
         severity: warning
 
     edge_cases:
@@ -209,7 +223,8 @@ functions:
           ALWAYS configure: new WebSocketServer({ maxPayload: 10 * 1024 * 1024 })
           Set to appropriate limit for your use case (e.g., 10 MB).
           Prevents CVE-2016-10542 style attacks.
-        source: "https://nvd.nist.gov/vuln/detail/CVE-2016-10542"
+        sources:
+          - "https://nvd.nist.gov/vuln/detail/CVE-2016-10542"
         severity: info
 
       - id: memory-leak-event-listeners
@@ -219,7 +234,8 @@ functions:
           Results in memory leak as listener count grows unbounded.
           ALWAYS: ws.on('close', () => { ws.removeAllListeners(); });
           Alternatively, use once() for one-time events.
-        source: "https://github.com/websockets/ws/issues/1334"
+        sources:
+          - "https://github.com/websockets/ws/issues/1334"
         severity: info
 
   - name: close
@@ -236,5 +252,6 @@ functions:
           Code 1000 means clean shutdown.
           Code 1009 means message too big.
           Remove event listeners to prevent memory leaks.
-        source: "https://websocket.org/reference/close-codes/"
+        sources:
+          - "https://websocket.org/reference/close-codes/"
         severity: warning

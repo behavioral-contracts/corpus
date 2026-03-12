@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-27"
 status: production  # Event listener detection now supported by EventListenerAnalyzer
+evidence_quality: stub
 
 # CRITICAL SECURITY NOTE:
 # pg has 1 CVE in versions < 7.2.0:
@@ -48,7 +49,8 @@ functions:
           Caller MUST validate SQL syntax before execution.
           This indicates a SQL syntax error - DO NOT retry.
           Check error.position for location of syntax error in query.
-        source: "https://www.postgresql.org/docs/current/errcodes-appendix.html"
+        sources:
+          - "https://www.postgresql.org/docs/current/errcodes-appendix.html"
         severity: error
 
       - id: unique-violation
@@ -58,7 +60,8 @@ functions:
           Caller MUST handle duplicate key violations gracefully.
           Extract constraint name from error.constraint.
           DO NOT retry without changing the unique field value.
-        source: "https://www.postgresql.org/docs/current/errcodes-appendix.html"
+        sources:
+          - "https://www.postgresql.org/docs/current/errcodes-appendix.html"
         severity: error
 
       - id: foreign-key-violation
@@ -68,7 +71,8 @@ functions:
           Caller MUST verify referenced record exists before insertion.
           Extract constraint and table from error.constraint and error.table.
           This indicates data integrity issue - DO NOT retry.
-        source: "https://www.postgresql.org/docs/current/errcodes-appendix.html"
+        sources:
+          - "https://www.postgresql.org/docs/current/errcodes-appendix.html"
         severity: error
 
       - id: not-null-violation
@@ -78,7 +82,8 @@ functions:
           Caller MUST provide all required fields.
           Extract column name from error.column.
           Validate data completeness before query execution.
-        source: "https://www.postgresql.org/docs/current/errcodes-appendix.html"
+        sources:
+          - "https://www.postgresql.org/docs/current/errcodes-appendix.html"
         severity: error
 
       - id: connection-error
@@ -89,7 +94,8 @@ functions:
           Common causes: database down, wrong host/port, network issues.
           Implement retry with exponential backoff for transient connection issues.
           Alert operations if connection errors persist.
-        source: "https://node-postgres.com/"
+        sources:
+          - "https://node-postgres.com/"
         severity: error
 
       - id: undefined-table
@@ -99,7 +105,8 @@ functions:
           Caller MUST verify table exists before querying.
           Check error.message for table name.
           DO NOT retry - this indicates schema mismatch or missing migration.
-        source: "https://www.postgresql.org/docs/current/errcodes-appendix.html"
+        sources:
+          - "https://www.postgresql.org/docs/current/errcodes-appendix.html"
         severity: error
 
     edge_cases:
@@ -110,7 +117,8 @@ functions:
           CORRECT: pool.query('SELECT * FROM users WHERE username = $1', [username]);
           NEVER concatenate user input into SQL - use parameterized queries ($1, $2, etc).
           This is the #1 security vulnerability in database applications.
-        source: "https://dev.to/ofri-peretz/sql-injection-in-node-postgres-the-pattern-everyone-gets-wrong-54mn"
+        sources:
+          - "https://dev.to/ofri-peretz/sql-injection-in-node-postgres-the-pattern-everyone-gets-wrong-54mn"
         severity: warning
 
       - id: transaction-not-rolled-back
@@ -119,12 +127,14 @@ functions:
           Results in data corruption and held locks.
           ALWAYS wrap transactions: try { BEGIN -> COMMIT } catch { ROLLBACK } finally { release() }
           Missing ROLLBACK leaves database in inconsistent state.
-        source: "https://node-postgres.com/features/transactions"
+        sources:
+          - "https://node-postgres.com/features/transactions"
         severity: warning
 
       - id: query-timeout
         description: "Long-running queries may timeout. Configure statement_timeout or query_timeout."
-        source: "https://node-postgres.com/apis/client"
+        sources:
+          - "https://node-postgres.com/apis/client"
         severity: warning
 
   - name: connect
@@ -143,7 +153,8 @@ functions:
           3. Queries taking too long
           Implement proper client.release() in finally blocks.
           Monitor pool metrics to identify leaks.
-        source: "https://node-postgres.com/apis/pool"
+        sources:
+          - "https://node-postgres.com/apis/pool"
         severity: error
 
       - id: connection-error
@@ -154,7 +165,8 @@ functions:
           Implement retry with exponential backoff.
           Check database server status.
           Verify connection string credentials.
-        source: "https://node-postgres.com/features/pooling"
+        sources:
+          - "https://node-postgres.com/features/pooling"
         severity: error
 
       - id: client-not-released
@@ -173,7 +185,8 @@ functions:
           CRITICAL: This is the #1 production bug (affects 30% of mid-sized projects).
           Failure to release causes pool exhaustion and application hangs.
           Silent failure until complete outage.
-        source: "https://github.com/brianc/node-postgres/issues/1882"
+        sources:
+          - "https://github.com/brianc/node-postgres/issues/1882"
         severity: error
 
     edge_cases:
@@ -184,12 +197,14 @@ functions:
           WRONG: await pool.query('BEGIN'); await pool.query(...); await pool.query('COMMIT');
           CORRECT: const client = await pool.connect(); try { await client.query('BEGIN'); ... } ...
           Transactions MUST use a dedicated client from pool.connect().
-        source: "https://node-postgres.com/features/transactions"
+        sources:
+          - "https://node-postgres.com/features/transactions"
         severity: warning
 
       - id: pool-error-events
         description: "Pool emits 'error' events for background errors. MUST add error listener to prevent crash."
-        source: "https://node-postgres.com/apis/pool"
+        sources:
+          - "https://node-postgres.com/apis/pool"
         severity: warning
 
       - id: pool-not-closed-on-shutdown
@@ -197,6 +212,7 @@ functions:
           COMMON: Not calling pool.end() during graceful shutdown.
           Results in hung connections and prevents clean application exit.
           MUST call pool.end() in shutdown handlers (SIGTERM, SIGINT).
-        source: "https://node-postgres.com/apis/pool"
+        sources:
+          - "https://node-postgres.com/apis/pool"
         severity: info
 

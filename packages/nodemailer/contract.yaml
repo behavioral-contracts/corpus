@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
 status: production
+evidence_quality: stub
 
 # CRITICAL SECURITY NOTE:
 # nodemailer has 4 CVEs in versions < 7.0.11:
@@ -52,7 +53,8 @@ functions:
           EDNS: Hostname DNS resolution failed.
           ESOCKET: Low-level socket error from net/tls modules.
           These errors are TRANSIENT and RETRIABLE with exponential backoff.
-        source: "https://nodemailer.com/errors/#econnection"
+        sources:
+          - "https://nodemailer.com/errors/#econnection"
         severity: error
 
       - id: authentication-failure
@@ -65,7 +67,8 @@ functions:
           EOAUTH2: OAuth2 token refresh failed or invalid credentials.
           DO NOT RETRY - indicates configuration issue.
           Check SMTP credentials and account status.
-        source: "https://nodemailer.com/errors/#eauth"
+        sources:
+          - "https://nodemailer.com/errors/#eauth"
         severity: error
 
       - id: tls-ssl-error
@@ -77,7 +80,8 @@ functions:
           EREQUIRETLS: RFC 8689 REQUIRETLS extension unsupported by server.
           DO NOT RETRY - indicates certificate or TLS configuration issue.
           Verify SSL certificate validity and STARTTLS support.
-        source: "https://nodemailer.com/smtp/#tls-options"
+        sources:
+          - "https://nodemailer.com/smtp/#tls-options"
         severity: error
 
       - id: invalid-recipient
@@ -89,7 +93,8 @@ functions:
           Validate against RFC 5321/5322 before calling sendMail().
           Check info.rejected array for partial failures.
           SECURITY: Sanitize addresses to prevent CVE-2021-23400 (header injection).
-        source: "https://nodemailer.com/errors/#eenvelope"
+        sources:
+          - "https://nodemailer.com/errors/#eenvelope"
         severity: error
 
       - id: message-content-error
@@ -103,7 +108,8 @@ functions:
           EFETCH: HTTP error fetching remote content.
           ESTREAM: Attachment stream failed.
           Verify attachment paths exist and are readable before sending.
-        source: "https://nodemailer.com/message/attachments/"
+        sources:
+          - "https://nodemailer.com/message/attachments/"
         severity: error
 
       - id: protocol-error
@@ -115,7 +121,8 @@ functions:
           ECONFIG: Invalid transport configuration.
           EMAXLIMIT: Message size exceeds server limit.
           Check SMTP server logs and message size limits.
-        source: "https://nodemailer.com/errors/#eprotocol"
+        sources:
+          - "https://nodemailer.com/errors/#eprotocol"
         severity: error
 
     edge_cases:
@@ -128,7 +135,8 @@ functions:
           ALWAYS use: await transporter.sendMail(mailOptions)
           NEVER use: transporter.sendMail(mailOptions) // Missing await!
           This is the #1 cause of "emails not sending" support tickets.
-        source: "https://github.com/nodemailer/nodemailer/issues/1174"
+        sources:
+          - "https://github.com/nodemailer/nodemailer/issues/1174"
         severity: warning
 
       - id: no-input-validation
@@ -138,7 +146,8 @@ functions:
           ALWAYS sanitize: email.replace(/[\r\n]/g, '')
           REQUIRED: Validate against RFC 5321/5322 format.
           Affects ALL user-supplied email addresses (to, from, cc, bcc, replyTo).
-        source: "https://nvd.nist.gov/vuln/detail/CVE-2021-23400"
+        sources:
+          - "https://nvd.nist.gov/vuln/detail/CVE-2021-23400"
         severity: warning
 
       - id: ignored-rejected-recipients
@@ -147,7 +156,8 @@ functions:
           sendMail() succeeds even if some recipients were rejected.
           ALWAYS check: if (info.rejected.length > 0) { handle_partial_failure(); }
           Also check: info.rejectedErrors for detailed error per rejected recipient.
-        source: "https://github.com/nodemailer/nodemailer/issues/414"
+        sources:
+          - "https://github.com/nodemailer/nodemailer/issues/414"
         severity: warning
 
       - id: new-transporter-each-time
@@ -156,7 +166,8 @@ functions:
           Creates new connection pool every time, wastes resources, may exceed limits.
           CORRECT: Create once during initialization, reuse for all emails.
           Use pool: true for high-volume sending (default: 5 connections).
-        source: "https://nodemailer.com/smtp/pooled/"
+        sources:
+          - "https://nodemailer.com/smtp/pooled/"
         severity: info
 
       - id: no-retry-transient-errors
@@ -166,7 +177,8 @@ functions:
           NON-RETRIABLE: EAUTH, ENOAUTH, EENVELOPE, ETLS
           Implement exponential backoff: 1s, 2s, 4s, 8s delays.
           Use job queue (Bull, BullMQ) for production retry logic.
-        source: "https://github.com/nodemailer/nodemailer/issues/1340"
+        sources:
+          - "https://github.com/nodemailer/nodemailer/issues/1340"
         severity: info
 
   - name: verify
@@ -181,7 +193,8 @@ functions:
           Call verify() during application initialization to catch config issues early.
           Same error codes as sendMail() connection/auth errors.
           Verification failure indicates configuration problem - fix before deployment.
-        source: "https://nodemailer.com/usage/#verify-smtp-connection-configuration"
+        sources:
+          - "https://nodemailer.com/usage/#verify-smtp-connection-configuration"
         severity: error
 
     edge_cases:
@@ -191,7 +204,8 @@ functions:
           errors are discovered only when first email is sent (possibly in production).
           ALWAYS call verify() during app startup to fail fast on misconfiguration.
           Example: await transporter.verify(); // Before serving requests
-        source: "https://github.com/nodemailer/nodemailer/issues/206"
+        sources:
+          - "https://github.com/nodemailer/nodemailer/issues/206"
         severity: info
 
   - name: createTransport
@@ -206,5 +220,6 @@ functions:
           Common issues: missing host/port, invalid auth structure, unsupported options.
           Use environment variables for credentials, never hardcode.
           Call verify() after createTransport() to test configuration.
-        source: "https://nodemailer.com/smtp/"
+        sources:
+          - "https://nodemailer.com/smtp/"
         severity: error

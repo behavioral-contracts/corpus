@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-23"
 status: production
+evidence_quality: stub
 
 functions:
   - name: create
@@ -19,7 +20,8 @@ functions:
           Verify API key is correct and not revoked.
           Use environment variables, never hardcode keys.
           Alert operations team - this is a configuration error.
-        source: "https://developers.openai.com/api/docs/guides/error-codes/"
+        sources:
+          - "https://developers.openai.com/api/docs/guides/error-codes/"
         severity: error
 
       - id: rate-limit-error
@@ -30,7 +32,8 @@ functions:
           Check rate limit headers (x-ratelimit-remaining-requests, x-ratelimit-remaining-tokens).
           Different endpoints have different limits (IPM for images, RPM/TPM for text).
           SDK automatically retries 2 times with exponential backoff.
-        source: "https://developers.openai.com/api/docs/guides/rate-limits/"
+        sources:
+          - "https://developers.openai.com/api/docs/guides/rate-limits/"
         severity: error
 
       - id: server-error
@@ -40,7 +43,8 @@ functions:
           Caller SHOULD treat as transient failure and retry with exponential backoff.
           SDK automatically retries 2 times.
           If errors persist, check OpenAI status page.
-        source: "https://developers.openai.com/api/docs/guides/error-codes/"
+        sources:
+          - "https://developers.openai.com/api/docs/guides/error-codes/"
         severity: error
 
       - id: timeout-error
@@ -49,7 +53,8 @@ functions:
         required_handling: >
           Caller SHOULD retry with exponential backoff.
           SDK automatically retries.
-        source: "https://www.npmjs.com/package/openai"
+        sources:
+          - "https://www.npmjs.com/package/openai"
         severity: error
 
       - id: invalid-request-error
@@ -59,7 +64,8 @@ functions:
           Caller MUST validate parameters before making API call.
           Check error.message for specific parameter that failed.
           DO NOT retry without fixing the parameter.
-        source: "https://developers.openai.com/api/docs/guides/error-codes/"
+        sources:
+          - "https://developers.openai.com/api/docs/guides/error-codes/"
         severity: error
 
   - name: generate
@@ -71,7 +77,8 @@ functions:
         condition: "Invalid API key (401)"
         throws: "AuthenticationError"
         required_handling: "Verify API key, DO NOT retry. Alert operations."
-        source: "https://developers.openai.com/api/docs/guides/error-codes/"
+        sources:
+          - "https://developers.openai.com/api/docs/guides/error-codes/"
         severity: error
 
       - id: rate-limit-error-images
@@ -80,7 +87,8 @@ functions:
         required_handling: >
           Implement exponential backoff.
           Image generation has different rate limits than text completion (IPM vs RPM/TPM).
-        source: "https://developers.openai.com/api/docs/guides/rate-limits/"
+        sources:
+          - "https://developers.openai.com/api/docs/guides/rate-limits/"
         severity: error
 
       - id: content-policy-violation
@@ -89,12 +97,14 @@ functions:
         required_handling: >
           DO NOT retry with same prompt.
           Return user-friendly error about content policy.
-        source: "https://developers.openai.com/api/docs/guides/error-codes/"
+        sources:
+          - "https://developers.openai.com/api/docs/guides/error-codes/"
         severity: error
 
       - id: server-error
         condition: "Server error (500+)"
         throws: "APIError"
         required_handling: "Retry with exponential backoff. SDK auto-retries 2 times."
-        source: "https://developers.openai.com/api/docs/guides/error-codes/"
+        sources:
+          - "https://developers.openai.com/api/docs/guides/error-codes/"
         severity: error

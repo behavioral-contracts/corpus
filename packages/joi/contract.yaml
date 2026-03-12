@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
 status: production
+evidence_quality: stub
 
 functions:
   - name: validate
@@ -18,7 +19,8 @@ functions:
           Without checking error, invalid data will pass through silently, leading to data
           corruption, business logic errors, or security vulnerabilities.
           Use pattern: const { error, value } = schema.validate(data); if (error) { /* handle */ }
-        source: "https://joi.dev/api/#anyvalidatevalue-options"
+        sources:
+          - "https://joi.dev/api/#anyvalidatevalue-options"
         severity: error
 
   - name: validateAsync
@@ -33,7 +35,8 @@ functions:
           Without error handling, validation failures cause unhandled promise rejections
           that crash the application.
           Use pattern: try { const value = await schema.validateAsync(data); } catch (error) { /* handle */ }
-        source: "https://joi.dev/api/#anyvalidateasyncvalue-options"
+        sources:
+          - "https://joi.dev/api/#anyvalidateasyncvalue-options"
         severity: error
 
   - name: assert
@@ -48,7 +51,8 @@ functions:
           Without error handling, validation failures throw uncaught exceptions that crash
           the application.
           Use pattern: try { Joi.assert(value, schema); } catch (error) { /* handle */ }
-        source: "https://joi.dev/api/#assertvalue-schema-message-options"
+        sources:
+          - "https://joi.dev/api/#assertvalue-schema-message-options"
         severity: error
 
   - name: attempt
@@ -63,7 +67,8 @@ functions:
           Without error handling, validation failures throw uncaught exceptions that crash
           the application.
           Use pattern: try { const validated = Joi.attempt(value, schema); } catch (error) { /* handle */ }
-        source: "https://joi.dev/api/#attemptvalue-schema-message-options"
+        sources:
+          - "https://joi.dev/api/#attemptvalue-schema-message-options"
         severity: error
 
 # Category: validation

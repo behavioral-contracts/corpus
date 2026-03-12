@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-25"
 status: production
+evidence_quality: stub
 
 functions:
   # Main message posting function
@@ -27,8 +28,8 @@ functions:
           RequestError (network failures), RateLimitedError (check retryAfter property), and
           HTTPError. Also check response.ok === false for API-level errors (invalid_auth,
           channel_not_found, rate_limited).
-        source: "https://tessl.io/registry/tessl/npm-slack--web-api/7.10.0/files/docs/error-handling.md"
-
+        sources:
+          - "https://tessl.io/registry/tessl/npm-slack--web-api/7.10.0/files/docs/error-handling.md"
   # User listing function
   - name: "users.list"
     import_path: "@slack/web-api"
@@ -47,8 +48,8 @@ functions:
         required_handling: >
           MUST wrap await client.users.list() in try-catch block to handle network errors, rate
           limiting, and HTTP errors.
-        source: "https://tessl.io/registry/tessl/npm-slack--web-api/7.10.0/files/docs/error-handling.md"
-
+        sources:
+          - "https://tessl.io/registry/tessl/npm-slack--web-api/7.10.0/files/docs/error-handling.md"
   # User info function
   - name: "users.info"
     import_path: "@slack/web-api"
@@ -64,8 +65,8 @@ functions:
           If client.users.info() is called without try-catch or .catch()
         required_handling: >
           MUST wrap await client.users.info() in try-catch block.
-        source: "https://api.slack.com/methods/users.info"
-
+        sources:
+          - "https://api.slack.com/methods/users.info"
   # Conversation listing function
   - name: "conversations.list"
     import_path: "@slack/web-api"
@@ -81,8 +82,8 @@ functions:
           If client.conversations.list() is called without try-catch or .catch()
         required_handling: >
           MUST wrap await client.conversations.list() in try-catch block.
-        source: "https://api.slack.com/methods/conversations.list"
-
+        sources:
+          - "https://api.slack.com/methods/conversations.list"
   # Conversation join function
   - name: "conversations.join"
     import_path: "@slack/web-api"
@@ -99,8 +100,8 @@ functions:
           If client.conversations.join() is called without try-catch or .catch()
         required_handling: >
           MUST wrap await client.conversations.join() in try-catch block.
-        source: "https://api.slack.com/methods/conversations.join"
-
+        sources:
+          - "https://api.slack.com/methods/conversations.join"
   # Conversation invite function
   - name: "conversations.invite"
     import_path: "@slack/web-api"
@@ -117,8 +118,8 @@ functions:
           If client.conversations.invite() is called without try-catch or .catch()
         required_handling: >
           MUST wrap await client.conversations.invite() in try-catch block.
-        source: "https://api.slack.com/methods/conversations.invite"
-
+        sources:
+          - "https://api.slack.com/methods/conversations.invite"
   # File upload function
   - name: "files.upload"
     import_path: "@slack/web-api"
@@ -135,8 +136,8 @@ functions:
           If client.files.upload() is called without try-catch or .catch()
         required_handling: >
           MUST wrap await client.files.upload() in try-catch block.
-        source: "https://api.slack.com/methods/files.upload"
-
+        sources:
+          - "https://api.slack.com/methods/files.upload"
   # Auth test function
   - name: "auth.test"
     import_path: "@slack/web-api"
@@ -153,4 +154,5 @@ functions:
           If client.auth.test() is called without try-catch or .catch()
         required_handling: >
           MUST wrap await client.auth.test() in try-catch block.
-        source: "https://api.slack.com/methods/auth.test"
+        sources:
+          - "https://api.slack.com/methods/auth.test"

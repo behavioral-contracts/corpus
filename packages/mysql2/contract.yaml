@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
 status: production
+evidence_quality: stub
 
 # CRITICAL SECURITY NOTE:
 # mysql2 has 5 CRITICAL CVEs in versions < 3.9.8:
@@ -57,7 +58,8 @@ functions:
           - ER_ACCESS_DENIED_ERROR: Wrong username/password
           - ETIMEDOUT: Network timeout
           Implement retry with exponential backoff for transient issues.
-        source: "https://github.com/sidorares/node-mysql2"
+        sources:
+          - "https://github.com/sidorares/node-mysql2"
         severity: error
 
   - name: query
@@ -72,7 +74,8 @@ functions:
           Caller MUST validate SQL syntax before execution.
           DO NOT retry - indicates SQL syntax error.
           Check error.sqlMessage for details.
-        source: "https://github.com/sidorares/node-mysql2"
+        sources:
+          - "https://github.com/sidorares/node-mysql2"
         severity: error
 
       - id: constraint-violation
@@ -85,7 +88,8 @@ functions:
           - ER_BAD_NULL_ERROR (1048): NOT NULL constraint
           Extract details from error.sqlMessage.
           DO NOT retry without fixing data.
-        source: "https://dev.mysql.com/doc/mysql-errors/8.0/en/server-error-reference.html"
+        sources:
+          - "https://dev.mysql.com/doc/mysql-errors/8.0/en/server-error-reference.html"
         severity: error
 
       - id: connection-error
@@ -95,7 +99,8 @@ functions:
           Caller MUST handle connection errors.
           Connection may be lost due to timeout or server restart.
           Implement retry with exponential backoff.
-        source: "https://github.com/sidorares/node-mysql2"
+        sources:
+          - "https://github.com/sidorares/node-mysql2"
         severity: error
 
       - id: table-not-found
@@ -104,7 +109,8 @@ functions:
         required_handling: >
           Caller MUST verify table exists before querying.
           DO NOT retry - indicates schema mismatch or missing migration.
-        source: "https://dev.mysql.com/doc/mysql-errors/8.0/en/server-error-reference.html"
+        sources:
+          - "https://dev.mysql.com/doc/mysql-errors/8.0/en/server-error-reference.html"
         severity: error
 
     edge_cases:
@@ -114,7 +120,8 @@ functions:
           Example VULNERABLE code: query(`SELECT * FROM users WHERE id = ${userId}`)
           This creates SQL injection vulnerability. ALWAYS use execute() with parameters
           instead: execute('SELECT * FROM users WHERE id = ?', [userId])
-        source: "https://github.com/sidorares/node-mysql2/discussions/1601"
+        sources:
+          - "https://github.com/sidorares/node-mysql2/discussions/1601"
         severity: warning
 
   - name: execute
@@ -128,7 +135,8 @@ functions:
           Caller MUST validate SQL syntax.
           Prepared statements prevent SQL injection but not syntax errors.
           DO NOT retry - fix SQL syntax.
-        source: "https://github.com/sidorares/node-mysql2"
+        sources:
+          - "https://github.com/sidorares/node-mysql2"
         severity: error
 
       - id: constraint-violation
@@ -137,7 +145,8 @@ functions:
         required_handling: >
           Caller MUST handle constraint violations gracefully.
           DO NOT retry without changing violating data.
-        source: "https://dev.mysql.com/doc/mysql-errors/8.0/en/server-error-reference.html"
+        sources:
+          - "https://dev.mysql.com/doc/mysql-errors/8.0/en/server-error-reference.html"
         severity: error
 
       - id: connection-error
@@ -146,7 +155,8 @@ functions:
         required_handling: >
           Caller MUST handle connection errors.
           May be transient - implement retry logic.
-        source: "https://github.com/sidorares/node-mysql2"
+        sources:
+          - "https://github.com/sidorares/node-mysql2"
         severity: error
 
     edge_cases:
@@ -155,7 +165,8 @@ functions:
           execute() uses MySQL prepared statements which prevent SQL injection
           by design. Parameters are sent separately from SQL query, making injection
           impossible. This is the recommended method for all queries with user input.
-        source: "https://github.com/sidorares/node-mysql2"
+        sources:
+          - "https://github.com/sidorares/node-mysql2"
         severity: info
 
   - name: getConnection
@@ -172,7 +183,8 @@ functions:
           2. Pool size too small for load
           3. Queries taking too long
           ALWAYS release connections in finally block.
-        source: "https://github.com/sidorares/node-mysql2"
+        sources:
+          - "https://github.com/sidorares/node-mysql2"
         severity: error
 
       - id: connection-failure
@@ -181,7 +193,8 @@ functions:
         required_handling: >
           Caller MUST handle connection failures.
           Implement retry with exponential backoff.
-        source: "https://github.com/sidorares/node-mysql2"
+        sources:
+          - "https://github.com/sidorares/node-mysql2"
         severity: error
 
     edge_cases:
@@ -196,7 +209,8 @@ functions:
             conn.release(); // CRITICAL - must always execute
           }
           Failure to release leads to "Pool is closed" errors and application hangs.
-        source: "https://github.com/sidorares/node-mysql2/issues/1486"
+        sources:
+          - "https://github.com/sidorares/node-mysql2/issues/1486"
         severity: warning
 
       - id: multiple-release-calls
@@ -205,7 +219,8 @@ functions:
           causes "Error: connection already released" and crashes. Only call
           release() once per getConnection(). Use boolean flag if needed to
           track release state.
-        source: "https://github.com/sidorares/node-mysql2/issues/1234"
+        sources:
+          - "https://github.com/sidorares/node-mysql2/issues/1234"
         severity: warning
 
   - name: beginTransaction
@@ -218,7 +233,8 @@ functions:
         required_handling: >
           Caller MUST catch transaction start errors.
           Network errors may be transient and retriable.
-        source: "https://github.com/sidorares/node-mysql2"
+        sources:
+          - "https://github.com/sidorares/node-mysql2"
         severity: error
 
   - name: commit
@@ -232,7 +248,8 @@ functions:
           Caller MUST catch commit errors.
           If commit fails, transaction is rolled back.
           Caller should handle rollback appropriately.
-        source: "https://github.com/sidorares/node-mysql2"
+        sources:
+          - "https://github.com/sidorares/node-mysql2"
         severity: error
 
   - name: rollback
@@ -246,5 +263,6 @@ functions:
           Caller MUST catch rollback errors.
           Even rollback can fail due to connection issues.
           Log rollback failures for investigation.
-        source: "https://github.com/sidorares/node-mysql2"
+        sources:
+          - "https://github.com/sidorares/node-mysql2"
         severity: error

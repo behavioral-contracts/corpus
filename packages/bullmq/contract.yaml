@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-27"
 status: production  # Event listener detection now supported by EventListenerAnalyzer
+evidence_quality: stub
 
 detection:
   class_names:
@@ -34,7 +35,8 @@ functions:
         condition: "Redis connection fails or is down during add operation"
         throws: "Error with Redis connection failure details"
         required_handling: "Caller MUST wrap Queue.add() in try-catch to handle Redis connection errors. Redis downtime crashes application if unhandled. Use try-catch to gracefully degrade or retry."
-        source: "https://docs.bullmq.io/guide/queues"
+        sources:
+          - "https://docs.bullmq.io/guide/queues"
         severity: error
 
   - name: addBulk
@@ -45,7 +47,8 @@ functions:
         condition: "Redis connection fails during bulk operation"
         throws: "Error causing partial or complete bulk operation failure"
         required_handling: "Caller MUST wrap Queue.addBulk() in try-catch to handle Redis errors. Bulk operations can partially fail if Redis connection is lost - must handle to prevent data loss."
-        source: "https://docs.bullmq.io/guide/queues"
+        sources:
+          - "https://docs.bullmq.io/guide/queues"
         severity: error
 
   - name: process
@@ -56,7 +59,8 @@ functions:
         condition: "job processing throws error or promise rejects"
         throws: "Error causing job to fail and trigger retry logic if configured"
         required_handling: "Worker processor SHOULD handle job errors gracefully with try-catch to control retry behavior and provide meaningful error messages. Unhandled errors in processor can cause worker to stop processing subsequent jobs."
-        source: "https://docs.bullmq.io/guide/workers"
+        sources:
+          - "https://docs.bullmq.io/guide/workers"
         severity: warning
 
   - name: close
@@ -67,17 +71,20 @@ functions:
         condition: "connection close operation fails (timeout, Redis error)"
         throws: "Error during connection cleanup"
         required_handling: "Caller SHOULD handle close() errors during graceful shutdown to ensure proper cleanup. Use try-catch in shutdown handlers to log but not crash on close errors."
-        source: "https://docs.bullmq.io/guide/connections"
+        sources:
+          - "https://docs.bullmq.io/guide/connections"
         severity: warning
 
 edge_cases:
   - id: redis-connection-handling
     description: "Configure connection event listeners on Queue/Worker to detect Redis disconnections - prevents silent failures and enables graceful degradation during Redis outages"
-    source: "https://docs.bullmq.io/patterns/failing-fast-when-redis-is-down"
+    sources:
+      - "https://docs.bullmq.io/patterns/failing-fast-when-redis-is-down"
     severity: warning
   - id: job-retry-strategy
     description: "Configure retry attempts and backoff strategy in job options - unhandled job errors trigger automatic retries which may mask underlying issues if not properly configured"
-    source: "https://docs.bullmq.io/guide/retrying-failing-jobs"
+    sources:
+      - "https://docs.bullmq.io/guide/retrying-failing-jobs"
     severity: info
 
 # Category: cache

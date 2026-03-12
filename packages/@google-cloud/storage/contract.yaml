@@ -3,32 +3,8 @@ semver: ">=5.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-27"
-status: draft
-
-detection:
-  # Google Cloud Storage uses class-based API with method chaining
-  # Most operations are async and return promises
-  await_patterns:
-    - "storage.createBucket("
-    - "storage.getBuckets("
-    - "storage.createHmacKey("
-    - "bucket.upload("
-    - "bucket.delete("
-    - "bucket.deleteFiles("
-    - "bucket.getFiles("
-    - "bucket.setMetadata("
-    - "bucket.getMetadata("
-    - "file.download("
-    - "file.save("
-    - "file.delete("
-    - "file.copy("
-    - "file.getMetadata("
-    - "file.setMetadata("
-    - "file.getSignedUrl("
-    - ".bucket(*).upload("
-    - ".bucket(*).file(*).download("
-    - ".bucket(*).file(*).save("
-    - ".bucket(*).file(*).delete("
+status: production
+evidence_quality: confirmed
 
 functions:
   # Bucket Operations
@@ -45,7 +21,8 @@ functions:
           due to internet connectivity issues, DNS failures, or Cloud Storage service downtime.
           The library automatically retries (default: 3 attempts with exponential backoff),
           but will throw after max retries exhausted.
-        source: "https://github.com/googleapis/nodejs-storage/issues/833"
+        sources:
+          - "https://github.com/googleapis/nodejs-storage/issues/833"
         severity: error
 
       - id: upload-permission-error
@@ -55,7 +32,8 @@ functions:
           Caller MUST handle permission errors. Verify service account has
           storage.objects.create permission on the target bucket. This error is NOT
           automatically retried.
-        source: "https://googleapis.dev/nodejs/storage/latest/Bucket.html#upload"
+        sources:
+          - "https://googleapis.dev/nodejs/storage/latest/Bucket.html#upload"
         severity: error
 
       - id: upload-bucket-not-found
@@ -64,7 +42,8 @@ functions:
         required_handling: >
           Caller MUST handle bucket not found errors. Create bucket first using
           storage.createBucket() or verify bucket name is correct.
-        source: "https://github.com/googleapis/nodejs-storage/issues/813"
+        sources:
+          - "https://github.com/googleapis/nodejs-storage/issues/813"
         severity: error
 
       - id: upload-file-not-found
@@ -73,7 +52,8 @@ functions:
         required_handling: >
           Caller MUST validate local file exists before calling upload(). Check with
           fs.existsSync() or handle file not found errors gracefully.
-        source: "https://googleapis.dev/nodejs/storage/latest/Bucket.html#upload"
+        sources:
+          - "https://googleapis.dev/nodejs/storage/latest/Bucket.html#upload"
         severity: error
 
   - name: download
@@ -87,7 +67,8 @@ functions:
         required_handling: >
           Caller MUST handle file not found errors. Check if file exists using
           file.exists() before downloading, or handle 404 gracefully.
-        source: "https://googleapis.dev/nodejs/storage/latest/File.html#download"
+        sources:
+          - "https://googleapis.dev/nodejs/storage/latest/File.html#download"
         severity: error
 
       - id: download-permission-error
@@ -96,7 +77,8 @@ functions:
         required_handling: >
           Caller MUST handle permission errors. Verify service account has
           storage.objects.get permission. This error is NOT automatically retried.
-        source: "https://googleapis.dev/nodejs/storage/latest/File.html#download"
+        sources:
+          - "https://googleapis.dev/nodejs/storage/latest/File.html#download"
         severity: error
 
       - id: download-network-error
@@ -106,7 +88,8 @@ functions:
           Caller MUST handle network errors. Large file downloads are more susceptible
           to connection timeouts. The library automatically retries, but will throw after
           max retries exhausted.
-        source: "https://github.com/googleapis/nodejs-storage/issues/2482"
+        sources:
+          - "https://github.com/googleapis/nodejs-storage/issues/2482"
         severity: error
 
       - id: download-corruption-error
@@ -115,7 +98,8 @@ functions:
         required_handling: >
           Caller MUST retry download when corruption detected. This error indicates
           the downloaded content differs from what was stored. Retry the download operation.
-        source: "https://github.com/googleapis/nodejs-storage/issues/709"
+        sources:
+          - "https://github.com/googleapis/nodejs-storage/issues/709"
         severity: error
 
   - name: delete
@@ -129,7 +113,8 @@ functions:
         required_handling: >
           Caller SHOULD handle 404 errors gracefully. If idempotent delete is desired,
           catch 404 and treat as success. Otherwise, throw error to caller.
-        source: "https://googleapis.dev/nodejs/storage/latest/File.html#delete"
+        sources:
+          - "https://googleapis.dev/nodejs/storage/latest/File.html#delete"
         severity: error
 
       - id: delete-permission-error
@@ -138,7 +123,8 @@ functions:
         required_handling: >
           Caller MUST handle permission errors. Verify service account has
           storage.objects.delete or storage.buckets.delete permission.
-        source: "https://googleapis.dev/nodejs/storage/latest/File.html#delete"
+        sources:
+          - "https://googleapis.dev/nodejs/storage/latest/File.html#delete"
         severity: error
 
       - id: delete-bucket-not-empty
@@ -147,7 +133,8 @@ functions:
         required_handling: >
           Caller MUST delete all files first using bucket.deleteFiles() before deleting
           bucket, or handle conflict error.
-        source: "https://googleapis.dev/nodejs/storage/latest/Bucket.html#delete"
+        sources:
+          - "https://googleapis.dev/nodejs/storage/latest/Bucket.html#delete"
         severity: error
 
   - name: save
@@ -161,7 +148,8 @@ functions:
         required_handling: >
           Caller MUST handle permission errors. Verify service account has
           storage.objects.create permission on the target bucket.
-        source: "https://googleapis.dev/nodejs/storage/latest/File.html#save"
+        sources:
+          - "https://googleapis.dev/nodejs/storage/latest/File.html#save"
         severity: error
 
       - id: save-network-error
@@ -170,7 +158,8 @@ functions:
         required_handling: >
           Caller MUST handle network errors. The library automatically retries with
           exponential backoff, but will throw after max retries exhausted.
-        source: "https://googleapis.dev/nodejs/storage/latest/File.html#save"
+        sources:
+          - "https://googleapis.dev/nodejs/storage/latest/File.html#save"
         severity: error
 
   - name: getMetadata
@@ -184,7 +173,8 @@ functions:
         required_handling: >
           Caller MUST handle not found errors. Check if resource exists using
           exists() method before calling getMetadata(), or handle 404 gracefully.
-        source: "https://googleapis.dev/nodejs/storage/latest/File.html#getMetadata"
+        sources:
+          - "https://googleapis.dev/nodejs/storage/latest/File.html#getMetadata"
         severity: error
 
       - id: getmetadata-permission-error
@@ -193,7 +183,8 @@ functions:
         required_handling: >
           Caller MUST handle permission errors. Verify service account has appropriate
           read permissions for the resource.
-        source: "https://googleapis.dev/nodejs/storage/latest/File.html#getMetadata"
+        sources:
+          - "https://googleapis.dev/nodejs/storage/latest/File.html#getMetadata"
         severity: error
 
   - name: setMetadata
@@ -207,7 +198,8 @@ functions:
         required_handling: >
           Caller MUST handle not found errors. Verify resource exists before
           attempting to update metadata.
-        source: "https://googleapis.dev/nodejs/storage/latest/File.html#setMetadata"
+        sources:
+          - "https://googleapis.dev/nodejs/storage/latest/File.html#setMetadata"
         severity: error
 
       - id: setmetadata-permission-error
@@ -216,7 +208,8 @@ functions:
         required_handling: >
           Caller MUST handle permission errors. Verify service account has
           storage.objects.update or storage.buckets.update permission.
-        source: "https://googleapis.dev/nodejs/storage/latest/File.html#setMetadata"
+        sources:
+          - "https://googleapis.dev/nodejs/storage/latest/File.html#setMetadata"
         severity: error
 
   - name: getFiles
@@ -230,7 +223,8 @@ functions:
         required_handling: >
           Caller MUST handle permission errors. Verify service account has
           storage.objects.list permission on the bucket.
-        source: "https://googleapis.dev/nodejs/storage/latest/Bucket.html#getFiles"
+        sources:
+          - "https://googleapis.dev/nodejs/storage/latest/Bucket.html#getFiles"
         severity: error
 
       - id: getfiles-network-error
@@ -239,7 +233,8 @@ functions:
         required_handling: >
           Caller MUST handle network errors. The library automatically retries,
           but will throw after max retries exhausted.
-        source: "https://googleapis.dev/nodejs/storage/latest/Bucket.html#getFiles"
+        sources:
+          - "https://googleapis.dev/nodejs/storage/latest/Bucket.html#getFiles"
         severity: error
 
   - name: createBucket
@@ -253,7 +248,8 @@ functions:
         required_handling: >
           Caller SHOULD handle bucket already exists errors. If idempotent create
           is desired, catch 409 and retrieve existing bucket.
-        source: "https://googleapis.dev/nodejs/storage/latest/Storage.html#createBucket"
+        sources:
+          - "https://googleapis.dev/nodejs/storage/latest/Storage.html#createBucket"
         severity: error
 
       - id: createbucket-invalid-name
@@ -262,7 +258,8 @@ functions:
         required_handling: >
           Caller MUST validate bucket names before creation. Names must be globally
           unique, lowercase, 3-63 characters, and follow DNS naming conventions.
-        source: "https://cloud.google.com/storage/docs/naming-buckets"
+        sources:
+          - "https://cloud.google.com/storage/docs/naming-buckets"
         severity: error
 
       - id: createbucket-permission-error
@@ -271,7 +268,8 @@ functions:
         required_handling: >
           Caller MUST handle permission errors. Verify service account has
           storage.buckets.create permission in the project.
-        source: "https://googleapis.dev/nodejs/storage/latest/Storage.html#createBucket"
+        sources:
+          - "https://googleapis.dev/nodejs/storage/latest/Storage.html#createBucket"
         severity: error
 
   - name: deleteFiles
@@ -286,7 +284,8 @@ functions:
           Caller MUST handle PartialFailureError separately from ApiError. Inspect
           error.errors array to determine which files failed and why. Consider retry
           logic for failed operations.
-        source: "https://googleapis.dev/nodejs/storage/latest/Bucket.html#deleteFiles"
+        sources:
+          - "https://googleapis.dev/nodejs/storage/latest/Bucket.html#deleteFiles"
         severity: error
 
       - id: deletefiles-permission-error
@@ -295,7 +294,8 @@ functions:
         required_handling: >
           Caller MUST handle permission errors. Verify service account has
           storage.objects.delete permission on all matching files.
-        source: "https://googleapis.dev/nodejs/storage/latest/Bucket.html#deleteFiles"
+        sources:
+          - "https://googleapis.dev/nodejs/storage/latest/Bucket.html#deleteFiles"
         severity: error
 
   - name: getSignedUrl
@@ -309,7 +309,8 @@ functions:
         required_handling: >
           Caller MUST handle credential errors. Signed URLs require service account
           with private key. Verify GOOGLE_APPLICATION_CREDENTIALS is set correctly.
-        source: "https://googleapis.dev/nodejs/storage/latest/File.html#getSignedUrl"
+        sources:
+          - "https://googleapis.dev/nodejs/storage/latest/File.html#getSignedUrl"
         severity: error
 
       - id: getsignedurl-file-not-found
@@ -318,31 +319,7 @@ functions:
         required_handling: >
           Caller SHOULD handle file not found errors. For read URLs, file must exist.
           For write URLs, file will be created on upload.
-        source: "https://googleapis.dev/nodejs/storage/latest/File.html#getSignedUrl"
+        sources:
+          - "https://googleapis.dev/nodejs/storage/latest/File.html#getSignedUrl"
         severity: error
 
-notes: |
-  @google-cloud/storage is the official Google Cloud Storage client library for Node.js.
-
-  ERROR HANDLING SUMMARY:
-  - All async operations throw ApiError on failures
-  - Batch operations throw PartialFailureError for partial failures
-  - Stream operations emit 'error' events (createReadStream, createWriteStream)
-  - Network errors (ECONNRESET, ETIMEDOUT) are automatically retried
-  - HTTP 408, 429, 5xx errors are automatically retried with exponential backoff
-  - HTTP 401, 403, 404 errors are NOT retried (permanent failures)
-
-  AUTOMATIC RETRY:
-  - Default: 3 retries, 600s total timeout, 2x backoff multiplier, max 64s delay
-  - Configurable via retryOptions: autoRetry, maxRetries, totalTimeout, retryDelayMultiplier
-  - Retries idempotent operations by default
-  - Can configure IdempotencyStrategy to retry all operations
-
-  ANALYZER DETECTION:
-  - Functions that throw exceptions: 95%+ detection rate
-  - All async methods return promises and throw on failure
-  - Stream error events: Limited detection (requires event listener analysis)
-
-  MINIMUM SAFE VERSION:
-  - >= 5.0.0 (stable API with comprehensive error handling and retry logic)
-  - Latest: 7.x (all features, latest error handling improvements)

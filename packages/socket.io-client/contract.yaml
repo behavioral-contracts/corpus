@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-27"
 status: production  # Event listener detection now supported by EventListenerAnalyzer
+evidence_quality: stub
 
 detection:
   factory_methods:
@@ -65,7 +66,8 @@ functions:
           socket.active attribute indicates whether automatic reconnection will occur:
           - socket.active = true: Temporary failure, auto-reconnect enabled
           - socket.active = false: Server rejected (auth failure), manual reconnect required
-        source: "https://socket.io/docs/v4/client-api/"
+        sources:
+          - "https://socket.io/docs/v4/client-api/"
         severity: error
         note: |
           Event-based API: socket.on('connect_error', (error) => { ... })
@@ -92,7 +94,8 @@ functions:
           - 'ping timeout': Heartbeat timeout (auto-reconnects)
           - 'transport close': Connection unexpectedly closed (auto-reconnects)
           - 'transport error': Connection error (auto-reconnects)
-        source: "https://socket.io/docs/v4/client-socket-instance/"
+        sources:
+          - "https://socket.io/docs/v4/client-socket-instance/"
         severity: warning
         note: |
           Event-based API: socket.on('disconnect', (reason) => { ... })
@@ -111,7 +114,8 @@ functions:
           - No way to recover without page reload
 
           Workaround: socket.io.on('error', handler) may catch some errors
-        source: "https://github.com/socketio/socket.io-client/issues/1551"
+        sources:
+          - "https://github.com/socketio/socket.io-client/issues/1551"
         severity: warning
         note: "Known bug: Parser errors not properly handled in multiple versions"
 
@@ -134,7 +138,8 @@ functions:
 
           Usage: socket.timeout(5000).emit('event', data, (err, response) => { ... })
           Promise-based: await socket.timeout(10000).emitWithAck('event', data)
-        source: "https://socket.io/docs/v4/client-api/"
+        sources:
+          - "https://socket.io/docs/v4/client-api/"
         severity: info
         note: "Not using timeout causes poor UX but not crashes"
 

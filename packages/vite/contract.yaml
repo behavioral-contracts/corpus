@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-03-09"
 status: production
+evidence_quality: stub
 
 functions:
   - name: build
@@ -29,7 +30,8 @@ functions:
           Callers MUST NOT attempt to use the return value if the promise rejects.
           Note: bundle cleanup (bundle.close()) is handled internally by vite — callers
           do not need to close anything.
-        source: "https://vite.dev/guide/api-javascript#build"
+        sources:
+          - "https://vite.dev/guide/api-javascript#build"
         severity: error
 
     edge_cases:
@@ -37,14 +39,16 @@ functions:
         description: >
           When build.watch is configured, build() returns a RolldownWatcher (not RolldownOutput).
           Callers must handle both return types. The watcher emits 'event' for build lifecycle.
-        source: "https://vite.dev/guide/api-javascript#build"
+        sources:
+          - "https://vite.dev/guide/api-javascript#build"
         severity: info
 
       - id: ssr-input-must-not-be-html
         description: >
           When building for SSR (build.ssr: true), rollupOptions.input must not be an HTML file.
           Passing an HTML file throws synchronously during config validation.
-        source: "https://vite.dev/guide/api-javascript#build"
+        sources:
+          - "https://vite.dev/guide/api-javascript#build"
         severity: warning
 
   - name: createServer
@@ -66,7 +70,8 @@ functions:
           before the error, caller SHOULD call server.close() for cleanup. In long-running
           processes, caller MUST also register process.on('SIGTERM') and process.on('SIGINT')
           handlers to call server.close() to free the port and file watchers.
-        source: "https://vite.dev/guide/api-javascript#createserver"
+        sources:
+          - "https://vite.dev/guide/api-javascript#createserver"
         severity: error
 
       - id: config-reuse-forbidden
@@ -75,7 +80,8 @@ functions:
         required_handling: >
           Each createServer() call MUST use a fresh InlineConfig (plain object), not a
           previously resolved config. Do not cache and reuse ResolvedConfig across calls.
-        source: "https://vite.dev/guide/api-javascript#createserver"
+        sources:
+          - "https://vite.dev/guide/api-javascript#createserver"
         severity: error
 
     edge_cases:
@@ -83,14 +89,16 @@ functions:
         description: >
           When server.middlewareMode is true, server.listen() must NOT be called.
           Call it only when vite owns the HTTP server lifecycle.
-        source: "https://vite.dev/guide/api-javascript#createserver"
+        sources:
+          - "https://vite.dev/guide/api-javascript#createserver"
         severity: warning
 
       - id: server-close-on-exit
         description: >
           server.close() must be called before process exit to release the port and
           stop file watchers. Failure to close leaves dangling processes and occupied ports.
-        source: "https://vite.dev/guide/api-javascript#createserver"
+        sources:
+          - "https://vite.dev/guide/api-javascript#createserver"
         severity: warning
 
   - name: preview
@@ -106,7 +114,8 @@ functions:
         required_handling: >
           Caller MUST wrap preview() in try/catch. Caller MUST call server.close()
           in a finally block or process signal handler to release the port.
-        source: "https://vite.dev/guide/api-javascript#preview"
+        sources:
+          - "https://vite.dev/guide/api-javascript#preview"
         severity: error
 
     edge_cases:
@@ -116,5 +125,6 @@ functions:
           the build output directory (default: dist/) exists. The server starts but serves
           nothing useful. Caller is responsible for verifying the build output exists
           before calling preview().
-        source: "https://vite.dev/guide/api-javascript#preview"
+        sources:
+          - "https://vite.dev/guide/api-javascript#preview"
         severity: warning

@@ -1,22 +1,87 @@
 package: pino
-semver: ">=1.0.0"
+semver: ">=7.0.0 <12.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
-last_verified: "2026-02-26"
-status: draft
+last_verified: "2026-03-12"
+status: production
+evidence_quality: partial
 
 functions:
-  - name: main
+  - name: pino
     import_path: "pino"
-    description: "pino operations (DRAFT - needs comprehensive research)"
+    description: "Creates a pino logger instance. Fast, low-overhead JSON logger for Node.js."
+
     postconditions:
-      - id: error-handling-required
-        condition: "Any error condition"
-        throws: "Error"
-        required_handling: "Caller MUST handle errors with try-catch (DRAFT - needs detailed research)"
-        source: "https://www.npmjs.com/package/pino"
+      - id: destination-error
+        condition: "The destination stream emits an error event and no error handler is attached"
+        throws: "Unhandled error event crashes the Node.js process"
+        required_handling: >
+          Caller MUST attach an error handler to custom destination streams.
+          Use destination.on('error', handler) before passing to pino.
+          pino.destination() streams are async-friendly but still emit errors on disk full, permissions, etc.
+        sources:
+          - "https://github.com/pinojs/pino/blob/main/docs/api.md"
         severity: error
 
-# NOTE: This is a DRAFT contract created from an invalid contract.
-# It requires comprehensive validation through all 8 phases.
-# See dev-notes/package-onboarding/VALIDATION_TRACKER.md
+      - id: invalid-level
+        condition: "An invalid log level string is passed to pino() options.level"
+        throws: "Error: unknown level value"
+        required_handling: >
+          Caller MUST use valid level strings: 'trace', 'debug', 'info', 'warn', 'error', 'fatal', 'silent'.
+          Invalid levels throw synchronously during logger construction.
+        sources:
+          - "https://github.com/pinojs/pino/blob/main/docs/api.md"
+        severity: error
+
+    edge_cases:
+      - id: circular-reference-safe
+        description: "Pino uses fast-safe-stringify which handles circular references gracefully by replacing the circular reference with '[Circular]' rather than throwing. No special handling needed for circular objects."
+        sources:
+          - "https://github.com/pinojs/pino/blob/main/docs/api.md"
+          - "https://github.com/pinojs/pino/issues/1062"
+        severity: info
+
+      - id: serializer-must-not-throw
+        description: "Custom serializer functions in options.serializers MUST NOT throw. A throwing serializer will propagate the error and potentially crash the logger or drop the log line."
+        sources:
+          - "https://github.com/pinojs/pino/blob/main/docs/api.md"
+        severity: warning
+
+      - id: async-destination-not-flushed-on-exit
+        description: "pino.destination() uses buffered writes. On process exit, buffered logs may be lost. Use pino.final() to flush on process exit events (exit, uncaughtException, SIGTERM)."
+        sources:
+          - "https://github.com/pinojs/pino/blob/main/docs/api.md"
+        severity: warning
+
+  - name: child
+    import_path: "pino"
+    description: "Creates a child logger that inherits parent settings and adds bound fields to every log line."
+
+    postconditions:
+      - id: child-bindings-serializer-error
+        condition: "A serializer applied to child bindings throws during child logger creation or first use"
+        throws: "Error from the serializer function"
+        required_handling: >
+          Caller MUST ensure serializers passed in child() bindings do not throw.
+          Errors in child binding serializers propagate to the caller of child() or the first log call.
+        sources:
+          - "https://github.com/pinojs/pino/blob/main/docs/api.md"
+        severity: error
+
+    edge_cases:
+      - id: child-inherits-level
+        description: "Child loggers inherit the parent's log level but can override it. Changing the parent logger's level does NOT retroactively change child logger levels in some pino versions."
+        sources:
+          - "https://github.com/pinojs/pino/blob/main/docs/api.md"
+        severity: info
+
+  - name: fatal
+    import_path: "pino"
+    description: "Logs at the fatal level. By default pino does NOT call process.exit() after fatal — that is the caller's responsibility."
+
+    edge_cases:
+      - id: fatal-does-not-exit
+        description: "Calling logger.fatal() does NOT automatically terminate the process. Callers are responsible for calling process.exit(1) after logging fatal errors if process termination is desired."
+        sources:
+          - "https://github.com/pinojs/pino/blob/main/docs/api.md"
+        severity: warning

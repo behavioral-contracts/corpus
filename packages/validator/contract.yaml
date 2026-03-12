@@ -3,7 +3,8 @@ semver: ">=13.15.20"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
-status: draft
+status: production
+evidence_quality: confirmed
 
 # CRITICAL SECURITY NOTE:
 # validator.js does NOT throw exceptions. It returns:
@@ -33,7 +34,8 @@ functions:
           Caller MUST use escape() on ALL user input before rendering in HTML.
           Failure to escape allows XSS attacks, session hijacking, and data theft.
           CRITICAL: This is the #1 web security vulnerability.
-        source: "https://owasp.org/www-community/attacks/xss/"
+        sources:
+          - "https://owasp.org/www-community/attacks/xss/"
         severity: error
 
     edge_cases:
@@ -42,14 +44,16 @@ functions:
           escape() replaces <, >, &, ', ", / with HTML entities. It ALWAYS succeeds
           and returns a string. However, failing to call escape() on user input
           before HTML rendering is the most common XSS vulnerability.
-        source: "https://github.com/validatorjs/validator.js#validators"
+        sources:
+          - "https://github.com/validatorjs/validator.js#validators"
         severity: warning
 
       - id: template-engine-escaping
         description: >
           Many template engines (React, EJS, Handlebars) auto-escape by default.
           Only use escape() when rendering raw HTML or using dangerouslySetInnerHTML.
-        source: "https://reactjs.org/docs/dom-elements.html#dangerouslysetinnerhtml"
+        sources:
+          - "https://reactjs.org/docs/dom-elements.html#dangerouslysetinnerhtml"
         severity: info
 
   - name: normalizeEmail
@@ -64,7 +68,8 @@ functions:
           Caller MUST check return value. normalizeEmail() returns false for invalid
           emails, not a normalized string. Failing to check allows invalid emails
           to be stored, causing authentication failures.
-        source: "https://github.com/validatorjs/validator.js/issues/1089"
+        sources:
+          - "https://github.com/validatorjs/validator.js/issues/1089"
         severity: error
 
       - id: normalize-email-spoofing
@@ -74,7 +79,8 @@ functions:
           Caller MUST normalize emails before storage. Without normalization,
           users can create duplicate accounts via case differences (User@Example.com
           vs user@example.com) or Gmail +alias bypass (user+1@gmail.com).
-        source: "https://github.com/validatorjs/validator.js#sanitizers"
+        sources:
+          - "https://github.com/validatorjs/validator.js#sanitizers"
         severity: warning
 
     edge_cases:
@@ -84,7 +90,8 @@ functions:
           becomes user@gmail.com). This prevents duplicate account creation but may
           break legitimate use cases. Use options: { gmail_remove_subaddress: false }
           to preserve aliases.
-        source: "https://github.com/validatorjs/validator.js#sanitizers"
+        sources:
+          - "https://github.com/validatorjs/validator.js#sanitizers"
         severity: info
 
   - name: isEmail
@@ -99,7 +106,8 @@ functions:
           Caller MUST check return value. isEmail() returns false for invalid emails,
           it does NOT throw. Failing to check allows invalid emails into the system,
           causing authentication and delivery failures.
-        source: "https://www.npmjs.com/package/validator"
+        sources:
+          - "https://www.npmjs.com/package/validator"
         severity: warning
 
       - id: email-not-validated
@@ -108,7 +116,8 @@ functions:
         required_handling: >
           Caller MUST validate emails before storage or sending. Accepting invalid
           emails causes delivery failures, spam, and phishing attacks.
-        source: "https://github.com/validatorjs/validator.js#validators"
+        sources:
+          - "https://github.com/validatorjs/validator.js#validators"
         severity: warning
 
     edge_cases:
@@ -118,7 +127,8 @@ functions:
           require_tld, allow_utf8_local_part, etc.). Default options accept
           most valid emails but may allow edge cases. Use strict options for
           security-critical applications.
-        source: "https://github.com/validatorjs/validator.js#validators"
+        sources:
+          - "https://github.com/validatorjs/validator.js#validators"
         severity: info
 
   - name: isURL
@@ -132,7 +142,8 @@ functions:
         required_handling: >
           Caller MUST check return value. isURL() returns false for invalid URLs,
           it does NOT throw. Failing to check allows malformed URLs to pass through.
-        source: "https://www.npmjs.com/package/validator"
+        sources:
+          - "https://www.npmjs.com/package/validator"
         severity: warning
 
       - id: url-protocol-not-whitelisted
@@ -142,7 +153,8 @@ functions:
           Caller MUST whitelist URL protocols. Default isURL() accepts dangerous
           protocols like javascript:, data:, and file: which enable XSS and phishing.
           ALWAYS use: isURL(url, { protocols: ['https'], require_protocol: true })
-        source: "https://github.com/validatorjs/validator.js/security/advisories/GHSA-9965-vmph-33xx"
+        sources:
+          - "https://github.com/validatorjs/validator.js/security/advisories/GHSA-9965-vmph-33xx"
         severity: error
 
       - id: url-validation-bypass-cve
@@ -152,7 +164,8 @@ functions:
           CRITICAL: CVE-2025-56200 affects validator < 13.15.20. The isURL() function
           has a validation bypass allowing XSS and open redirect attacks. Upgrade to
           13.15.20+ immediately. Exploit POC available publicly.
-        source: "https://github.com/advisories/GHSA-9965-vmph-33xx"
+        sources:
+          - "https://github.com/advisories/GHSA-9965-vmph-33xx"
         severity: error
 
     edge_cases:
@@ -161,7 +174,8 @@ functions:
           Using isURL() for redirect validation WITHOUT protocol whitelist allows
           attackers to redirect users to phishing sites. Always validate destination
           URLs against an allowlist of trusted domains, not just URL format.
-        source: "https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html"
+        sources:
+          - "https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html"
         severity: warning
 
   - name: isJSON
@@ -176,7 +190,8 @@ functions:
           Caller SHOULD use isJSON() before JSON.parse(). JSON.parse() throws
           SyntaxError on invalid JSON, crashing the application. isJSON() returns
           false safely, allowing graceful error handling.
-        source: "https://github.com/validatorjs/validator.js#validators"
+        sources:
+          - "https://github.com/validatorjs/validator.js#validators"
         severity: warning
 
       - id: json-parse-without-validation
@@ -186,7 +201,8 @@ functions:
           Caller SHOULD validate JSON before parsing. Without validation, malformed
           JSON from user input or external APIs causes uncaught SyntaxError exceptions,
           crashing the application or API endpoint.
-        source: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse#exceptions"
+        sources:
+          - "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse#exceptions"
         severity: warning
 
     edge_cases:
@@ -195,7 +211,8 @@ functions:
           Large or deeply nested JSON can cause performance issues even if valid.
           Consider size limits (max 1MB) and depth limits (max 100 levels) before
           parsing user-provided JSON to prevent DoS attacks.
-        source: "https://cheatsheetseries.owasp.org/cheatsheets/Denial_of_Service_Cheat_Sheet.html"
+        sources:
+          - "https://cheatsheetseries.owasp.org/cheatsheets/Denial_of_Service_Cheat_Sheet.html"
         severity: info
 
 # SOURCES.md has comprehensive documentation of all error conditions

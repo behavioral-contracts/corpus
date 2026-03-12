@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-27"
 status: production  # Event listener detection now supported by EventListenerAnalyzer
+evidence_quality: stub
 
 # CRITICAL SECURITY NOTE:
 # ioredis has prototype pollution vulnerability in versions < 4.27.8:
@@ -89,7 +90,8 @@ functions:
           Caller MUST attach an error listener immediately after creating Redis instance:
           `redis.on('error', (err) => logger.error(err))`.
           Without this listener, connection errors are silently logged to console and may crash the application.
-        source: "https://github.com/redis/ioredis#error-handling"
+        sources:
+          - "https://github.com/redis/ioredis#error-handling"
         severity: error
 
       - id: connection-errors-not-handled
@@ -99,13 +101,15 @@ functions:
           Caller MUST handle connection errors in the error event listener.
           Common errors: ECONNREFUSED (Redis not running), ETIMEDOUT (network timeout),
           ECONNRESET (connection dropped), ENOTFOUND (DNS failure).
-        source: "https://github.com/redis/ioredis/issues/321"
+        sources:
+          - "https://github.com/redis/ioredis/issues/321"
         severity: error
 
     edge_cases:
       - id: lazy-connection
         description: "Connection is lazy by default - errors may occur after constructor returns"
-        source: "https://github.com/redis/ioredis#connect-to-redis"
+        sources:
+          - "https://github.com/redis/ioredis#connect-to-redis"
         severity: info
 
   - name: get
@@ -120,7 +124,8 @@ functions:
           Caller MUST use try-catch (async/await) or .catch() on all Redis commands.
           Commands return promises that may reject due to: connection errors, WRONGTYPE,
           timeout, or serialization failures.
-        source: "https://github.com/redis/ioredis/issues/433"
+        sources:
+          - "https://github.com/redis/ioredis/issues/433"
         severity: error
 
       - id: command-timeout
@@ -129,7 +134,8 @@ functions:
         required_handling: >
           Caller SHOULD set commandTimeout option to prevent hanging operations.
           Without timeout, commands may hang indefinitely on network issues.
-        source: "https://github.com/redis/ioredis#command-timeout"
+        sources:
+          - "https://github.com/redis/ioredis#command-timeout"
         severity: warning
 
   - name: set
@@ -142,7 +148,8 @@ functions:
         throws: "UnhandledPromiseRejectionWarning"
         required_handling: >
           Caller MUST use try-catch or .catch() on all Redis commands.
-        source: "https://github.com/redis/ioredis/issues/433"
+        sources:
+          - "https://github.com/redis/ioredis/issues/433"
         severity: error
 
   - name: pipeline
@@ -157,7 +164,8 @@ functions:
           Caller MUST check each result in pipeline.exec() return value.
           Format: [[null, 'OK'], [Error, undefined], ...].
           Pipeline does NOT reject on individual command failures.
-        source: "https://github.com/redis/ioredis#pipelines"
+        sources:
+          - "https://github.com/redis/ioredis#pipelines"
         severity: error
 
       - id: pipeline-exec-unhandled
@@ -165,7 +173,8 @@ functions:
         throws: "UnhandledPromiseRejectionWarning"
         required_handling: >
           Caller MUST use try-catch or .catch() on pipeline.exec().
-        source: "https://github.com/redis/ioredis/issues/753"
+        sources:
+          - "https://github.com/redis/ioredis/issues/753"
         severity: error
 
   - name: multi
@@ -180,7 +189,8 @@ functions:
           Caller MUST check if exec() returns null after using WATCH.
           Null indicates a watched key was modified, transaction aborted.
           This is NOT an error/rejection - it's a null return value.
-        source: "https://github.com/redis/ioredis/issues/883"
+        sources:
+          - "https://github.com/redis/ioredis/issues/883"
         severity: error
 
       - id: exec-abort-not-handled
@@ -189,7 +199,8 @@ functions:
         required_handling: >
           Caller MUST check exec() results for EXECABORT errors.
           Happens when queued commands fail validation (WRONGTYPE, etc.).
-        source: "https://github.com/redis/ioredis#transactions"
+        sources:
+          - "https://github.com/redis/ioredis#transactions"
         severity: error
 
   - name: subscribe
@@ -204,13 +215,15 @@ functions:
           Caller MUST use separate Redis connection for pub/sub.
           After subscribe(), only subscribe/unsubscribe/psubscribe/punsubscribe/quit/ping allowed.
           Use redis.duplicate() to create separate connection for normal commands.
-        source: "https://github.com/redis/ioredis#pub/sub"
+        sources:
+          - "https://github.com/redis/ioredis#pub/sub"
         severity: error
 
     edge_cases:
       - id: duplicate-for-commands
         description: "Must use redis.duplicate() to create separate connection for normal commands while subscribed"
-        source: "https://github.com/redis/ioredis/issues/944"
+        sources:
+          - "https://github.com/redis/ioredis/issues/944"
         severity: info
 
   - name: brpop
@@ -225,7 +238,8 @@ functions:
           Caller SHOULD provide timeout parameter to blocking commands (BRPOP, BLPOP, BZPOPMIN, BZPOPMAX).
           Without timeout (or timeout=0), command blocks until data available, potentially forever.
           Recommended: Set reasonable timeout (e.g., 5-30 seconds).
-        source: "https://redis.io/commands/brpop/"
+        sources:
+          - "https://redis.io/commands/brpop/"
         severity: warning
 
   - name: connect
@@ -238,7 +252,8 @@ functions:
         throws: "UnhandledPromiseRejectionWarning on connection failure"
         required_handling: >
           Caller MUST use try-catch or .catch() on explicit connect() calls.
-        source: "https://github.com/redis/ioredis#connect-to-redis"
+        sources:
+          - "https://github.com/redis/ioredis#connect-to-redis"
         severity: error
 
   - name: hget
@@ -253,7 +268,8 @@ functions:
           Caller MUST catch WRONGTYPE errors for hash operations.
           This indicates key is not a hash - DO NOT retry.
           Fix data model or use correct command for key type.
-        source: "https://redis.io/docs/latest/develop/clients/error-handling/"
+        sources:
+          - "https://redis.io/docs/latest/develop/clients/error-handling/"
         severity: error
 
       - id: unhandled-promise-rejection
@@ -261,7 +277,8 @@ functions:
         throws: "UnhandledPromiseRejectionWarning"
         required_handling: >
           Caller MUST use try-catch or .catch() on all Redis commands.
-        source: "https://github.com/redis/ioredis/issues/433"
+        sources:
+          - "https://github.com/redis/ioredis/issues/433"
         severity: error
 
   - name: hset
@@ -275,7 +292,8 @@ functions:
         required_handling: >
           Caller MUST catch WRONGTYPE errors.
           Key exists with different type - DO NOT retry.
-        source: "https://redis.io/docs/latest/develop/clients/error-handling/"
+        sources:
+          - "https://redis.io/docs/latest/develop/clients/error-handling/"
         severity: error
 
       - id: unhandled-promise-rejection
@@ -283,7 +301,8 @@ functions:
         throws: "UnhandledPromiseRejectionWarning"
         required_handling: >
           Caller MUST use try-catch or .catch() on all Redis commands.
-        source: "https://github.com/redis/ioredis/issues/433"
+        sources:
+          - "https://github.com/redis/ioredis/issues/433"
         severity: error
 
   - name: hgetall
@@ -297,7 +316,8 @@ functions:
         required_handling: >
           Caller MUST catch WRONGTYPE errors.
           Key is not a hash - DO NOT retry.
-        source: "https://redis.io/docs/latest/develop/clients/error-handling/"
+        sources:
+          - "https://redis.io/docs/latest/develop/clients/error-handling/"
         severity: error
 
       - id: unhandled-promise-rejection
@@ -305,7 +325,8 @@ functions:
         throws: "UnhandledPromiseRejectionWarning"
         required_handling: >
           Caller MUST use try-catch or .catch() on all Redis commands.
-        source: "https://github.com/redis/ioredis/issues/433"
+        sources:
+          - "https://github.com/redis/ioredis/issues/433"
         severity: error
 
   - name: lpush
@@ -319,7 +340,8 @@ functions:
         required_handling: >
           Caller MUST catch WRONGTYPE errors.
           Key exists with different type - DO NOT retry.
-        source: "https://redis.io/docs/latest/develop/clients/error-handling/"
+        sources:
+          - "https://redis.io/docs/latest/develop/clients/error-handling/"
         severity: error
 
       - id: unhandled-promise-rejection
@@ -327,7 +349,8 @@ functions:
         throws: "UnhandledPromiseRejectionWarning"
         required_handling: >
           Caller MUST use try-catch or .catch() on all Redis commands.
-        source: "https://github.com/redis/ioredis/issues/433"
+        sources:
+          - "https://github.com/redis/ioredis/issues/433"
         severity: error
 
   - name: rpush
@@ -341,7 +364,8 @@ functions:
         required_handling: >
           Caller MUST catch WRONGTYPE errors.
           Key exists with different type - DO NOT retry.
-        source: "https://redis.io/docs/latest/develop/clients/error-handling/"
+        sources:
+          - "https://redis.io/docs/latest/develop/clients/error-handling/"
         severity: error
 
       - id: unhandled-promise-rejection
@@ -349,7 +373,8 @@ functions:
         throws: "UnhandledPromiseRejectionWarning"
         required_handling: >
           Caller MUST use try-catch or .catch() on all Redis commands.
-        source: "https://github.com/redis/ioredis/issues/433"
+        sources:
+          - "https://github.com/redis/ioredis/issues/433"
         severity: error
 
   - name: publish
@@ -364,7 +389,8 @@ functions:
           Caller MUST catch publish errors with try-catch or .catch().
           Network errors may be transient - implement retry logic.
           Returns number of subscribers that received the message (may be 0).
-        source: "https://dev.to/franciscomendes10866/using-redis-pub-sub-with-node-js-13k3"
+        sources:
+          - "https://dev.to/franciscomendes10866/using-redis-pub-sub-with-node-js-13k3"
         severity: error
 
   - name: eval
@@ -379,7 +405,8 @@ functions:
           Caller MUST catch Lua script errors.
           Script syntax errors should NOT be retried - fix script.
           Script runtime errors depend on logic - may or may not be retriable.
-        source: "https://redis.io/docs/latest/develop/clients/error-handling/"
+        sources:
+          - "https://redis.io/docs/latest/develop/clients/error-handling/"
         severity: error
 
       - id: script-timeout
@@ -390,5 +417,6 @@ functions:
           Redis has lua-time-limit configuration (default 5 seconds).
           Optimize script or increase limit if needed.
           DO NOT retry immediately - may cause cascading timeouts.
-        source: "https://redis.io/docs/latest/develop/clients/error-handling/"
+        sources:
+          - "https://redis.io/docs/latest/develop/clients/error-handling/"
         severity: error

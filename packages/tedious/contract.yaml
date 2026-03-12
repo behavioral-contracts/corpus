@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
 status: production
+evidence_quality: stub
 
 # Tedious - Microsoft SQL Server Driver for Node.js
 #
@@ -45,7 +46,8 @@ functions:
           - ELOGIN: Authentication failed
           - ETIMEOUT: Connection timeout
           Implement retry with exponential backoff for transient issues.
-        source: "https://tediousjs.github.io/tedious/api-connection.html"
+        sources:
+          - "https://tediousjs.github.io/tedious/api-connection.html"
         severity: error
 
   - name: execSql
@@ -62,7 +64,8 @@ functions:
           - 207: Invalid column name
           - 208: Invalid object name (table not found)
           DO NOT retry - fix SQL syntax.
-        source: "https://tediousjs.github.io/tedious/api-request.html"
+        sources:
+          - "https://tediousjs.github.io/tedious/api-request.html"
         severity: error
 
       - id: constraint-violation
@@ -75,7 +78,8 @@ functions:
           - 515: NOT NULL constraint violation
           Extract details from error.message.
           DO NOT retry without fixing data.
-        source: "https://docs.microsoft.com/en-us/sql/relational-databases/errors-events/database-engine-events-and-errors"
+        sources:
+          - "https://docs.microsoft.com/en-us/sql/relational-databases/errors-events/database-engine-events-and-errors"
         severity: error
 
       - id: connection-error
@@ -85,7 +89,8 @@ functions:
           Caller MUST handle connection errors.
           Connection may be lost due to timeout or server restart.
           Implement retry with exponential backoff.
-        source: "https://tediousjs.github.io/tedious/api-connection.html"
+        sources:
+          - "https://tediousjs.github.io/tedious/api-connection.html"
         severity: error
 
       - id: deadlock
@@ -96,7 +101,8 @@ functions:
           Deadlocks are transient - implement retry logic.
           SQL Server automatically rolls back deadlocked transaction.
           Consider transaction isolation level and lock hints to reduce deadlocks.
-        source: "https://docs.microsoft.com/en-us/sql/relational-databases/sql-server-transaction-locking-and-row-versioning-guide"
+        sources:
+          - "https://docs.microsoft.com/en-us/sql/relational-databases/sql-server-transaction-locking-and-row-versioning-guide"
         severity: error
 
       - id: timeout
@@ -106,7 +112,8 @@ functions:
           Caller MUST handle timeout errors.
           Query took longer than request timeout setting.
           Consider optimizing query or increasing timeout.
-        source: "https://tediousjs.github.io/tedious/api-request.html"
+        sources:
+          - "https://tediousjs.github.io/tedious/api-request.html"
         severity: error
 
   - name: callProcedure
@@ -122,7 +129,8 @@ functions:
           - 2812: Procedure not found
           - Application errors: RAISERROR in procedure
           Check error.number and error.message for details.
-        source: "https://tediousjs.github.io/tedious/api-request.html"
+        sources:
+          - "https://tediousjs.github.io/tedious/api-request.html"
         severity: error
 
       - id: connection-error
@@ -131,7 +139,8 @@ functions:
         required_handling: >
           Caller MUST handle connection errors.
           Implement retry with exponential backoff for transient issues.
-        source: "https://tediousjs.github.io/tedious/api-connection.html"
+        sources:
+          - "https://tediousjs.github.io/tedious/api-connection.html"
         severity: error
 
   - name: beginTransaction
@@ -145,7 +154,8 @@ functions:
           Caller MUST handle 'error' event on Connection.
           Connection must be in LoggedIn state to begin transaction.
           Ensure no other transaction is active on connection.
-        source: "https://tediousjs.github.io/tedious/api-connection.html"
+        sources:
+          - "https://tediousjs.github.io/tedious/api-connection.html"
         severity: error
 
       - id: nested-transaction-error
@@ -155,7 +165,8 @@ functions:
           Caller MUST track transaction state.
           SQL Server supports nested transactions via SAVE TRANSACTION.
           Consider using savepoints for nested logic.
-        source: "https://docs.microsoft.com/en-us/sql/t-sql/language-elements/begin-transaction-transact-sql"
+        sources:
+          - "https://docs.microsoft.com/en-us/sql/t-sql/language-elements/begin-transaction-transact-sql"
         severity: error
 
   - name: commitTransaction
@@ -169,7 +180,8 @@ functions:
           Caller MUST handle 'error' event on Connection.
           Commit can fail if deferred constraints are violated.
           Transaction will be rolled back automatically on commit failure.
-        source: "https://tediousjs.github.io/tedious/api-connection.html"
+        sources:
+          - "https://tediousjs.github.io/tedious/api-connection.html"
         severity: error
 
       - id: no-active-transaction
@@ -178,7 +190,8 @@ functions:
         required_handling: >
           Caller MUST track transaction state.
           Ensure beginTransaction was called and no prior rollback occurred.
-        source: "https://tediousjs.github.io/tedious/api-connection.html"
+        sources:
+          - "https://tediousjs.github.io/tedious/api-connection.html"
         severity: error
 
   - name: rollbackTransaction
@@ -192,7 +205,8 @@ functions:
           Caller MUST handle 'error' event on Connection.
           Rollback rarely fails; if it does, connection may be unusable.
           Consider closing and reopening connection after rollback failure.
-        source: "https://tediousjs.github.io/tedious/api-connection.html"
+        sources:
+          - "https://tediousjs.github.io/tedious/api-connection.html"
         severity: error
 
       - id: no-active-transaction
@@ -201,7 +215,8 @@ functions:
         required_handling: >
           Caller MUST track transaction state.
           Ensure beginTransaction was called.
-        source: "https://tediousjs.github.io/tedious/api-connection.html"
+        sources:
+          - "https://tediousjs.github.io/tedious/api-connection.html"
         severity: error
 
   - name: prepare
@@ -215,7 +230,8 @@ functions:
           Caller MUST handle 'error' event on Request.
           Prepare validates SQL syntax before execution.
           Error numbers same as execSql (102, 156, 207, 208).
-        source: "https://tediousjs.github.io/tedious/api-request.html"
+        sources:
+          - "https://tediousjs.github.io/tedious/api-request.html"
         severity: error
 
   - name: unprepare
@@ -228,7 +244,8 @@ functions:
         required_handling: >
           Caller MUST handle 'error' event on Request.
           Unprepare should always be called to free server resources.
-        source: "https://tediousjs.github.io/tedious/api-request.html"
+        sources:
+          - "https://tediousjs.github.io/tedious/api-request.html"
         severity: error
 
 edge_cases:
@@ -239,7 +256,8 @@ edge_cases:
       as whenever something goes wrong with the connection it will emit an error and if
       there is no listener it will crash your application with an uncaught error."
       This is the #1 production bug. Always use connection.on('error', handler).
-    source: "https://tediousjs.github.io/tedious/"
+    sources:
+      - "https://tediousjs.github.io/tedious/"
     severity: error
 
   - id: concurrent-query-limitation
@@ -248,7 +266,8 @@ edge_cases:
       queries concurrently causes error: "Requests can only be made in the LoggedIn state,
       not the SentClientRequest state". Wait for request callback before next query, or
       use connection pooling with multiple connections.
-    source: "https://tediousjs.github.io/tedious/frequently-encountered-problems.html"
+    sources:
+      - "https://tediousjs.github.io/tedious/frequently-encountered-problems.html"
     severity: error
 
   - id: event-based-api
@@ -256,7 +275,8 @@ edge_cases:
       Tedious uses EVENT-BASED API, not promises. Cannot use async/await directly.
       Must manually promisify or use mssql package wrapper for promise-based API.
       Example: connection.execSql() does not return a promise; use request.on('done', callback).
-    source: "https://tediousjs.github.io/tedious/"
+    sources:
+      - "https://tediousjs.github.io/tedious/"
     severity: warning
 
   - id: connection-pooling
@@ -264,7 +284,8 @@ edge_cases:
       Tedious does NOT include connection pooling. Creating many connections causes
       resource exhaustion under load. Use tedious-connection-pool or mssql package
       (recommended for production). Without pooling, performance degrades significantly.
-    source: "https://github.com/tediousjs/tedious-connection-pool"
+    sources:
+      - "https://github.com/tediousjs/tedious-connection-pool"
     severity: warning
 
   - id: aggregate-error-handling
@@ -273,7 +294,8 @@ edge_cases:
       Developers must loop through error.errors array for complete error details.
       Example: Azure token retrieval errors accumulate; checking only top-level
       error misses critical details.
-    source: "https://tediousjs.github.io/tedious/frequently-encountered-problems.html"
+    sources:
+      - "https://tediousjs.github.io/tedious/frequently-encountered-problems.html"
     severity: warning
 
   - id: javascript-number-overflow
@@ -282,7 +304,8 @@ edge_cases:
       Values outside this range (common with SQL Server BIGINT, large financial values,
       large IDs) lose precision. Use VarChar type for large numbers or BigInt (ES2020+).
       Data corruption risk in financial/ID fields.
-    source: "https://tediousjs.github.io/tedious/frequently-encountered-problems.html"
+    sources:
+      - "https://tediousjs.github.io/tedious/frequently-encountered-problems.html"
     severity: error
 
   - id: connection-config-prerequisites
@@ -291,7 +314,8 @@ edge_cases:
       via SQL Configuration Manager, user account disabled, port not specified in
       options (not authentication options), Azure AD clientId missing (now mandatory).
       Verify all prerequisites before debugging connection code.
-    source: "https://tediousjs.github.io/tedious/frequently-encountered-problems.html"
+    sources:
+      - "https://tediousjs.github.io/tedious/frequently-encountered-problems.html"
     severity: warning
 
   - id: tls-version-requirements
@@ -299,7 +323,8 @@ edge_cases:
       Node.js 12+ requires TLS 1.2 minimum. Old SQL Servers supporting only TLS 1.0
       will fail to connect. Upgrade server to TLS 1.2 (preferred) or use
       --tls-min-v1.0 flag (NOT recommended, security risk). TLS 1.0 is deprecated.
-    source: "https://tediousjs.github.io/tedious/frequently-encountered-problems.html"
+    sources:
+      - "https://tediousjs.github.io/tedious/frequently-encountered-problems.html"
     severity: warning
 
   - id: ntlm-nodejs-17-plus
@@ -307,5 +332,6 @@ edge_cases:
       NTLM authentication fails on Node.js 17+ due to OpenSSL 3.0 deprecating md4
       algorithm. Enable --openssl-legacy-provider flag or use different authentication
       (SQL auth or Azure AD recommended). Security concern with legacy provider.
-    source: "https://tediousjs.github.io/tedious/frequently-encountered-problems.html"
+    sources:
+      - "https://tediousjs.github.io/tedious/frequently-encountered-problems.html"
     severity: warning

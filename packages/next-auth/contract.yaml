@@ -1,14 +1,15 @@
+# getToken() from next-auth/jwt already catches decode errors and returns null — no try/catch needed there.
+# encode()/decode() inside NextAuth jwt callbacks are protected by the framework.
+# Rotate NEXTAUTH_SECRET carefully — existing sessions will be invalidated.
+# CVE-2023-48309: Keep next-auth >= 4.24.5 for OAuth security fix.
+# signIn() with redirect:false returns {ok, error} object — check .error, not try/catch.
 package: next-auth
 semver: "^4.22.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-03-09"
-status: draft
-
-detection:
-  await_patterns:
-    - "encode({"
-    - "decode({"
+status: production
+evidence_quality: confirmed
 
 functions:
   - name: encode
@@ -26,7 +27,8 @@ functions:
           jwt.encode callback. Common error: NEXTAUTH_SECRET not set → TypeError from hkdf.
           Handle gracefully: log the configuration error and fail the request with 500.
           Note: encode() inside NextAuth's jwt.encode option is protected by the framework.
-        source: "https://next-auth.js.org/configuration/options#secret"
+        sources:
+          - "https://next-auth.js.org/configuration/options#secret"
         severity: warning
 
   - name: decode
@@ -47,12 +49,6 @@ functions:
           3. Missing NEXTAUTH_SECRET: TypeError → configuration error, fail fast with clear message
           Note: getToken() from next-auth/jwt already wraps decode() in try/catch internally.
           This postcondition applies only to direct decode() calls.
-        source: "https://next-auth.js.org/configuration/options#secret"
+        sources:
+          - "https://next-auth.js.org/configuration/options#secret"
         severity: warning
-
-notes:
-  - "getToken() from next-auth/jwt already catches decode errors and returns null — no try/catch needed"
-  - "encode()/decode() inside NextAuth jwt callbacks are protected by the framework"
-  - "Rotate NEXTAUTH_SECRET carefully — existing sessions will be invalidated"
-  - "CVE-2023-48309: Keep next-auth >= 4.24.5 for OAuth security fix"
-  - "signIn() with redirect:false returns {ok, error} object — check .error, not try/catch"

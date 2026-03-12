@@ -1,0 +1,273 @@
+package: algoliasearch
+semver: ">=4.0.0 <6.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-03-11"
+status: production
+evidence_quality: stub
+
+detection:
+  factory_methods:
+    - algoliasearch
+    - initIndex
+  class_names:
+    - "SearchClient"
+  require_instance_tracking: true
+  await_patterns:
+    - ".search("
+    - ".searchSingleIndex("
+    - ".saveObject("
+    - ".saveObjects("
+    - ".getObject("
+    - ".getObjects("
+    - ".deleteObject("
+    - ".deleteObjects("
+    - ".waitForTask("
+    - ".waitTask("
+    - ".setSettings("
+    - ".replaceAllObjects("
+    - ".chunkedBatch("
+
+functions:
+  - name: search
+    import_path: "algoliasearch"
+    description: >
+      Searches one or more Algolia indices. In v4: called on an index object returned by
+      client.initIndex(). In v5: called directly on the client as client.search() or
+      client.searchSingleIndex(). Throws ApiError on 4xx responses (invalid key,
+      index not found, rate limit) and RetryError when all hosts are unreachable.
+
+    postconditions:
+      - id: search-no-try-catch
+        condition: >
+          search() / searchSingleIndex() called in async context without surrounding try/catch.
+          Any network failure, invalid API key (401), missing index (404), or rate limit (429)
+          results in an unhandled rejected Promise.
+        throws: >
+          ApiError (status 401/403/404/429) — thrown immediately, not retried.
+          RetryError — thrown when all Algolia hosts are unreachable.
+        required_handling: >
+          Caller MUST wrap search calls in try/catch. Handle at minimum:
+          - ApiError for API-level failures (check err.status or err.name === 'ApiError')
+          - RetryError / network errors for connectivity failures
+          Return a sensible empty result or error response — do NOT crash the request.
+        sources:
+          - "https://www.algolia.com/doc/api-client/advanced/handling-errors/"
+        severity: error
+
+  - name: searchSingleIndex
+    import_path: "algoliasearch"
+    description: >
+      v5 method: searches a single index. Equivalent to v4's index.search().
+      Throws ApiError and RetryError on failure.
+
+    postconditions:
+      - id: searchsingleindex-no-try-catch
+        condition: >
+          searchSingleIndex() called without surrounding try/catch.
+        throws: >
+          ApiError on 4xx responses. RetryError when all hosts unreachable.
+        required_handling: >
+          Caller MUST wrap in try/catch. Same handling as search().
+        sources:
+          - "https://www.algolia.com/doc/api-client/advanced/handling-errors/"
+        severity: error
+
+  - name: saveObject
+    import_path: "algoliasearch"
+    description: >
+      Indexes or updates a single record in an Algolia index. Throws on API or network errors.
+      In v4, also throws MissingObjectIDError when object has no objectID and auto-generation
+      is disabled.
+
+    postconditions:
+      - id: saveobject-no-try-catch
+        condition: >
+          saveObject() called without surrounding try/catch. Indexing failure (invalid API key,
+          insufficient write ACL, malformed record) is silently swallowed.
+        throws: >
+          ApiError — 401 (invalid key), 403 (missing write ACL), 400 (malformed record).
+          RetryError — network failure.
+        required_handling: >
+          Caller MUST wrap in try/catch. Indexing failures in production apps (webhooks, API
+          routes, background jobs) must be logged and optionally retried. Silent failures
+          cause search index to diverge from source of truth.
+        sources:
+          - "https://www.algolia.com/doc/api-client/advanced/handling-errors/"
+        severity: error
+
+  - name: saveObjects
+    import_path: "algoliasearch"
+    description: >
+      Indexes or updates multiple records. In v4, returns a WaitablePromise — both the
+      initial call and the optional .wait() can throw. In v5, returns a Promise directly.
+
+    postconditions:
+      - id: saveobjects-no-try-catch
+        condition: >
+          saveObjects() called without surrounding try/catch. Batch indexing failure results
+          in entire batch failing silently.
+        throws: >
+          ApiError — 401, 403, 400 (malformed records), 413 (request too large).
+          RetryError — network failure.
+        required_handling: >
+          Caller MUST wrap in try/catch. For large batches, log the failure with batch size
+          for debugging. Consider splitting large batches if 413 errors occur.
+        sources:
+          - "https://www.algolia.com/doc/api-client/advanced/handling-errors/"
+        severity: error
+
+  - name: getObject
+    import_path: "algoliasearch"
+    description: >
+      Retrieves a single record from an Algolia index by objectID. Throws ApiError with
+      status 404 if the object does not exist. In v4, may throw ObjectNotFoundError.
+
+    postconditions:
+      - id: getobject-no-try-catch
+        condition: >
+          getObject() called without surrounding try/catch. Object not found (404)
+          crashes the caller.
+        throws: >
+          ApiError with status 404 when object does not exist.
+          ApiError with status 401/403 for auth failures.
+          RetryError for network failures.
+        required_handling: >
+          Caller MUST wrap in try/catch. Handle 404 explicitly — the object may have been
+          deleted. Return null or a sensible default rather than crashing.
+        sources:
+          - "https://www.algolia.com/doc/api-client/advanced/handling-errors/"
+        severity: error
+
+  - name: getObjects
+    import_path: "algoliasearch"
+    description: >
+      Retrieves multiple records by objectID. Missing objects do not throw — they return
+      null entries in the results array. Other errors (auth, network) do throw.
+
+    postconditions:
+      - id: getobjects-no-try-catch
+        condition: >
+          getObjects() called without surrounding try/catch. Auth failure or network error
+          crashes the caller.
+        throws: >
+          ApiError on auth failures (401/403).
+          RetryError on network failures.
+        required_handling: >
+          Caller MUST wrap in try/catch. Note: missing individual objects return null results,
+          not errors. But API/network errors still throw.
+        sources:
+          - "https://www.algolia.com/doc/api-client/advanced/handling-errors/"
+        severity: error
+
+  - name: deleteObject
+    import_path: "algoliasearch"
+    description: >
+      Deletes a single record from an Algolia index. Note: deleting a non-existent object
+      does NOT throw — Algolia returns success for idempotent deletes.
+
+    postconditions:
+      - id: deleteobject-no-try-catch
+        condition: >
+          deleteObject() called without surrounding try/catch. Auth or network failure
+          silently fails, leaving stale data in the search index.
+        throws: >
+          ApiError on auth failures (401/403) or invalid index (400).
+          RetryError on network failures.
+        required_handling: >
+          Caller MUST wrap in try/catch. Unhandled delete failures leave stale records
+          in the search index, causing deleted items to appear in search results.
+        sources:
+          - "https://www.algolia.com/doc/api-client/advanced/handling-errors/"
+        severity: error
+
+  - name: deleteObjects
+    import_path: "algoliasearch"
+    description: >
+      Deletes multiple records by objectID. Idempotent for non-existent objects.
+      Throws on auth/network errors.
+
+    postconditions:
+      - id: deleteobjects-no-try-catch
+        condition: >
+          deleteObjects() called without surrounding try/catch.
+        throws: >
+          ApiError on auth failures (401/403).
+          RetryError on network failures.
+        required_handling: >
+          Caller MUST wrap in try/catch. Failed batch deletes leave stale records in index.
+        sources:
+          - "https://www.algolia.com/doc/api-client/advanced/handling-errors/"
+        severity: error
+
+  - name: waitForTask
+    import_path: "algoliasearch"
+    description: >
+      v5 method: waits for an async indexing task to complete. Used after write operations
+      to ensure data is indexed before proceeding. Can throw if polling fails or task errors.
+
+    postconditions:
+      - id: waitfortask-no-try-catch
+        condition: >
+          waitForTask() called without surrounding try/catch.
+        throws: >
+          ApiError — task failed or polling encountered an error.
+          RetryError — network failure during polling.
+        required_handling: >
+          Caller MUST wrap in try/catch. Task failures mean data was not indexed.
+          Log task ID for debugging.
+        sources:
+          - "https://www.algolia.com/doc/api-client/advanced/handling-errors/"
+        severity: error
+
+  - name: setSettings
+    import_path: "algoliasearch"
+    description: >
+      Updates the settings of an Algolia index (searchable attributes, ranking, facets, etc.).
+      Throws on auth errors, invalid settings, or network failures.
+
+    postconditions:
+      - id: setsettings-no-try-catch
+        condition: >
+          setSettings() called without surrounding try/catch. Invalid settings or auth
+          failure silently leaves index misconfigured.
+        throws: >
+          ApiError — 400 (invalid settings), 401/403 (auth), 422 (unprocessable entity).
+          RetryError — network failure.
+        required_handling: >
+          Caller MUST wrap in try/catch. Failed settings updates leave the index with
+          incorrect search configuration.
+        sources:
+          - "https://www.algolia.com/doc/api-client/advanced/handling-errors/"
+        severity: error
+
+  - name: replaceAllObjects
+    import_path: "algoliasearch"
+    description: >
+      v5 method: atomically replaces all objects in an index (using a temporary index
+      internally). Long-running operation that can fail at any stage.
+
+    postconditions:
+      - id: replaceall-no-try-catch
+        condition: >
+          replaceAllObjects() called without surrounding try/catch. Partial failure
+          during the atomic swap may leave index in inconsistent state.
+        throws: >
+          ApiError — auth, invalid objects, rate limit.
+          RetryError — network failure.
+        required_handling: >
+          Caller MUST wrap in try/catch. This is a critical operation — partial failure
+          can leave the index empty or in an inconsistent state.
+        sources:
+          - "https://www.algolia.com/doc/api-client/advanced/handling-errors/"
+        severity: error
+
+notes:
+  - "algoliasearch uses throw-based error model — NO result-object pattern (unlike resend)"
+  - "v4 errors: plain objects with .name property (not instanceof Error)"
+  - "v5 errors: proper class hierarchy, instanceof ApiError works"
+  - "ApiError.status: 400=bad request, 401=invalid key, 403=missing ACL, 404=not found, 429=rate limit"
+  - "RetryError thrown when all Algolia hosts exhausted — check appId configuration"
+  - "Constructor does NOT throw — credential errors only surface at first API call"
+  - "Deleting non-existent objects is idempotent (no 404 thrown)"
+  - "v4 WaitablePromise: both the write operation AND .wait() can throw independently"

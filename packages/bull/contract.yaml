@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-27"
 status: production  # Event listener detection now supported by EventListenerAnalyzer
+evidence_quality: stub
 
 # Event handler detection NOW SUPPORTED (as of 2026-02-27):
 # The EventListenerAnalyzer can now detect missing event handlers:
@@ -58,7 +59,8 @@ functions:
           2. done(error) in callback processors: done(err)
           Without error handling, exceptions are caught by Bull but may not be logged,
           and failed jobs accumulate silently if no 'failed' event listener exists.
-        source: "https://github.com/OptimalBits/bull"
+        sources:
+          - "https://github.com/OptimalBits/bull"
         severity: error
 
       - id: missing-failed-listener
@@ -69,7 +71,8 @@ functions:
           Without this listener, failed jobs are silently lost with no visibility.
           CRITICAL: This is production bug #2 (60-70% of codebases).
           Always add: queue.on('failed', (job, err) => { logger.error('Job failed:', err); })
-        source: "https://blog.logrocket.com/asynchronous-task-processing-in-node-js-with-bull/"
+        sources:
+          - "https://blog.logrocket.com/asynchronous-task-processing-in-node-js-with-bull/"
         severity: error
 
       - id: missing-stalled-listener
@@ -81,7 +84,8 @@ functions:
           CRITICAL: This is production bug #1 (80-90% of codebases don't detect this).
           Impact: Duplicate emails, duplicate payments, data corruption.
           Always add: queue.on('stalled', (job) => { logger.error('Job stalled:', job.id); })
-        source: "https://docs.bullmq.io/guide/jobs/stalled"
+        sources:
+          - "https://docs.bullmq.io/guide/jobs/stalled"
         severity: error
 
       - id: missing-error-listener
@@ -91,7 +95,8 @@ functions:
           Caller SHOULD attach 'error' event listener to queue instance.
           Without this listener, Redis connection errors and queue errors go unnoticed.
           Always add: queue.on('error', (error) => { logger.error('Queue error:', error); })
-        source: "https://github.com/OptimalBits/bull"
+        sources:
+          - "https://github.com/OptimalBits/bull"
         severity: warning
 
     edge_cases:
@@ -113,7 +118,8 @@ functions:
             const result2 = await action2(job.data);
             return result2;
           });
-        source: "https://github.com/OptimalBits/bull/issues/1822"
+        sources:
+          - "https://github.com/OptimalBits/bull/issues/1822"
         severity: warning
 
       - id: cpu-intensive-processor
@@ -130,7 +136,8 @@ functions:
             await new Promise(resolve => setImmediate(resolve));
             // Process chunk
           }
-        source: "https://docs.bullmq.io/guide/jobs/stalled"
+        sources:
+          - "https://docs.bullmq.io/guide/jobs/stalled"
         severity: warning
 
       - id: queue-instance-leak
@@ -153,7 +160,8 @@ functions:
           process.on('SIGTERM', async () => {
             await jobQueue.close();  // Cleanup
           });
-        source: "https://github.com/OptimalBits/bull/issues/1822"
+        sources:
+          - "https://github.com/OptimalBits/bull/issues/1822"
         severity: warning
 
       - id: manual-job-finalization
@@ -175,7 +183,8 @@ functions:
           queue.process(async (job) => {
             await work();  // Just throw on error, Bull handles finalization
           });
-        source: "https://github.com/OptimalBits/bull/issues/1104"
+        sources:
+          - "https://github.com/OptimalBits/bull/issues/1104"
         severity: warning
 
   - name: new Queue
@@ -191,7 +200,8 @@ functions:
           2. queue.on('stalled', ...) - CRITICAL
           3. queue.on('error', ...) - RECOMMENDED
           See Queue.process postconditions for details.
-        source: "https://github.com/OptimalBits/bull"
+        sources:
+          - "https://github.com/OptimalBits/bull"
         severity: error
 
     edge_cases:
@@ -199,5 +209,6 @@ functions:
         description: >
           Creating Queue instances repeatedly instead of reusing.
           See queue-instance-leak in Queue.process edge_cases.
-        source: "https://github.com/OptimalBits/bull/issues/1822"
+        sources:
+          - "https://github.com/OptimalBits/bull/issues/1822"
         severity: warning

@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
 status: production
+evidence_quality: stub
 
 detection:
   type_names:
@@ -21,7 +22,8 @@ functions:
         condition: "constructor throws error during dependency injection (connection failure, initialization error)"
         throws: "Error that prevents application startup"
         required_handling: "Injectable class constructors SHOULD handle initialization errors gracefully or throw descriptive errors. Constructor errors during DI crash application startup with unclear error messages."
-        source: "https://docs.nestjs.com/providers"
+        sources:
+          - "https://docs.nestjs.com/providers"
         severity: warning
 
   - name: Controller
@@ -32,13 +34,15 @@ functions:
         condition: "async route handler throws error or promise rejects"
         throws: "Error propagated to exception filter or default error handler"
         required_handling: "Controller route handlers MUST handle async errors with try-catch or let NestJS exception filters handle them. Unhandled async errors crash application if no exception filter is configured."
-        source: "https://docs.nestjs.com/exception-filters"
+        sources:
+          - "https://docs.nestjs.com/exception-filters"
         severity: error
 
 edge_cases:
   - id: exception-filter-pattern
     description: "Use @UseFilters() with custom ExceptionFilter for centralized error handling - prevents inconsistent error responses and provides proper error formatting"
-    source: "https://docs.nestjs.com/exception-filters#exception-filters-1"
+    sources:
+      - "https://docs.nestjs.com/exception-filters#exception-filters-1"
     severity: warning
 
 # Category: framework

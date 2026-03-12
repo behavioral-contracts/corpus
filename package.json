@@ -32,5 +32,11 @@
   "homepage": "https://behavioral-contracts.com",
   "engines": {
     "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.36.4"
+  },
+  "devDependencies": {
+    "@google/generative-ai": "^0.24.0"
   }
 }

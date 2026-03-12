@@ -22,6 +22,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-27"
 status: production
+evidence_quality: stub
 
 # Mocha hook functions (it, before, after, etc.) are called synchronously — the async
 # callback they receive is run later by the Mocha runtime, not at the call site.
@@ -45,7 +46,8 @@ functions:
           failures to be reported incorrectly or crash the test runner.
           Use pattern: it('test', async () => { try { await operation(); } catch (e) { throw e; } })
           or rely on Mocha's built-in async handling.
-        source: "https://mochajs.org/#asynchronous-code"
+        sources:
+          - "https://mochajs.org/#asynchronous-code"
         severity: warning
 
   - name: before
@@ -59,7 +61,8 @@ functions:
           Before hooks that return promises MUST handle rejections properly.
           Unhandled rejections in before hooks cause test suite failures without clear
           error messages. Use async/await or return promises that are properly handled.
-        source: "https://mochajs.org/#hooks"
+        sources:
+          - "https://mochajs.org/#hooks"
         severity: warning
 
   - name: after
@@ -73,7 +76,8 @@ functions:
           After hooks that return promises MUST handle rejections properly.
           Unhandled rejections in cleanup hooks can leave resources in inconsistent states.
           Use async/await or return promises that are properly handled.
-        source: "https://mochajs.org/#hooks"
+        sources:
+          - "https://mochajs.org/#hooks"
         severity: warning
 
   - name: beforeEach
@@ -86,7 +90,8 @@ functions:
         required_handling: >
           BeforeEach hooks that return promises MUST handle rejections properly.
           Unhandled rejections cause individual test failures without clear attribution.
-        source: "https://mochajs.org/#hooks"
+        sources:
+          - "https://mochajs.org/#hooks"
         severity: warning
 
   - name: afterEach
@@ -99,7 +104,8 @@ functions:
         required_handling: >
           AfterEach hooks that return promises MUST handle rejections properly.
           Unhandled rejections in cleanup can leave test environment in bad state.
-        source: "https://mochajs.org/features/hooks/"
+        sources:
+          - "https://mochajs.org/features/hooks/"
         severity: warning
 
       - id: aftereach-resource-leak
@@ -110,7 +116,8 @@ functions:
           Common mistake: afterEach(() => { server.close(); }) instead of afterEach(async () => { await server.close(); }).
           Unclosed resources (servers, database connections, file handles) prevent Mocha from exiting.
           Frequency: 25-35% of resource cleanup bugs.
-        source: "https://www.mindfulchase.com/explore/troubleshooting-tips/testing-frameworks/troubleshooting-mocha-flaky-tests,-async-bugs,-and-ci-failures.html"
+        sources:
+          - "https://www.mindfulchase.com/explore/troubleshooting-tips/testing-frameworks/troubleshooting-mocha-flaky-tests,-async-bugs,-and-ci-failures.html"
         severity: warning
 
   - name: describe
@@ -125,7 +132,8 @@ functions:
           Common mistake: describe('Suite', async () => { const data = await fetchData(); ... }) - data will be undefined.
           Use before() hook for async setup: before(async () => { data = await fetchData(); }).
           Frequency: 15-20% of suite setup bugs.
-        source: "https://mochajs.org/next/features/asynchronous-code/"
+        sources:
+          - "https://mochajs.org/next/features/asynchronous-code/"
         severity: error
 
 edge_cases:
@@ -141,7 +149,8 @@ edge_cases:
     frequency: "60-70% of async test bugs"
     detection: "Hard - test appears to pass but doesn't actually test anything"
     fix: "Always return promises: return fetchData().then(...)"
-    source: "https://github.com/mochajs/mocha/issues/2797"
+    sources:
+      - "https://github.com/mochajs/mocha/issues/2797"
     severity: critical
 
   - id: assertion-in-catch-causes-timeout
@@ -158,7 +167,8 @@ edge_cases:
     frequency: "40-50% of promise rejection tests"
     detection: "Medium - timeout error 'timeout of 2000ms exceeded' instead of assertion error"
     fix: "Use async/await with try/catch: try { await fetchData(); assert.fail(...); } catch (err) { assert.strictEqual(err.code, 'ERR'); }"
-    source: "https://github.com/mochajs/mocha/issues/1128"
+    sources:
+      - "https://github.com/mochajs/mocha/issues/1128"
     severity: high
 
   - id: missing-await-race-condition
@@ -172,7 +182,8 @@ edge_cases:
     frequency: "30-40% of async/await tests"
     detection: "Medium - tests pass locally but fail in CI, non-deterministic"
     fix: "Always await async operations: await fetchData();"
-    source: "https://www.mindfulchase.com/explore/troubleshooting-tips/testing-frameworks/troubleshooting-mocha-flaky-tests,-async-bugs,-and-ci-failures.html"
+    sources:
+      - "https://www.mindfulchase.com/explore/troubleshooting-tips/testing-frameworks/troubleshooting-mocha-flaky-tests,-async-bugs,-and-ci-failures.html"
     severity: high
 
   - id: hook-without-return-await
@@ -189,7 +200,8 @@ edge_cases:
     frequency: "50-60% of hook setup bugs"
     detection: "Medium - tests fail intermittently or have state pollution"
     fix: "Return promise or use async/await: beforeEach(async () => { await db.clearUsers(); })"
-    source: "https://mochajs.org/features/hooks/"
+    sources:
+      - "https://mochajs.org/features/hooks/"
     severity: high
 
   - id: mixed-done-and-promise
@@ -202,7 +214,8 @@ edge_cases:
     frequency: "20-30% of callback migration bugs"
     detection: "Easy - 'Error: Resolution method is overspecified. Specify a callback *or* return a Promise; not both.'"
     fix: "Use only one pattern: async/await (recommended) or done callback"
-    source: "https://github.com/mochajs/mocha/issues/2025"
+    sources:
+      - "https://github.com/mochajs/mocha/issues/2025"
     severity: low
 
   - id: timeout-masking-bug
@@ -216,7 +229,8 @@ edge_cases:
     frequency: "30-40% of timeout configuration"
     detection: "Hard - test eventually times out, doesn't reveal root cause"
     fix: "Don't increase timeout - fix the async bug (return promise or await)"
-    source: "https://github.com/mochajs/mocha/issues/2294"
+    sources:
+      - "https://github.com/mochajs/mocha/issues/2294"
     severity: medium
 
   - id: async-hook-error-prevents-tests
@@ -231,7 +245,8 @@ edge_cases:
     frequency: "30-35% of suite-level hook errors"
     detection: "Easy - clear error message, all tests skipped"
     fix: "Handle errors in hooks gracefully or split test suites"
-    source: "https://mochajs.org/features/hooks/"
+    sources:
+      - "https://mochajs.org/features/hooks/"
     severity: medium
 
   - id: done-not-called-in-error-path
@@ -248,7 +263,8 @@ edge_cases:
     frequency: "40-50% of done callback bugs"
     detection: "Easy - 'timeout of 2000ms exceeded. Ensure the done() callback is being called'"
     fix: "Call done(err) in all error paths: if (err) return done(err);"
-    source: "https://mochajs.org/next/features/asynchronous-code/"
+    sources:
+      - "https://mochajs.org/next/features/asynchronous-code/"
     severity: medium
 
 # Category: testing

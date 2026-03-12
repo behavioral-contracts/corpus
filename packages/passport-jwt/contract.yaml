@@ -1,18 +1,85 @@
-package: "passport-jwt"
-status: in-development
-description: "JWT authentication strategy for Passport"
-semver: ">=4.0.0"
+package: passport-jwt
+semver: ">=4.0.0 <5.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-03-12"
+status: production
+evidence_quality: partial
 
-postconditions:
-  - id: passport-jwt-001
-    summary: "Strategy verify callback must handle token validation errors"
-    severity: ERROR
-    behavior: |
-      The verify callback provided to JwtStrategy must handle user lookup
-      errors and token validation failures by calling the done callback
-      with appropriate error parameters. Unhandled errors in the verify
-      callback will crash the application.
-    patterns:
-      # JwtStrategy with verify callback
-      - "new JwtStrategy(options, verifyCallback)"
-      - "passport.use(new JwtStrategy())"
+functions:
+  - name: Strategy
+    import_path: "passport-jwt"
+    description: "Constructor for JWT authentication strategy. Validates JWT tokens from requests and calls the verify callback with the decoded payload."
+
+    preconditions:
+      - id: secret-or-key-required
+        description: "Options MUST include either secretOrKey (string or Buffer) or secretOrKeyProvider (async function). Omitting both causes the strategy to throw immediately on construction."
+        sources:
+          - "https://www.passportjs.org/packages/passport-jwt/"
+          - "https://github.com/mikenicholson/passport-jwt/issues/206"
+        severity: error
+
+      - id: jwt-from-request-required
+        description: "Options MUST include jwtFromRequest extractor function. Without it, the strategy cannot extract the token and will fail all requests."
+        sources:
+          - "https://www.passportjs.org/packages/passport-jwt/"
+        severity: error
+
+    postconditions:
+      - id: missing-secret-throws
+        condition: "secretOrKey and secretOrKeyProvider are both absent from options"
+        throws: "Error: JwtStrategy requires a secret or key"
+        required_handling: >
+          Caller MUST provide either secretOrKey or secretOrKeyProvider in options.
+          This error is thrown synchronously during strategy instantiation.
+          Wrap new Strategy() in try-catch during application initialization if using
+          dynamic configuration.
+        sources:
+          - "https://www.passportjs.org/packages/passport-jwt/"
+          - "https://github.com/mikenicholson/passport-jwt/issues/206"
+        severity: error
+
+      - id: verify-callback-db-error
+        condition: "The verify callback encounters a database or service error during user lookup"
+        throws: "Error passed to done(err) callback in the verify function"
+        required_handling: >
+          The verify callback MUST call done(err) when encountering errors during user lookup.
+          Calling done(err) with a non-null first argument causes passport to return a 500 error.
+          Pattern: if (err) { return done(err, false); }
+        sources:
+          - "https://www.passportjs.org/packages/passport-jwt/"
+        severity: error
+
+      - id: token-invalid-or-expired
+        condition: "JWT token signature is invalid, token is expired, or token is malformed"
+        throws: "Authentication failure passed to done(null, false, info)"
+        required_handling: >
+          When token validation fails, passport calls the verify function with null payload.
+          The verify callback MUST call done(null, false) to deny authentication.
+          Callers using passport.authenticate('jwt') MUST handle 401 responses appropriately.
+        sources:
+          - "https://www.passportjs.org/packages/passport-jwt/"
+        severity: error
+
+      - id: token-extraction-fails
+        condition: "jwtFromRequest extractor returns null (no token found in request)"
+        throws: "Authentication fails with 401 Unauthorized before verify callback is called"
+        required_handling: >
+          Caller MUST handle 401 responses from protected routes when no token is present.
+          The verify callback is NOT invoked when extraction fails.
+        sources:
+          - "https://www.passportjs.org/packages/passport-jwt/"
+        severity: error
+
+    edge_cases:
+      - id: secret-or-key-provider-async-error
+        description: "If secretOrKeyProvider throws or rejects, the authentication fails. The provider must never throw synchronously and must always call the callback."
+        sources:
+          - "https://www.passportjs.org/packages/passport-jwt/"
+        severity: warning
+
+      - id: verify-callback-must-call-done
+        description: "The verify callback MUST always call done() exactly once. Forgetting to call done() leaves the request hanging indefinitely (no response sent)."
+        sources:
+          - "https://www.passportjs.org/packages/passport-jwt/"
+        severity: warning

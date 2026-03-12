@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-24"
 status: production
+evidence_quality: stub
 
 functions:
   # CRITICAL: Server-side authentication
@@ -23,8 +24,8 @@ functions:
           1. File src/middleware.ts or src/middleware.js exists
           2. clerkMiddleware is imported from @clerk/nextjs/server
           3. clerkMiddleware() is exported as 'export default' or in middleware function
-        source: "https://clerk.com/docs/reference/nextjs/clerk-middleware"
-
+        sources:
+          - "https://clerk.com/docs/reference/nextjs/clerk-middleware"
       - id: auth-null-not-checked
         condition: "auth() result used without checking if userId exists"
         throws: "Runtime error when accessing properties of null/undefined user"
@@ -35,8 +36,8 @@ functions:
         detector: >
           If auth() is called and result properties (userId, sessionId, etc.) are accessed directly
           without conditional check or protect() wrapper, flag violation.
-        source: "https://clerk.com/docs/reference/nextjs/app-router/auth#usage"
-
+        sources:
+          - "https://clerk.com/docs/reference/nextjs/app-router/auth#usage"
   # CRITICAL: User data fetching with rate limiting implications
   - name: currentUser
     import_path: "@clerk/nextjs/server"
@@ -52,8 +53,8 @@ functions:
         detector: >
           In Next.js App Router components/layouts, if currentUser() appears multiple times
           in same file/component tree without cache() wrapper, flag warning.
-        source: "https://github.com/clerk/javascript/issues/4894"
-
+        sources:
+          - "https://github.com/clerk/javascript/issues/4894"
       - id: current-user-null-not-handled
         condition: "currentUser() result used without null check"
         throws: "Runtime error accessing properties of null"
@@ -63,8 +64,8 @@ functions:
           Returns null if user not authenticated.
         detector: >
           If currentUser() result is accessed without null check (if/guard), flag violation.
-        source: "https://clerk.com/docs/reference/nextjs/current-user"
-
+        sources:
+          - "https://clerk.com/docs/reference/nextjs/current-user"
   # CRITICAL: Middleware setup
   - name: clerkMiddleware
     import_path: "@clerk/nextjs/server"
@@ -79,8 +80,8 @@ functions:
           Pattern: `export default clerkMiddleware();`
         detector: >
           Check if clerkMiddleware is imported but not in an export statement.
-        source: "https://clerk.com/docs/reference/nextjs/clerk-middleware"
-
+        sources:
+          - "https://clerk.com/docs/reference/nextjs/clerk-middleware"
       - id: middleware-matcher-missing
         condition: "clerkMiddleware without matcher configuration"
         throws: "Middleware runs on static assets, causes 404 auth errors"
@@ -90,8 +91,8 @@ functions:
           Pattern: `export const config = { matcher: ['/((?!.*\\..*|_next).*)', '/'] };`
         detector: >
           Check if clerkMiddleware is exported but no config.matcher export exists in same file.
-        source: "https://clerk.com/docs/guides/development/custom-flows/error-handling"
-
+        sources:
+          - "https://clerk.com/docs/guides/development/custom-flows/error-handling"
   # HIGH: Route protection
   - name: protect
     import_path: "@clerk/nextjs/server"
@@ -107,8 +108,8 @@ functions:
           Returns 404 for unauthenticated requests with session token, 401 for machine tokens.
         detector: >
           If auth.protect() or (await auth()).protect() called outside try-catch, flag warning.
-        source: "https://clerk.com/docs/reference/nextjs/app-router/auth"
-
+        sources:
+          - "https://clerk.com/docs/reference/nextjs/app-router/auth"
   # CRITICAL: Sign-in flow
   - name: create
     import_path: "@clerk/nextjs"
@@ -125,8 +126,8 @@ functions:
           For user_locked, display lockout_expires_in_seconds from error.meta.
         detector: >
           If signIn.create() is called (via useSignIn hook) without try-catch or .catch(), flag violation.
-        source: "https://clerk.com/docs/guides/development/custom-flows/error-handling"
-
+        sources:
+          - "https://clerk.com/docs/guides/development/custom-flows/error-handling"
       - id: user-lockout-meta-not-displayed
         condition: "user_locked error caught but lockout_expires_in_seconds not shown to user"
         throws: "Poor UX - user doesn't know when to retry"
@@ -137,8 +138,8 @@ functions:
         detector: >
           In error handling for signIn.create(), if error.code === 'user_locked' but no access
           to error.meta.lockout_expires_in_seconds, flag warning.
-        source: "https://clerk.com/docs/guides/development/errors/frontend-api"
-
+        sources:
+          - "https://clerk.com/docs/guides/development/errors/frontend-api"
   # CRITICAL: Sign-up flow
   - name: create
     import_path: "@clerk/nextjs"
@@ -154,8 +155,8 @@ functions:
           Common errors: form_password_length_too_short, form_param_missing, requires_captcha.
         detector: >
           If signUp.create() is called (via useSignUp hook) without try-catch or .catch(), flag violation.
-        source: "https://clerk.com/docs/guides/development/custom-flows/error-handling"
-
+        sources:
+          - "https://clerk.com/docs/guides/development/custom-flows/error-handling"
   # CRITICAL: Webhook security
   - name: verify
     import_path: "svix"
@@ -173,8 +174,8 @@ functions:
         detector: >
           In webhook route handlers (routes with /api/webhooks/clerk or similar),
           check if Webhook.verify() is called. If payload processed without verification, flag violation.
-        source: "https://clerk.com/docs/guides/development/webhooks/overview"
-
+        sources:
+          - "https://clerk.com/docs/guides/development/webhooks/overview"
       - id: webhook-verify-not-in-try-catch
         condition: "Webhook.verify() called without try-catch"
         throws: "Unhandled error on invalid signature causes 500 instead of 400"
@@ -183,8 +184,8 @@ functions:
           SHOULD wrap Webhook.verify() in try-catch to return proper 400 response on verification failure.
         detector: >
           If Webhook.verify() called outside try-catch block, flag warning.
-        source: "https://clerk.com/docs/guides/development/webhooks/overview"
-
+        sources:
+          - "https://clerk.com/docs/guides/development/webhooks/overview"
   # HIGH: Token management
   - name: getToken
     import_path: "@clerk/nextjs/server"
@@ -199,8 +200,8 @@ functions:
           Returns null if user not authenticated or token invalid.
         detector: >
           If getToken() result is accessed without null check, flag violation.
-        source: "https://clerk.com/docs/reference/nextjs/get-token"
-
+        sources:
+          - "https://clerk.com/docs/reference/nextjs/get-token"
   # HIGH: Session management
   - name: setActive
     import_path: "@clerk/nextjs"
@@ -216,8 +217,8 @@ functions:
           Can fail if session is null, invalid, or race conditions occur.
         detector: >
           If setActive() is called (via useClerk or useSignIn/useSignUp) without try-catch, flag warning.
-        source: "https://clerk.com/docs/reference/clerk-react/use-clerk"
-
+        sources:
+          - "https://clerk.com/docs/reference/clerk-react/use-clerk"
   # MEDIUM: Client hooks
   - name: useSignIn
     import_path: "@clerk/nextjs"
@@ -232,8 +233,8 @@ functions:
           Use isClerkAPIResponseError() to type-check errors.
         detector: >
           If useSignIn() is called but no error state (useState/signal) or error display exists, flag warning.
-        source: "https://clerk.com/docs/guides/development/custom-flows/error-handling"
-
+        sources:
+          - "https://clerk.com/docs/guides/development/custom-flows/error-handling"
   - name: useClerk
     import_path: "@clerk/nextjs"
     description: "React hook for accessing Clerk context and methods"
@@ -248,4 +249,5 @@ functions:
         detector: >
           This is runtime detection only - hard to statically analyze.
           Flag if useClerk appears in component tree but no ClerkProvider wrapper found in layout.
-        source: "https://clerk.com/docs/reference/clerk-react/use-clerk"
+        sources:
+          - "https://clerk.com/docs/reference/clerk-react/use-clerk"

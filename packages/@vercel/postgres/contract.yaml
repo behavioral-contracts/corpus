@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-25"
 status: production
+evidence_quality: stub
 
 detection:
   type_names:
@@ -23,8 +24,8 @@ functions:
         required_handling: "Wrap sql queries in try-catch blocks to handle database errors appropriately"
         severity: error
         rationale: "SQL queries can fail due to syntax errors, connection issues, or constraint violations"
-        source: "https://vercel.com/docs/storage/vercel-postgres"
-
+        sources:
+          - "https://vercel.com/docs/storage/vercel-postgres"
   - name: query
     import_path: "@vercel/postgres"
     description: "Executes a SQL query on database connection"
@@ -36,8 +37,8 @@ functions:
         required_handling: "Wrap query() calls in try-catch blocks to handle connection and SQL errors"
         severity: error
         rationale: "Query operations can fail due to connection issues or SQL errors"
-        source: "https://vercel.com/docs/storage/vercel-postgres"
-
+        sources:
+          - "https://vercel.com/docs/storage/vercel-postgres"
   - name: connect
     import_path: "@vercel/postgres"
     description: "Obtains a client from the connection pool"
@@ -49,8 +50,8 @@ functions:
         required_handling: "Call client.release() in a finally block to ensure connection is returned to pool"
         severity: error
         rationale: "Unreleased clients cause connection pool exhaustion"
-        source: "https://vercel.com/kb/guide/connection-pooling-with-functions"
-
+        sources:
+          - "https://vercel.com/kb/guide/connection-pooling-with-functions"
 # Category: database
 # Latest version: 0.10.0
 # Generated: 2026-02-26

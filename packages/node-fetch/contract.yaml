@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
 status: production
+evidence_quality: stub
 
 detection:
   factory_methods:
@@ -24,5 +25,6 @@ functions:
           responses that must be checked with response.ok. Recommended pattern:
           try { const res = await fetch(url); if (!res.ok) throw new Error(`HTTP ${res.status}`); }
           catch (error) { /* handle network errors */ }
-        source: "https://github.com/node-fetch/node-fetch/blob/main/docs/ERROR-HANDLING.md"
+        sources:
+          - "https://github.com/node-fetch/node-fetch/blob/main/docs/ERROR-HANDLING.md"
         severity: error

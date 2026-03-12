@@ -4,6 +4,7 @@ contract_version: "1.1.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-27"
 status: production
+evidence_quality: stub
 priority: medium
 
 functions:
@@ -19,7 +20,8 @@ functions:
           Invalid Day.js objects can cause incorrect date calculations, display issues,
           or NaN values propagating through the application.
           Use pattern: const d = dayjs(input); if (!d.isValid()) { /* handle error */ }
-        source: "https://day.js.org/docs/en/parse/string"
+        sources:
+          - "https://day.js.org/docs/en/parse/string"
         severity: error
         notes: |
           This contract detects missing .isValid() checks but has limitations:
@@ -40,7 +42,8 @@ functions:
           Caller MUST check isValid() after parsing.
           Invalid UTC dates can cause timezone calculation errors and data corruption.
           Use pattern: const d = dayjs.utc(input); if (!d.isValid()) { /* handle error */ }
-        source: "https://day.js.org/docs/en/plugin/utc"
+        sources:
+          - "https://day.js.org/docs/en/plugin/utc"
         severity: error
 
   - name: format
@@ -55,7 +58,8 @@ functions:
           Vulnerable regex patterns in format parsing can cause quadratic time complexity,
           leading to CPU exhaustion and DoS. Validate and limit format string length.
           See GitHub PR #2908 for technical details.
-        source: "https://github.com/iamkun/dayjs/pull/2908"
+        sources:
+          - "https://github.com/iamkun/dayjs/pull/2908"
         severity: warning
         notes: |
           ReDoS vulnerability identified in format parsing (unfixed as of 2026-02-27).

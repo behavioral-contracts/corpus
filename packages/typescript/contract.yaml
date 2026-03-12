@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-24"
 status: production
+evidence_quality: stub
 
 functions:
   - name: readFile
@@ -18,7 +19,8 @@ functions:
         required_handling: >
           Caller MUST wrap ts.sys.readFile() in a try-catch block to handle file-not-found errors.
           Uncaught ENOENT errors will crash the application.
-        source: "https://github.com/microsoft/TypeScript-wiki/blob/main/Using-the-Compiler-API.md"
+        sources:
+          - "https://github.com/microsoft/TypeScript-wiki/blob/main/Using-the-Compiler-API.md"
         severity: error
 
       - id: permission-denied
@@ -27,7 +29,8 @@ functions:
         required_handling: >
           Caller MUST wrap ts.sys.readFile() in a try-catch block to handle permission errors.
           File system permissions can vary across environments.
-        source: "https://nodejs.org/docs/latest/api/errors.html"
+        sources:
+          - "https://nodejs.org/docs/latest/api/errors.html"
         severity: error
 
       - id: encoding-error
@@ -36,13 +39,15 @@ functions:
         required_handling: >
           Caller SHOULD validate file contents after reading, especially when reading
           user-provided or external files. Binary files read as text will produce invalid results.
-        source: "https://github.com/microsoft/TypeScript-wiki/blob/main/Using-the-Compiler-API.md"
+        sources:
+          - "https://github.com/microsoft/TypeScript-wiki/blob/main/Using-the-Compiler-API.md"
         severity: warning
 
     edge_cases:
       - id: undefined-return
         description: "May return undefined instead of throwing if file doesn't exist (implementation-dependent)"
-        source: "https://github.com/microsoft/TypeScript-wiki/blob/main/Using-the-Compiler-API.md"
+        sources:
+          - "https://github.com/microsoft/TypeScript-wiki/blob/main/Using-the-Compiler-API.md"
         severity: info
 
   - name: readDirectory
@@ -57,7 +62,8 @@ functions:
         required_handling: >
           Caller MUST wrap ts.sys.readDirectory() in a try-catch block to handle
           directory-not-found errors. Uncaught ENOENT errors will crash the application.
-        source: "https://github.com/microsoft/TypeScript-wiki/blob/main/Using-the-Compiler-API.md"
+        sources:
+          - "https://github.com/microsoft/TypeScript-wiki/blob/main/Using-the-Compiler-API.md"
         severity: error
 
       - id: permission-denied
@@ -66,7 +72,8 @@ functions:
         required_handling: >
           Caller MUST wrap ts.sys.readDirectory() in a try-catch block to handle
           permission errors. Directory permissions can vary across environments.
-        source: "https://nodejs.org/docs/latest/api/errors.html"
+        sources:
+          - "https://nodejs.org/docs/latest/api/errors.html"
         severity: error
 
       - id: symlink-loop
@@ -75,13 +82,15 @@ functions:
         required_handling: >
           Caller SHOULD wrap ts.sys.readDirectory() in a try-catch to handle symlink loops,
           especially when scanning user-provided or external directories.
-        source: "https://nodejs.org/docs/latest/api/errors.html"
+        sources:
+          - "https://nodejs.org/docs/latest/api/errors.html"
         severity: warning
 
     edge_cases:
       - id: empty-array-return
         description: "Returns empty array if no files match the specified extensions, not an error"
-        source: "https://github.com/microsoft/TypeScript-wiki/blob/main/Using-the-Compiler-API.md"
+        sources:
+          - "https://github.com/microsoft/TypeScript-wiki/blob/main/Using-the-Compiler-API.md"
         severity: info
 
   - name: writeFile
@@ -96,7 +105,8 @@ functions:
         required_handling: >
           Caller MUST wrap ts.sys.writeFile() in a try-catch block to handle permission errors.
           Write permissions can be restricted in production environments.
-        source: "https://nodejs.org/docs/latest/api/errors.html"
+        sources:
+          - "https://nodejs.org/docs/latest/api/errors.html"
         severity: error
 
       - id: directory-not-found
@@ -106,7 +116,8 @@ functions:
           Caller MUST either:
           1. Wrap ts.sys.writeFile() in a try-catch and handle ENOENT, OR
           2. Create parent directories before writing (e.g., using ts.sys.createDirectory or mkdirp)
-        source: "https://nodejs.org/docs/latest/api/errors.html"
+        sources:
+          - "https://nodejs.org/docs/latest/api/errors.html"
         severity: error
 
       - id: disk-full
@@ -115,7 +126,8 @@ functions:
         required_handling: >
           Caller SHOULD wrap ts.sys.writeFile() in a try-catch to handle disk-full errors,
           especially for build tools that may write large files.
-        source: "https://nodejs.org/docs/latest/api/errors.html"
+        sources:
+          - "https://nodejs.org/docs/latest/api/errors.html"
         severity: warning
 
       - id: read-only-filesystem
@@ -123,7 +135,8 @@ functions:
         throws: "Error with code EROFS (read-only file system)"
         required_handling: >
           Caller SHOULD wrap ts.sys.writeFile() in a try-catch to handle read-only filesystem errors.
-        source: "https://nodejs.org/docs/latest/api/errors.html"
+        sources:
+          - "https://nodejs.org/docs/latest/api/errors.html"
         severity: warning
 
   - name: createProgram
@@ -138,7 +151,8 @@ functions:
           Caller SHOULD wrap ts.createProgram() in a try-catch AND check
           ts.getPreEmitDiagnostics() for file-not-found errors. The API may
           return a program with errors rather than throwing.
-        source: "https://github.com/microsoft/TypeScript-wiki/blob/main/Using-the-Compiler-API.md"
+        sources:
+          - "https://github.com/microsoft/TypeScript-wiki/blob/main/Using-the-Compiler-API.md"
         severity: warning
 
       - id: invalid-compiler-options
@@ -147,7 +161,8 @@ functions:
         required_handling: >
           Caller SHOULD validate compiler options before passing to ts.createProgram()
           or check diagnostics after program creation.
-        source: "https://github.com/microsoft/TypeScript-wiki/blob/main/Using-the-Compiler-API.md"
+        sources:
+          - "https://github.com/microsoft/TypeScript-wiki/blob/main/Using-the-Compiler-API.md"
         severity: warning
 
       - id: unchecked-diagnostics
@@ -157,13 +172,15 @@ functions:
           Caller MUST call ts.getPreEmitDiagnostics(program) after creating a program
           to check for compilation errors. Programs can be created even when source
           files have errors, but emitting without checking diagnostics is unsafe.
-        source: "https://github.com/microsoft/TypeScript-wiki/blob/main/Using-the-Compiler-API.md"
+        sources:
+          - "https://github.com/microsoft/TypeScript-wiki/blob/main/Using-the-Compiler-API.md"
         severity: warning
 
     edge_cases:
       - id: module-resolution-failure
         description: "If module resolution fails, errors appear in diagnostics rather than throwing"
-        source: "https://www.typescriptlang.org/docs/handbook/module-resolution.html"
+        sources:
+          - "https://www.typescriptlang.org/docs/handbook/module-resolution.html"
         severity: info
 
   - name: createCompilerHost
@@ -178,11 +195,13 @@ functions:
           When implementing custom CompilerHost, the getSourceFile method MUST handle
           file system errors (ENOENT, EACCES) gracefully. Either wrap fs operations
           in try-catch and return undefined, or allow errors to propagate with clear messages.
-        source: "https://github.com/microsoft/TypeScript-wiki/blob/main/Using-the-Compiler-API.md"
+        sources:
+          - "https://github.com/microsoft/TypeScript-wiki/blob/main/Using-the-Compiler-API.md"
         severity: warning
 
     edge_cases:
       - id: default-host-delegates-to-sys
         description: "Default compiler host delegates to ts.sys, which can throw file system errors"
-        source: "https://github.com/microsoft/TypeScript-wiki/blob/main/Using-the-Compiler-API.md"
+        sources:
+          - "https://github.com/microsoft/TypeScript-wiki/blob/main/Using-the-Compiler-API.md"
         severity: info

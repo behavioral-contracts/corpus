@@ -1,121 +1,95 @@
 package: "@aws-sdk/client-s3"
-semver: "^3.0.0"
-contract_version: "1.0.0"
-maintainer: "corpus-team"
-last_verified: "2026-02-25"
+semver: ^3.0.0
+contract_version: 1.0.0
+maintainer: corpus-team
+last_verified: 2026-02-25
 status: production
-
+evidence_quality: stub
 functions:
-  # S3 Object Operations
   - name: send
     import_path: "@aws-sdk/client-s3"
-    description: "Sends S3 commands (GetObject, PutObject, DeleteObject, etc.) to AWS S3"
-
+    description: Sends S3 commands (GetObject, PutObject, DeleteObject, etc.) to AWS S3
     postconditions:
       - id: s3-object-operation-no-try-catch
-        condition: "s3Client.send() called with object operation commands without try-catch"
-        throws: "NoSuchKey (404), AccessDenied (403), NoSuchBucket (404), network errors"
+        condition: s3Client.send() called with object operation commands without try-catch
+        throws: NoSuchKey (404), AccessDenied (403), NoSuchBucket (404), network errors
         severity: error
-        description: >
-          S3 object operations (GetObjectCommand, PutObjectCommand, DeleteObjectCommand, HeadObjectCommand,
-          CopyObjectCommand) are called without try-catch block. These operations make network requests
-          to AWS S3 and can fail with NoSuchKey (object not found), AccessDenied (permission issues),
-          NoSuchBucket (bucket doesn't exist), or network errors. Unhandled promise rejections will
-          crash the application.
-        detector: >
-          If s3Client.send(new GetObjectCommand(...)) or similar object operation commands are called
-          in an async context without try-catch wrapping the await
-        required_handling: >
-          MUST wrap await s3Client.send() in try-catch block when using GetObjectCommand, PutObjectCommand,
-          DeleteObjectCommand, HeadObjectCommand, or CopyObjectCommand. Catch block should check error.name
-          for specific error types (NoSuchKey, AccessDenied, NoSuchBucket) and handle appropriately.
+        description: |
+          S3 object operations (GetObjectCommand, PutObjectCommand, DeleteObjectCommand, HeadObjectCommand, CopyObjectCommand) are called without try-catch block. These operations make network requests to AWS S3 and can fail with NoSuchKey (object not found), AccessDenied (permission issues), NoSuchBucket (bucket doesn't exist), or network errors. Unhandled promise rejections will crash the application.
+        detector: |
+          If s3Client.send(new GetObjectCommand(...)) or similar object operation commands are called in an async context without try-catch wrapping the await
+        required_handling: |
+          MUST wrap await s3Client.send() in try-catch block when using GetObjectCommand, PutObjectCommand, DeleteObjectCommand, HeadObjectCommand, or CopyObjectCommand. Catch block should check error.name for specific error types (NoSuchKey, AccessDenied, NoSuchBucket) and handle appropriately.
         source: https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/s3/
-
+        sources:
+          - https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/s3/
       - id: s3-multipart-no-try-catch
-        condition: "s3Client.send() called with multipart commands without try-catch"
-        throws: "NoSuchUpload (404), EntityTooSmall (400), InvalidPart (400)"
+        condition: s3Client.send() called with multipart commands without try-catch
+        throws: NoSuchUpload (404), EntityTooSmall (400), InvalidPart (400)
         severity: error
-        description: >
-          S3 multipart upload operations (CreateMultipartUploadCommand, UploadPartCommand,
-          CompleteMultipartUploadCommand) are called without try-catch block. Multipart uploads
-          are complex multi-step operations that can fail at any stage. Without error handling,
-          failed uploads leave orphaned parts that consume storage and incur costs.
-        detector: >
-          If s3Client.send(new CreateMultipartUploadCommand(...)) or similar multipart commands
-          are called without try-catch, especially without AbortMultipartUpload in catch block
-        required_handling: >
-          MUST wrap multipart upload operations in try-catch block. Catch block MUST call
-          AbortMultipartUploadCommand with the uploadId to clean up orphaned parts. This prevents
-          storage charges for incomplete uploads.
+        description: |
+          S3 multipart upload operations (CreateMultipartUploadCommand, UploadPartCommand, CompleteMultipartUploadCommand) are called without try-catch block. Multipart uploads are complex multi-step operations that can fail at any stage. Without error handling, failed uploads leave orphaned parts that consume storage and incur costs.
+        detector: |
+          If s3Client.send(new CreateMultipartUploadCommand(...)) or similar multipart commands are called without try-catch, especially without AbortMultipartUpload in catch block
+        required_handling: |
+          MUST wrap multipart upload operations in try-catch block. Catch block MUST call AbortMultipartUploadCommand with the uploadId to clean up orphaned parts. This prevents storage charges for incomplete uploads.
         source: https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpuoverview.html
-
+        sources:
+          - https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpuoverview.html
       - id: s3-bucket-operation-no-try-catch
-        condition: "s3Client.send() called with bucket operations without try-catch"
-        throws: "BucketAlreadyExists (409), BucketNotEmpty (409), NoSuchBucket (404)"
+        condition: s3Client.send() called with bucket operations without try-catch
+        throws: BucketAlreadyExists (409), BucketNotEmpty (409), NoSuchBucket (404)
         severity: error
-        description: >
-          S3 bucket operations (CreateBucketCommand, DeleteBucketCommand, HeadBucketCommand) are called
-          without try-catch block. Bucket names are globally unique across AWS. CreateBucket can fail if
-          name is taken, DeleteBucket fails if bucket not empty, and all operations fail with permission
-          errors.
-        detector: >
-          If s3Client.send(new CreateBucketCommand(...)) or similar bucket commands are called
-          without try-catch wrapping the await
-        required_handling: >
-          MUST wrap bucket operations in try-catch block. Handle BucketAlreadyExists/BucketAlreadyOwnedByYou
-          gracefully (may be acceptable), check BucketNotEmpty before deletion, validate permissions.
+        description: |
+          S3 bucket operations (CreateBucketCommand, DeleteBucketCommand, HeadBucketCommand) are called without try-catch block. Bucket names are globally unique across AWS. CreateBucket can fail if name is taken, DeleteBucket fails if bucket not empty, and all operations fail with permission errors.
+        detector: |
+          If s3Client.send(new CreateBucketCommand(...)) or similar bucket commands are called without try-catch wrapping the await
+        required_handling: |
+          MUST wrap bucket operations in try-catch block. Handle BucketAlreadyExists/BucketAlreadyOwnedByYou gracefully (may be acceptable), check BucketNotEmpty before deletion, validate permissions.
         source: https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html
-
+        sources:
+          - https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html
       - id: s3-list-operation-no-try-catch
-        condition: "s3Client.send() called with list operations without try-catch"
-        throws: "NoSuchBucket (404), AccessDenied (403), InvalidArgument (400)"
+        condition: s3Client.send() called with list operations without try-catch
+        throws: NoSuchBucket (404), AccessDenied (403), InvalidArgument (400)
         severity: warning
-        description: >
-          S3 list operations (ListObjectsV2Command, ListBucketsCommand) are called without try-catch
-          block. While less critical than object operations, list operations can still fail if bucket
-          doesn't exist, permissions are insufficient, or pagination parameters are invalid.
-        detector: >
-          If s3Client.send(new ListObjectsV2Command(...)) or similar list commands are called
-          without try-catch wrapping the await
-        required_handling: >
-          SHOULD wrap list operations in try-catch block for robustness. Handle NoSuchBucket and
-          AccessDenied errors gracefully. Implement pagination properly with ContinuationToken.
+        description: |
+          S3 list operations (ListObjectsV2Command, ListBucketsCommand) are called without try-catch block. While less critical than object operations, list operations can still fail if bucket doesn't exist, permissions are insufficient, or pagination parameters are invalid.
+        detector: |
+          If s3Client.send(new ListObjectsV2Command(...)) or similar list commands are called without try-catch wrapping the await
+        required_handling: |
+          SHOULD wrap list operations in try-catch block for robustness. Handle NoSuchBucket and AccessDenied errors gracefully. Implement pagination properly with ContinuationToken.
         source: https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/s3/
-
-  # S3 Client Initialization
+        sources:
+          - https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/s3/
   - name: S3Client
     import_path: "@aws-sdk/client-s3"
-    description: "Initializes AWS S3 client"
-
+    description: Initializes AWS S3 client
     postconditions:
       - id: s3-client-no-retry-config
-        condition: "S3Client created without retry configuration"
+        condition: S3Client created without retry configuration
         severity: info
-        description: >
-          S3Client is instantiated without retry configuration (maxAttempts, retryMode). AWS S3
-          can return SlowDown (503) errors when request rate is too high. Without retry configuration,
-          requests fail unnecessarily. The SDK provides built-in retry with adaptive or standard modes.
-        detector: >
+        description: |
+          S3Client is instantiated without retry configuration (maxAttempts, retryMode). AWS S3 can return SlowDown (503) errors when request rate is too high. Without retry configuration, requests fail unnecessarily. The SDK provides built-in retry with adaptive or standard modes.
+        detector: |
           If 'new S3Client({ region })' is called without maxAttempts or retryMode in config
-        required_handling: >
-          CONSIDER configuring retry settings: new S3Client({ region, maxAttempts: 3, retryMode: 'adaptive' }).
-          Adaptive mode adjusts retry attempts based on throttling signals from AWS.
+        required_handling: |
+          CONSIDER configuring retry settings: new S3Client({ region, maxAttempts: 3, retryMode: 'adaptive' }). Adaptive mode adjusts retry attempts based on throttling signals from AWS.
         source: https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/error-handling.html
-
+        sources:
+          - https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/error-handling.html
       - id: s3-client-missing-region
-        condition: "S3Client created without explicit region"
+        condition: S3Client created without explicit region
         severity: warning
-        description: >
-          S3Client is instantiated without explicit region configuration. While SDK falls back to
-          environment variables or default region, explicit region configuration prevents unexpected
-          behavior and makes code more maintainable.
-        detector: >
+        description: |
+          S3Client is instantiated without explicit region configuration. While SDK falls back to environment variables or default region, explicit region configuration prevents unexpected behavior and makes code more maintainable.
+        detector: |
           If 'new S3Client({})' is called with empty config or without region property
-        required_handling: >
-          SHOULD explicitly set region: new S3Client({ region: 'us-east-1' }) or use environment
-          variable with fallback.
+        required_handling: |
+          SHOULD explicitly set region: new S3Client({ region: 'us-east-1' }) or use environment variable with fallback.
         source: https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/s3/
-
+        sources:
+          - https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/client/s3/
 tags:
   - aws
   - cloud-storage
@@ -124,7 +98,6 @@ tags:
   - error-handling
   - network
   - sdk
-
 related_packages:
   - "@aws-sdk/client-dynamodb"
   - "@aws-sdk/client-lambda"

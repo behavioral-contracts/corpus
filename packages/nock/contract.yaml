@@ -1,267 +1,165 @@
-package: "nock"
-status: in-development
-description: "HTTP server mocking and expectations library for Node.js testing. Intercepts HTTP requests and allows defining expected requests/responses without making real network calls."
+package: nock
 semver: ">=9.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
 last_verified: "2026-02-27"
-
-# Behavioral contract for nock - throw-based error model for test failures
-# Focus: Unmatched requests, scope leaks, missing cleanup, configuration errors
+status: production
+evidence_quality: confirmed
 
 functions:
   - name: nock
-    detection:
-      patterns:
-        - call_expression: nock
+    import_path: "nock"
+    description: >
+      Creates an HTTP interceptor scope for the given base URL. Subsequent
+      method calls (.get, .post, etc.) on the returned scope define the
+      expected requests and their mocked responses.
+
     postconditions:
-      - throws
+      - id: unmatched-request-throws
+        condition: >
+          An HTTP request is made that does not match any defined interceptor
+          and nock.disableNetConnect() has been called
+        throws: "NetConnectNotAllowedError (error.code === 'ENETUNREACH')"
+        required_handling: >
+          Test assertions MUST account for this error. The most common cause is
+          a URL path, method, query parameter, header, or body mismatch between
+          the real request and the mock definition. Fix the mock to match the
+          actual request, or allow the specific host with nock.enableNetConnect(host).
+        sources:
+          - "https://github.com/nock/nock#disabling-real-http-requests"
+          - "https://github.com/nock/nock/issues/884"
+        severity: error
 
-  - name: scope.get
-    detection:
-      patterns:
-        - member_expression: get
-          on_object_from: nock
+    edge_cases:
+      - id: jest-async-error-timing
+        description: >
+          In Jest, unmatched-request errors thrown inside async callbacks may
+          surface after the test has already passed. Use expect.assertions(n)
+          or nock.disableNetConnect() to force errors to propagate during test
+          execution.
+        sources:
+          - "https://jestjs.io/docs/expect#expectassertionsnumber"
+        severity: warning
+
+  - name: disableNetConnect
+    import_path: "nock"
+    description: >
+      Disables all real outbound HTTP connections for the current Node.js process.
+      Any request that does not match a defined nock interceptor will throw
+      NetConnectNotAllowedError instead of making a real network call.
+
+    preconditions:
+      - id: call-before-tests
+        description: >
+          Must be called before any HTTP-making code under test executes, typically
+          in a beforeAll or beforeEach hook.
+        sources:
+          - "https://github.com/nock/nock#disabling-real-http-requests"
+        severity: warning
+
     postconditions:
-      - throws
+      - id: real-requests-blocked
+        condition: "called without arguments"
+        returns: "undefined; all subsequent unmatched HTTP requests will throw"
+        sources:
+          - "https://github.com/nock/nock#disabling-real-http-requests"
+        severity: info
 
-  - name: scope.post
-    detection:
-      patterns:
-        - member_expression: post
-          on_object_from: nock
+    edge_cases:
+      - id: missing-disable-net-connect
+        description: >
+          Without calling disableNetConnect(), requests that do not match any mock
+          fall through to the real network. This allows tests to inadvertently hit
+          production APIs, causing flaky tests and unintended side effects.
+          Approximately 55% of projects using nock omit this safeguard.
+        sources:
+          - "https://github.com/nock/nock#disabling-real-http-requests"
+        severity: warning
+
+  - name: cleanAll
+    import_path: "nock"
+    description: >
+      Removes all pending interceptors from all scopes. Should be called in
+      afterEach to prevent mock state from leaking between tests.
+
     postconditions:
-      - throws
+      - id: all-interceptors-removed
+        condition: "called at any point"
+        returns: "undefined; all pending interceptors are cleared"
+        sources:
+          - "https://github.com/nock/nock#cleanall"
+        severity: info
 
-  - name: scope.put
-    detection:
-      patterns:
-        - member_expression: put
-          on_object_from: nock
+    edge_cases:
+      - id: missing-clean-all
+        description: >
+          Without calling cleanAll() in afterEach, interceptors defined in one
+          test persist into subsequent tests. This causes false positives (tests
+          pass by consuming a previous test's mock) and false negatives (tests fail
+          due to stale mocks). Approximately 30-40% of nock projects are missing
+          this cleanup.
+        sources:
+          - "https://github.com/nock/nock/issues/705"
+        severity: warning
+
+      - id: persist-without-cleanup
+        description: >
+          Interceptors created with .persist() are reused indefinitely. Without
+          cleanAll() in afterEach, persist() mocks remain active across all
+          subsequent tests in the suite, causing cross-test pollution.
+        sources:
+          - "https://github.com/nock/nock/issues/1042"
+          - "https://github.com/nock/nock/issues/1495"
+        severity: warning
+
+  - name: restore
+    import_path: "nock"
+    description: >
+      Restores the original http/https module request functions, deactivating
+      all nock interception. Must be called after recording sessions and in
+      final teardown.
+
+    preconditions:
+      - id: clean-all-first
+        description: >
+          nock.cleanAll() should be called before nock.restore() to avoid memory
+          leaks from interceptors that were removed from routing but not garbage
+          collected.
+        sources:
+          - "https://github.com/nock/nock/issues/2077"
+        severity: warning
+
     postconditions:
-      - throws
+      - id: interception-deactivated
+        condition: "called after interception is no longer needed"
+        returns: "undefined; http module is restored to its original state"
+        sources:
+          - "https://github.com/nock/nock#restoring-http-intercepting"
+        severity: info
 
-  - name: scope.delete
-    detection:
-      patterns:
-        - member_expression: delete
-          on_object_from: nock
+  - name: isDone
+    import_path: "nock"
+    description: >
+      Returns true if all interceptors defined on this scope have been used
+      (consumed by matching requests) at least once.
+
     postconditions:
-      - throws
+      - id: returns-false-for-unused-mocks
+        condition: "one or more interceptors on the scope have not been matched by any request"
+        returns: "false"
+        required_handling: >
+          Tests SHOULD assert scope.isDone() after the code under test runs.
+          A false return indicates the code did not make the expected request,
+          the mock URL/method/body does not match the real request, or there
+          is a bug in the test logic.
+        sources:
+          - "https://github.com/nock/nock#asserting-expectations-after-execution"
+          - "https://snyk.io/advisor/npm-package/nock/functions/nock.isDone"
+        severity: warning
 
-  - name: scope.isDone
-    detection:
-      patterns:
-        - member_expression: isDone
-          on_object_from: nock
-    postconditions:
-      - returns_boolean
-
-postconditions:
-  # Priority 1: Unmatched Requests (NetConnectNotAllowedError)
-  - id: nock-unmatched-request
-    summary: "Unmatched HTTP requests throw NetConnectNotAllowedError when disableNetConnect is enabled"
-    severity: ERROR
-    behavior: |
-      When nock.disableNetConnect() is called, any HTTP request that doesn't match a defined
-      mock will throw NetConnectNotAllowedError with error code ENETUNREACH.
-
-      Common causes:
-      - URL path mismatch (mock: /users, request: /users/123)
-      - HTTP method mismatch (mock: GET, request: POST)
-      - Query parameter mismatch
-      - Header mismatch (when using matchHeader)
-      - Body mismatch (POST/PUT/PATCH)
-      - Hostname mismatch
-
-      This is the MOST COMMON nock error pattern (40-50% of nock failures).
-    error_type: NetConnectNotAllowedError
-    error_code: ENETUNREACH
-    patterns:
-      - "nock('{host}').get('{path}').reply({status})"
-      - "nock('{host}').post('{path}').reply({status})"
-      - "nock.disableNetConnect()"
-    references:
-      - https://github.com/nock/nock/issues/884
-      - https://michaelheap.com/test-sdks-with-nock/
-      - https://github.com/sindresorhus/got/issues/187
-
-  # Priority 2: Scope Not Done (Unused Mocks)
-  - id: nock-scope-not-done
-    summary: "Mocks that are defined but never called remain 'not done'"
-    severity: MEDIUM
-    behavior: |
-      When a mock is defined but the expected request is never made, scope.isDone()
-      returns false. This indicates:
-      - The code under test didn't make the expected request
-      - The mock configuration is incorrect
-      - The test logic has a bug
-
-      Best practice: Check scope.isDone() in afterEach or after each test.
-      Frequency: 20-30% of nock usage issues.
-    error_type: assertion_failure
-    patterns:
-      - "const scope = nock('{host}').get('{path}').reply({status})"
-      - "scope.isDone()"
-      - "nock.pendingMocks()"
-    references:
-      - https://blog.neverendingqs.com/2017/03/13/ensure-all-nock-interceptors-are-used.html
-      - https://michaelheap.com/nock-all-mocks-used/
-      - https://snyk.io/advisor/npm-package/nock/functions/nock.isDone
-
-  # Priority 3: Scope Leaks (Missing Cleanup)
-  - id: nock-scope-leak
-    summary: "Mocks persist between tests without proper cleanup causing test pollution"
-    severity: MEDIUM
-    behavior: |
-      Without calling nock.cleanAll() in afterEach, mocks can persist between tests:
-      - False positives (test passes using previous test's mocks)
-      - False negatives (test fails due to unexpected mocks)
-      - Flaky tests (order-dependent failures)
-
-      Especially problematic with persist() which makes mocks reusable.
-      Frequency: 30-40% of nock projects missing cleanup.
-    error_type: test_pollution
-    patterns:
-      - "afterEach(() => { nock.cleanAll(); })"
-      - "nock('{host}').persist().get('{path}').reply({status})"
-    references:
-      - https://github.com/nock/nock/issues/705
-      - https://circleci.com/blog/api-mock-testing-nock/
-      - https://www.jackfranklin.co.uk/blog/mocking-web-requests/
-
-  # Priority 4: Missing disableNetConnect
-  - id: nock-missing-disable-net-connect
-    summary: "Without disableNetConnect, real HTTP requests can leak through to production APIs"
-    severity: HIGH
-    behavior: |
-      If nock.disableNetConnect() is not called, requests that don't match mocks will
-      make REAL HTTP requests instead of throwing errors. This can cause:
-      - Tests calling production APIs
-      - Flaky tests (network-dependent)
-      - Accidental data modification in production
-
-      Best practice: Always call nock.disableNetConnect() in beforeAll/beforeEach.
-      Frequency: 55% of projects missing this safeguard.
-    error_type: configuration_error
-    patterns:
-      - "beforeAll(() => { nock.disableNetConnect(); })"
-      - "beforeEach(() => { nock.disableNetConnect(); })"
-      - "nock.enableNetConnect()"
-    references:
-      - https://blog.logrocket.com/api-mock-testing-with-nock-node-js/
-      - https://michaelheap.com/test-sdks-with-nock/
-
-  # Priority 5: Invalid URL Patterns
-  - id: nock-invalid-url-pattern
-    summary: "Malformed URLs or regex patterns cause parsing errors"
-    severity: LOW
-    behavior: |
-      Invalid URL formats or regex syntax errors in mock definitions cause runtime errors:
-      - Invalid regex patterns
-      - Malformed URLs
-      - Incorrect protocol (http vs https)
-    error_type: throw
-    patterns:
-      - "nock('{host}').get(/{regex}/).reply({status})"
-    references:
-      - https://github.com/nock/nock
-
-  # Priority 6: Header Matching Errors
-  - id: nock-header-mismatch
-    summary: "Request headers must match mock expectations or NetConnectNotAllowedError is thrown"
-    severity: LOW
-    behavior: |
-      Headers are matched case-insensitively, but values must match exactly
-      (unless using regex). Mismatched headers cause NetConnectNotAllowedError.
-    error_type: NetConnectNotAllowedError
-    patterns:
-      - "nock('{host}').matchHeader('{name}', '{value}').get('{path}').reply({status})"
-    references:
-      - https://github.com/nock/nock/issues/2253
-
-  # Priority 7: Body Matching Errors
-  - id: nock-body-mismatch
-    summary: "POST/PUT/PATCH request bodies must match mock expectations"
-    severity: LOW
-    behavior: |
-      Request bodies are compared for exact match (unless using function matcher).
-      Mismatched bodies cause NetConnectNotAllowedError.
-    error_type: NetConnectNotAllowedError
-    patterns:
-      - "nock('{host}').post('{path}', {body}).reply({status})"
-      - "nock('{host}').post('{path}', body => {condition}).reply({status})"
-
-  # Priority 8: Recording Errors
-  - id: nock-recorder-no-restore
-    summary: "Missing nock.restore() after recording leaves nock in interception mode"
-    severity: LOW
-    behavior: |
-      After using nock.recorder.rec() and nock.recorder.play(), must call
-      nock.restore() to stop intercepting requests. Forgetting this leaves
-      nock in recording mode.
-    error_type: state_error
-    patterns:
-      - "nock.recorder.rec({options})"
-      - "nock.recorder.play()"
-      - "nock.restore()"
-    references:
-      - https://www.bytesmatter.io/blog/why-did-nock-not-record-all-the-api-requests/
-      - https://www.clouddefense.ai/code/javascript/example/nock
-
-  # Priority 9: Jest-Specific Unmatched Requests
-  - id: nock-jest-unmatched-success
-    summary: "Jest tests pass even with unmatched requests, errors appear after test completes"
-    severity: HIGH
-    behavior: |
-      When using nock with Jest, unmatched requests can cause tests to succeed
-      while throwing promises with "No match for request" errors that appear
-      AFTER the test completes. Use expect.assertions() or disableNetConnect()
-      to force errors during test execution.
-    error_type: test_framework_specific
-    patterns:
-      - "expect.assertions({count})"
-      - "nock.disableNetConnect()"
-    references:
-      - https://francosirena.dev/tech-notes/nock-jest/
-
-  # Priority 10: Parallel Test Interference
-  - id: nock-parallel-test-interference
-    summary: "Multiple tests using nock in parallel can interfere with each other"
-    severity: MEDIUM
-    behavior: |
-      nock state is global, so tests running in parallel can share mocks
-      and cause flaky failures. Solution: run tests sequentially or isolate
-      nock scope per test file.
-    error_type: test_pollution
-    patterns:
-      - "jest --runInBand"
-    references:
-      - https://github.com/nock/nock/issues/997
-
-  # Priority 11: Memory Leaks
-  - id: nock-memory-leak
-    summary: "Calling nock.restore() without nock.cleanAll() causes memory leaks"
-    severity: LOW
-    behavior: |
-      Must call nock.cleanAll() before nock.restore() in afterEach to prevent
-      memory leaks. Leaking mocks consume memory over time.
-    error_type: memory_leak
-    patterns:
-      - "afterEach(() => { nock.cleanAll(); nock.restore(); })"
-    references:
-      - https://github.com/nock/nock/issues/2077
-
-  # Priority 12: persist() Without Cleanup
-  - id: nock-persist-leak
-    summary: "persist() makes mocks reusable indefinitely causing cross-test pollution"
-    severity: MEDIUM
-    behavior: |
-      Calling persist() on a mock makes it reusable for all requests.
-      Without cleanup via nock.cleanAll(), these mocks persist across tests
-      causing false positives and flaky tests.
-    error_type: test_pollution
-    patterns:
-      - "nock('{host}').persist().get('{path}').reply({status})"
-      - "afterEach(() => { nock.cleanAll(); })"
-    references:
-      - https://github.com/nock/nock/issues/1042
-      - https://github.com/nock/nock/issues/1495
+      - id: returns-true-when-all-consumed
+        condition: "all interceptors on the scope have been matched at least once"
+        returns: "true"
+        sources:
+          - "https://github.com/nock/nock#asserting-expectations-after-execution"
+        severity: info

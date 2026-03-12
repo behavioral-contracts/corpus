@@ -2,26 +2,20 @@ package: express
 semver: ">=4.0.0 <6.0.0"
 contract_version: 1.0.0
 maintainer: behavioral-contracts
-last_verified: "2026-02-24"
+last_verified: 2026-02-24
 status: production
+evidence_quality: stub
 description: |
   Behavioral contracts for Express.js focusing on async error handling in route handlers
   and middleware. Express 4.x requires explicit error forwarding via next(err), while
   Express 5+ automatically handles promise rejections.
-
-# Note: Express follows a method-based API pattern where route handlers and middleware
-# are passed as callbacks to app.get(), app.post(), app.use(), etc. This contract
-# documents the error handling requirements for these callback functions.
-
 functions:
-  # Async Route Handlers - app.get, app.post, app.put, app.delete, app.patch
-  - name: "app.METHOD"
+  - name: app.METHOD
     import_path: express
     description: |
       Route handler methods (get, post, put, delete, patch, etc.) that accept
       async callback functions. In Express 4.x, unhandled promise rejections
       in async route handlers will not be caught automatically.
-
     postconditions:
       - id: async-route-handler-unhandled-rejection
         condition: |
@@ -49,14 +43,13 @@ functions:
           Express 5.x automatically handles promise rejections by calling next(value)
           when async route handlers reject or throw errors. Express 4.x requires
           explicit error handling.
-
-  # Async Middleware - app.use
-  - name: "app.use"
+        sources:
+          - https://expressjs.com/en/guide/error-handling.html
+  - name: app.use
     import_path: express
     description: |
       Middleware registration function. When async functions are used as middleware,
       they must handle errors properly.
-
     postconditions:
       - id: async-middleware-unhandled-rejection
         condition: |
@@ -78,7 +71,8 @@ functions:
           });
         source: https://expressjs.com/en/guide/error-handling.html
         severity: error
-
+        sources:
+          - https://expressjs.com/en/guide/error-handling.html
       - id: error-middleware-signature
         condition: |
           When defining error-handling middleware
@@ -98,14 +92,13 @@ functions:
         notes: |
           This is a structural requirement rather than a runtime error. Middleware
           with fewer than 4 parameters will not be treated as error handlers.
-
-  # Router methods - same patterns as app
-  - name: "router.METHOD"
+        sources:
+          - https://expressjs.com/en/guide/error-handling.html
+  - name: router.METHOD
     import_path: express
     description: |
       Router methods (get, post, put, delete, patch, etc.) created via express.Router().
       Same async error handling requirements as app.METHOD.
-
     postconditions:
       - id: async-router-handler-unhandled-rejection
         condition: |
@@ -128,12 +121,12 @@ functions:
           });
         source: https://expressjs.com/en/guide/error-handling.html
         severity: error
-
-  - name: "router.use"
+        sources:
+          - https://expressjs.com/en/guide/error-handling.html
+  - name: router.use
     import_path: express
     description: |
       Router middleware registration. Same async error handling requirements as app.use.
-
     postconditions:
       - id: async-router-middleware-unhandled-rejection
         condition: |
@@ -145,11 +138,11 @@ functions:
           Same requirements as app.use middleware.
         source: https://expressjs.com/en/guide/error-handling.html
         severity: error
-
+        sources:
+          - https://expressjs.com/en/guide/error-handling.html
 related_packages:
   - express-async-errors
   - express-async-handler
-
 notes: |
   Express error handling has evolved significantly:
 

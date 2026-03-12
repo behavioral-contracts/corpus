@@ -3,6 +3,7 @@ ecosystem: npm
 contract_version: "1.0.0"
 maintainer: behavioral-contracts
 status: production
+evidence_quality: stub
 description: Express/Connect middleware for CORS (Cross-Origin Resource Sharing) security configuration
 semver: ">=2.0.0"
 last_verified: "2026-02-27"

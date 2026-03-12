@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
 status: production
+evidence_quality: stub
 
 detection:
   type_names:
@@ -21,7 +22,8 @@ functions:
         condition: "query fails (connection lost, invalid relation, timeout, syntax error)"
         throws: "QueryFailedError or connection error"
         required_handling: "Caller MUST wrap repository.find() in try-catch to handle database errors. Connection failures and invalid queries crash application if unhandled."
-        source: "https://typeorm.io/find-options"
+        sources:
+          - "https://typeorm.io/find-options"
         severity: error
 
   - name: save
@@ -32,7 +34,8 @@ functions:
         condition: "save violates constraint (unique, foreign key, validation, type mismatch)"
         throws: "QueryFailedError with constraint violation details"
         required_handling: "Caller MUST wrap save() in try-catch to handle constraint violations and validation errors. Unique violations, foreign key errors, and validation failures crash application if unhandled."
-        source: "https://typeorm.io/repository-api"
+        sources:
+          - "https://typeorm.io/repository-api"
         severity: error
 
   - name: transaction
@@ -43,13 +46,15 @@ functions:
         condition: "operation within transaction fails (constraint violation, deadlock, connection lost)"
         throws: "Error causing automatic rollback"
         required_handling: "Caller MUST wrap transaction operations in try-catch to handle errors and ensure rollback. Unhandled errors leave database in inconsistent state if transaction partially commits."
-        source: "https://typeorm.io/transactions"
+        sources:
+          - "https://typeorm.io/transactions"
         severity: error
 
 edge_cases:
   - id: datasource-initialization
     description: "DataSource.initialize() must be called before any database operations and can fail - must wrap in try-catch. DataSource.destroy() must be called on shutdown to close connections."
-    source: "https://typeorm.io/data-source"
+    sources:
+      - "https://typeorm.io/data-source"
     severity: warning
 
 # Category: database

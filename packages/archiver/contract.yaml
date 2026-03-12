@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-27"
 status: production  # Event listener detection now supported by EventListenerAnalyzer
+evidence_quality: stub
 
 # archiver: Streaming interface for archive generation (ZIP/TAR)
 # Event-driven error handling - NOW AUTOMATICALLY DETECTED
@@ -42,7 +43,8 @@ functions:
           Without error handler, unhandled 'error' events crash the entire Node.js process.
           CRITICAL: This is the #1 production bug (70% of codebases).
           Always add: archive.on('error', (error) => { handle_error(error); })
-        source: "https://github.com/archiverjs/node-archiver/issues/181"
+        sources:
+          - "https://github.com/archiverjs/node-archiver/issues/181"
         severity: error
 
       - id: missing-warning-handler
@@ -54,7 +56,8 @@ functions:
           incomplete archives and silent data loss.
           CRITICAL: This is production bug #2 (80% of codebases).
           Always add: archive.on('warning', (err) => { if (err.code !== 'ENOENT') throw err; })
-        source: "https://www.npmjs.com/package/archiver"
+        sources:
+          - "https://www.npmjs.com/package/archiver"
         severity: error
 
       - id: compression-error
@@ -64,7 +67,8 @@ functions:
           Caller MUST handle compression errors via error event handler.
           Common causes: out of memory, invalid compression options, stream errors.
           Error event is emitted during finalize().
-        source: "https://www.archiverjs.com/docs/archiver/"
+        sources:
+          - "https://www.archiverjs.com/docs/archiver/"
         severity: error
 
       - id: file-access-error
@@ -74,7 +78,8 @@ functions:
           Caller MUST handle warning events to detect missing or inaccessible files.
           Warning events are emitted for individual file failures during directory archiving.
           Check err.code === 'ENOENT' to differentiate from fatal errors.
-        source: "https://www.npmjs.com/package/archiver"
+        sources:
+          - "https://www.npmjs.com/package/archiver"
         severity: warning
 
       - id: missing-finalize
@@ -85,7 +90,8 @@ functions:
           Without finalize(), the archive is never completed and the process exits
           silently with code 0 once the event loop is empty. This is extremely
           difficult to debug.
-        source: "https://github.com/archiverjs/node-archiver/issues/457"
+        sources:
+          - "https://github.com/archiverjs/node-archiver/issues/457"
         severity: error
 
     edge_cases:
@@ -96,7 +102,8 @@ functions:
           an unhandled error that crashes the process.
           ALWAYS attach error handler BEFORE calling finalize() or appending files:
           archive.on('error', (err) => { console.error('Archive error:', err); throw err; });
-        source: "https://github.com/archiverjs/node-archiver/issues/181"
+        sources:
+          - "https://github.com/archiverjs/node-archiver/issues/181"
         severity: warning
 
       - id: no-warning-handler
@@ -108,7 +115,8 @@ functions:
             if (err.code === 'ENOENT') { console.warn('File not found:', err); }
             else { throw err; }
           });
-        source: "https://www.npmjs.com/package/archiver"
+        sources:
+          - "https://www.npmjs.com/package/archiver"
         severity: warning
 
       - id: read-stream-errors
@@ -119,7 +127,8 @@ functions:
           const stream = fs.createReadStream('file.txt');
           stream.on('error', (err) => { archive.emit('error', err); });
           archive.append(stream, { name: 'file.txt' });
-        source: "https://github.com/archiverjs/node-archiver/issues/321"
+        sources:
+          - "https://github.com/archiverjs/node-archiver/issues/321"
         severity: warning
 
       - id: incomplete-archives
@@ -131,5 +140,6 @@ functions:
           MUST wait for both finalize() AND output stream 'close' event:
           await archive.finalize();
           await new Promise(resolve => output.on('close', resolve));
-        source: "https://github.com/archiverjs/node-archiver/issues/476"
+        sources:
+          - "https://github.com/archiverjs/node-archiver/issues/476"
         severity: warning

@@ -4,6 +4,7 @@ contract_version: "2.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-27"
 status: production
+evidence_quality: stub
 
 functions:
   - name: stub
@@ -18,7 +19,8 @@ functions:
           Failure to restore causes "already wrapped" errors in subsequent tests.
           Best practice: Use sandboxes with sandbox.restore() in afterEach.
           Pattern: const sandbox = sinon.createSandbox(); afterEach(() => sandbox.restore());
-        source: "https://github.com/sinonjs/sinon/issues/1673"
+        sources:
+          - "https://github.com/sinonjs/sinon/issues/1673"
         severity: error
 
       - id: stub-non-existent-property
@@ -27,7 +29,8 @@ functions:
         required_handling: >
           MUST verify property exists and is a function before stubbing.
           Pattern: if (typeof obj.method === 'function') { sinon.stub(obj, 'method'); }
-        source: "https://github.com/sinonjs/sinon/issues/1762"
+        sources:
+          - "https://github.com/sinonjs/sinon/issues/1762"
         severity: error
 
       - id: stub-returns-arg-invalid-index
@@ -36,7 +39,8 @@ functions:
         required_handling: >
           MUST ensure argument index exists before calling stub.returnsArg(index).
           Note: Prior to v6.1.2 returns undefined; v6.1.2+ throws TypeError.
-        source: "https://sinonjs.org/releases/latest/stubs/"
+        sources:
+          - "https://sinonjs.org/releases/latest/stubs/"
         severity: error
 
       - id: stub-calls-arg-not-function
@@ -44,7 +48,8 @@ functions:
         throws: "TypeError: index missing or not a function"
         required_handling: >
           MUST verify argument at index is a function before calling stub.callsArg(index).
-        source: "https://sinonjs.org/releases/latest/stubs/"
+        sources:
+          - "https://sinonjs.org/releases/latest/stubs/"
         severity: error
 
       - id: stub-yields-no-callback
@@ -52,7 +57,8 @@ functions:
         throws: "Error: stub was never called with a function argument"
         required_handling: >
           MUST ensure stub is called with at least one function argument before using yields().
-        source: "https://sinonjs.org/releases/latest/stubs/"
+        sources:
+          - "https://sinonjs.org/releases/latest/stubs/"
         severity: error
 
   - name: spy
@@ -66,7 +72,8 @@ functions:
           MUST check spy.called before accessing spy.firstCall, spy.lastCall, or spy.getCall(n).
           Best practice: Use spy.calledWith(arg) instead of direct call access.
           Pattern: if (spy.called) { spy.firstCall.args }
-        source: "https://github.com/sinonjs/sinon/issues/1936"
+        sources:
+          - "https://github.com/sinonjs/sinon/issues/1936"
         severity: error
 
       - id: spy-must-restore
@@ -75,7 +82,8 @@ functions:
         required_handling: >
           MUST call spy.restore() in afterEach or finally block.
           Use sandboxes for automatic cleanup: sandbox.spy(obj, 'method'); afterEach(() => sandbox.restore());
-        source: "https://github.com/sinonjs/sinon/issues/1775"
+        sources:
+          - "https://github.com/sinonjs/sinon/issues/1775"
         severity: error
 
   - name: mock
@@ -89,7 +97,8 @@ functions:
           MUST call mock.verify() or sandbox.verifyAndRestore() to enforce expectations.
           Without verification, tests pass even when expectations are not met.
           Pattern: afterEach(() => { mock.verify(); }) or sandbox.verifyAndRestore()
-        source: "https://sinonjs.org/releases/latest/mocks/"
+        sources:
+          - "https://sinonjs.org/releases/latest/mocks/"
         severity: error
 
       - id: mock-verify-fails
@@ -98,7 +107,8 @@ functions:
         required_handling: >
           This is expected behavior when expectations fail.
           Ensure expectations match actual usage.
-        source: "https://sinonjs.org/releases/latest/mocks/"
+        sources:
+          - "https://sinonjs.org/releases/latest/mocks/"
         severity: info
 
   - name: useFakeTimers
@@ -112,7 +122,8 @@ functions:
           MUST call clock.restore() in afterEach or finally block.
           Failure to restore causes timer pollution and test hangs.
           Pattern: let clock; beforeEach(() => clock = sinon.useFakeTimers()); afterEach(() => clock.restore());
-        source: "https://sinonjs.org/releases/latest/fake-timers/"
+        sources:
+          - "https://sinonjs.org/releases/latest/fake-timers/"
         severity: error
 
   - name: createSandbox
@@ -126,7 +137,8 @@ functions:
           MUST call sandbox.restore() in afterEach or finally block.
           Sandboxes simplify cleanup but still require explicit restoration.
           Pattern: const sandbox = sinon.createSandbox(); afterEach(() => sandbox.restore());
-        source: "https://sinonjs.org/releases/latest/sandbox/"
+        sources:
+          - "https://sinonjs.org/releases/latest/sandbox/"
         severity: error
 
   - name: createStubInstance
@@ -139,7 +151,8 @@ functions:
         required_handling: >
           MUST restore or use different sandbox between createStubInstance calls.
           Pattern: Use sandbox.createStubInstance() and restore sandbox between uses.
-        source: "https://github.com/sinonjs/sinon/issues/852"
+        sources:
+          - "https://github.com/sinonjs/sinon/issues/852"
         severity: error
 
 # Category: testing

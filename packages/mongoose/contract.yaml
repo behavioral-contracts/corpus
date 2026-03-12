@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-25"
 status: production
+evidence_quality: stub
 
 # Detection rules for analyzer integration
 detection:
@@ -84,7 +85,8 @@ functions:
           Caller MUST wrap in try-catch or use .catch().
           Handle connection errors separately from query results.
           Implement retry logic for transient connection issues.
-        source: "https://mongoosejs.com/docs/connections.html"
+        sources:
+          - "https://mongoosejs.com/docs/connections.html"
         severity: error
 
       - id: cast-error-no-try-catch
@@ -94,7 +96,8 @@ functions:
           Caller MUST wrap in try-catch or use .catch().
           Validate query parameters before passing to mongoose.
           Handle CastError separately from other errors.
-        source: "https://mongoosejs.com/docs/schematypes.html#what-is-a-schematype"
+        sources:
+          - "https://mongoosejs.com/docs/schematypes.html#what-is-a-schematype"
         severity: error
 
   # Model.findOne - Query single document
@@ -107,14 +110,16 @@ functions:
         condition: "Database connection failed"
         throws: "MongooseError or MongoError"
         required_handling: "Caller MUST wrap in try-catch or use .catch() to handle connection errors"
-        source: "https://mongoosejs.com/docs/connections.html"
+        sources:
+          - "https://mongoosejs.com/docs/connections.html"
         severity: error
 
       - id: cast-error-no-try-catch
         condition: "Query parameter casting failed"
         throws: "CastError"
         required_handling: "Caller MUST wrap in try-catch to handle type casting errors"
-        source: "https://mongoosejs.com/docs/schematypes.html"
+        sources:
+          - "https://mongoosejs.com/docs/schematypes.html"
         severity: error
 
   # Model.findById - Query by ObjectId
@@ -130,14 +135,16 @@ functions:
           Caller MUST wrap in try-catch or use .catch().
           Common when user input is passed directly as ID.
           Validate ID format before querying.
-        source: "https://mongoosejs.com/docs/api/model.html#model_Model-findById"
+        sources:
+          - "https://mongoosejs.com/docs/api/model.html#model_Model-findById"
         severity: error
 
       - id: connection-error-no-try-catch
         condition: "Database connection failed"
         throws: "MongooseError"
         required_handling: "Caller MUST handle connection errors"
-        source: "https://mongoosejs.com/docs/connections.html"
+        sources:
+          - "https://mongoosejs.com/docs/connections.html"
         severity: error
 
   # Model.create - Create new documents
@@ -153,7 +160,8 @@ functions:
           Caller MUST wrap in try-catch or use .catch().
           Check error.name === 'ValidationError' and inspect error.errors object.
           Each field error is accessible via error.errors[fieldName].
-        source: "https://mongoosejs.com/docs/validation.html"
+        sources:
+          - "https://mongoosejs.com/docs/validation.html"
         severity: error
 
       - id: duplicate-key-error-no-try-catch
@@ -163,14 +171,16 @@ functions:
           Caller MUST wrap in try-catch and check error.code === 11000.
           This is NOT a ValidationError - it comes from MongoDB driver.
           Extract duplicate field from error message or error.keyPattern.
-        source: "https://mongoosejs.com/docs/validation.html#unique-indexes"
+        sources:
+          - "https://mongoosejs.com/docs/validation.html#unique-indexes"
         severity: error
 
       - id: connection-error-no-try-catch
         condition: "Database connection failed"
         throws: "MongooseError"
         required_handling: "Caller MUST handle connection errors with retry logic"
-        source: "https://mongoosejs.com/docs/connections.html"
+        sources:
+          - "https://mongoosejs.com/docs/connections.html"
         severity: error
 
   # Model.insertMany - Bulk create
@@ -183,14 +193,16 @@ functions:
         condition: "One or more documents fail validation"
         throws: "ValidationError"
         required_handling: "Caller MUST wrap in try-catch. Default behavior stops on first error; use ordered:false to continue on errors."
-        source: "https://mongoosejs.com/docs/api/model.html#model_Model-insertMany"
+        sources:
+          - "https://mongoosejs.com/docs/api/model.html#model_Model-insertMany"
         severity: error
 
       - id: duplicate-key-error-no-try-catch
         condition: "Duplicate key constraint violation"
         throws: "MongoError with code: 11000"
         required_handling: "Caller MUST wrap in try-catch and handle duplicate key errors"
-        source: "https://mongoosejs.com/docs/api/model.html#model_Model-insertMany"
+        sources:
+          - "https://mongoosejs.com/docs/api/model.html#model_Model-insertMany"
         severity: error
 
   # Model.updateOne - Update single document
@@ -203,21 +215,24 @@ functions:
         condition: "Update violates validation rules"
         throws: "ValidationError"
         required_handling: "Caller MUST wrap in try-catch to handle validation errors"
-        source: "https://mongoosejs.com/docs/validation.html"
+        sources:
+          - "https://mongoosejs.com/docs/validation.html"
         severity: error
 
       - id: cast-error-no-try-catch
         condition: "Update value cannot be cast to schema type"
         throws: "CastError"
         required_handling: "Caller MUST wrap in try-catch to handle type errors"
-        source: "https://mongoosejs.com/docs/schematypes.html"
+        sources:
+          - "https://mongoosejs.com/docs/schematypes.html"
         severity: error
 
       - id: connection-error-no-try-catch
         condition: "Database connection failed"
         throws: "MongooseError"
         required_handling: "Caller MUST handle connection errors"
-        source: "https://mongoosejs.com/docs/connections.html"
+        sources:
+          - "https://mongoosejs.com/docs/connections.html"
         severity: error
 
   # Model.findByIdAndUpdate - Find and update by ID
@@ -233,21 +248,24 @@ functions:
           Caller MUST wrap in try-catch.
           CRITICAL: Ensure mongoose version >= 5.13.20, 6.4.6, or 7.3.1 to patch CVE-2023-3696.
           Validate and sanitize all update payloads from user input.
-        source: "https://security.snyk.io/vuln/SNYK-JS-MONGOOSE-5777721"
+        sources:
+          - "https://security.snyk.io/vuln/SNYK-JS-MONGOOSE-5777721"
         severity: error
 
       - id: validation-error-no-try-catch
         condition: "Update violates validation rules"
         throws: "ValidationError"
         required_handling: "Caller MUST wrap in try-catch"
-        source: "https://mongoosejs.com/docs/validation.html"
+        sources:
+          - "https://mongoosejs.com/docs/validation.html"
         severity: error
 
       - id: cast-error-no-try-catch
         condition: "Invalid ObjectId or type casting failure"
         throws: "CastError"
         required_handling: "Caller MUST wrap in try-catch"
-        source: "https://mongoosejs.com/docs/api/model.html#model_Model-findByIdAndUpdate"
+        sources:
+          - "https://mongoosejs.com/docs/api/model.html#model_Model-findByIdAndUpdate"
         severity: error
 
   # Model.findOneAndUpdate
@@ -260,14 +278,16 @@ functions:
         condition: "Vulnerable to prototype pollution attacks"
         throws: "May not throw - allows RCE"
         required_handling: "Caller MUST wrap in try-catch and validate input. Upgrade mongoose to patched version."
-        source: "https://security.snyk.io/vuln/SNYK-JS-MONGOOSE-5777721"
+        sources:
+          - "https://security.snyk.io/vuln/SNYK-JS-MONGOOSE-5777721"
         severity: error
 
       - id: validation-error-no-try-catch
         condition: "Update violates validation"
         throws: "ValidationError"
         required_handling: "Caller MUST wrap in try-catch"
-        source: "https://mongoosejs.com/docs/validation.html"
+        sources:
+          - "https://mongoosejs.com/docs/validation.html"
         severity: error
 
   # Model.deleteOne - Delete single document
@@ -280,7 +300,8 @@ functions:
         condition: "Database connection failed"
         throws: "MongooseError"
         required_handling: "Caller MUST wrap in try-catch"
-        source: "https://mongoosejs.com/docs/connections.html"
+        sources:
+          - "https://mongoosejs.com/docs/connections.html"
         severity: error
 
   # Model.findByIdAndDelete
@@ -293,14 +314,16 @@ functions:
         condition: "Invalid ObjectId format"
         throws: "CastError"
         required_handling: "Caller MUST wrap in try-catch"
-        source: "https://mongoosejs.com/docs/api/model.html#model_Model-findByIdAndDelete"
+        sources:
+          - "https://mongoosejs.com/docs/api/model.html#model_Model-findByIdAndDelete"
         severity: error
 
       - id: connection-error-no-try-catch
         condition: "Database connection failed"
         throws: "MongooseError"
         required_handling: "Caller MUST wrap in try-catch"
-        source: "https://mongoosejs.com/docs/connections.html"
+        sources:
+          - "https://mongoosejs.com/docs/connections.html"
         severity: error
 
   # Document.save - Save document instance
@@ -316,7 +339,8 @@ functions:
           Caller MUST wrap in try-catch.
           Most common error when saving documents.
           Inspect error.errors for field-specific validation failures.
-        source: "https://mongoosejs.com/docs/api/document.html#document_Document-save"
+        sources:
+          - "https://mongoosejs.com/docs/api/document.html#document_Document-save"
         severity: error
 
       - id: duplicate-key-error-no-try-catch
@@ -325,14 +349,16 @@ functions:
         required_handling: >
           Caller MUST wrap in try-catch and check error.code === 11000.
           Common when saving new documents with existing unique field values.
-        source: "https://mongoosejs.com/docs/validation.html#unique-indexes"
+        sources:
+          - "https://mongoosejs.com/docs/validation.html#unique-indexes"
         severity: error
 
       - id: connection-error-no-try-catch
         condition: "Database connection failed"
         throws: "MongooseError"
         required_handling: "Caller MUST wrap in try-catch"
-        source: "https://mongoosejs.com/docs/connections.html"
+        sources:
+          - "https://mongoosejs.com/docs/connections.html"
         severity: error
 
   # Query.exec - Execute query
@@ -348,7 +374,8 @@ functions:
           Caller MUST wrap in try-catch or use .catch().
           .exec() is the terminal operation for query chains.
           All query errors surface here.
-        source: "https://mongoosejs.com/docs/api/query.html#query_Query-exec"
+        sources:
+          - "https://mongoosejs.com/docs/api/query.html#query_Query-exec"
         severity: error
 
   # Query.orFail - Execute with mandatory result
@@ -364,7 +391,8 @@ functions:
           Caller MUST wrap in try-catch.
           .orFail() is explicitly designed to throw when no results found.
           Use this when document existence is mandatory.
-        source: "https://mongoosejs.com/docs/api/query.html#query_Query-orFail"
+        sources:
+          - "https://mongoosejs.com/docs/api/query.html#query_Query-orFail"
         severity: error
 
   # mongoose.connect - Connect to MongoDB
@@ -380,7 +408,8 @@ functions:
           Caller MUST wrap in try-catch.
           Connection failures should stop application startup.
           Log error details and exit gracefully.
-        source: "https://mongoosejs.com/docs/connections.html"
+        sources:
+          - "https://mongoosejs.com/docs/connections.html"
         severity: error
 
   # Model.aggregate - Run aggregation pipeline
@@ -393,7 +422,8 @@ functions:
         condition: "Invalid pipeline stage or aggregation failure"
         throws: "MongooseError or MongoError"
         required_handling: "Caller MUST wrap in try-catch. Aggregation pipelines can fail with complex stage errors."
-        source: "https://mongoosejs.com/docs/api/model.html#model_Model-aggregate"
+        sources:
+          - "https://mongoosejs.com/docs/api/model.html#model_Model-aggregate"
         severity: error
 
   # Model.countDocuments
@@ -406,7 +436,8 @@ functions:
         condition: "Database connection failed"
         throws: "MongooseError"
         required_handling: "Caller MUST wrap in try-catch"
-        source: "https://mongoosejs.com/docs/api/model.html#model_Model-countDocuments"
+        sources:
+          - "https://mongoosejs.com/docs/api/model.html#model_Model-countDocuments"
         severity: error
 
   # Model.updateMany - Update multiple documents
@@ -419,7 +450,8 @@ functions:
         condition: "Database connection failed"
         throws: "MongooseError"
         required_handling: "Caller MUST wrap in try-catch"
-        source: "https://mongoosejs.com/docs/api/model.html#model_Model-updateMany"
+        sources:
+          - "https://mongoosejs.com/docs/api/model.html#model_Model-updateMany"
         severity: error
 
   # Model.replaceOne - Replace a document
@@ -432,7 +464,8 @@ functions:
         condition: "Database connection failed"
         throws: "MongooseError"
         required_handling: "Caller MUST wrap in try-catch"
-        source: "https://mongoosejs.com/docs/api/model.html#model_Model-replaceOne"
+        sources:
+          - "https://mongoosejs.com/docs/api/model.html#model_Model-replaceOne"
         severity: error
 
   # Model.findOneAndReplace - Find and replace a document
@@ -445,7 +478,8 @@ functions:
         condition: "Database connection failed"
         throws: "MongooseError"
         required_handling: "Caller MUST wrap in try-catch"
-        source: "https://mongoosejs.com/docs/api/model.html#model_Model-findOneAndReplace"
+        sources:
+          - "https://mongoosejs.com/docs/api/model.html#model_Model-findOneAndReplace"
         severity: error
 
   # Model.deleteMany - Delete multiple documents
@@ -458,7 +492,8 @@ functions:
         condition: "Database connection failed"
         throws: "MongooseError"
         required_handling: "Caller MUST wrap in try-catch"
-        source: "https://mongoosejs.com/docs/api/model.html#model_Model-deleteMany"
+        sources:
+          - "https://mongoosejs.com/docs/api/model.html#model_Model-deleteMany"
         severity: error
 
   # Model.findOneAndDelete - Find and delete a document
@@ -471,7 +506,8 @@ functions:
         condition: "Database connection failed"
         throws: "MongooseError"
         required_handling: "Caller MUST wrap in try-catch"
-        source: "https://mongoosejs.com/docs/api/model.html#model_Model-findOneAndDelete"
+        sources:
+          - "https://mongoosejs.com/docs/api/model.html#model_Model-findOneAndDelete"
         severity: error
 
   # Model.estimatedDocumentCount - Estimate total documents
@@ -484,7 +520,8 @@ functions:
         condition: "Database connection failed"
         throws: "MongooseError"
         required_handling: "Caller MUST wrap in try-catch"
-        source: "https://mongoosejs.com/docs/api/model.html#model_Model-estimatedDocumentCount"
+        sources:
+          - "https://mongoosejs.com/docs/api/model.html#model_Model-estimatedDocumentCount"
         severity: error
 
   # Model.exists - Check if documents exist
@@ -497,7 +534,8 @@ functions:
         condition: "Database connection failed"
         throws: "MongooseError"
         required_handling: "Caller MUST wrap in try-catch"
-        source: "https://mongoosejs.com/docs/api/model.html#model_Model-exists"
+        sources:
+          - "https://mongoosejs.com/docs/api/model.html#model_Model-exists"
         severity: error
 
   # Model.distinct - Get distinct values
@@ -510,7 +548,8 @@ functions:
         condition: "Database connection failed"
         throws: "MongooseError"
         required_handling: "Caller MUST wrap in try-catch"
-        source: "https://mongoosejs.com/docs/api/model.html#model_Model-distinct"
+        sources:
+          - "https://mongoosejs.com/docs/api/model.html#model_Model-distinct"
         severity: error
 
   # Model.bulkWrite - Perform bulk write operations
@@ -523,7 +562,8 @@ functions:
         condition: "Database connection failed or bulk operation error"
         throws: "MongooseError or BulkWriteError"
         required_handling: "Caller MUST wrap in try-catch"
-        source: "https://mongoosejs.com/docs/api/model.html#model_Model-bulkWrite"
+        sources:
+          - "https://mongoosejs.com/docs/api/model.html#model_Model-bulkWrite"
         severity: error
 
   # Document.validate - Validate document
@@ -536,5 +576,6 @@ functions:
         condition: "Document fails schema validation"
         throws: "ValidationError"
         required_handling: "Caller MUST wrap in try-catch. ValidationError contains field-specific errors."
-        source: "https://mongoosejs.com/docs/api/document.html#document_Document-validate"
+        sources:
+          - "https://mongoosejs.com/docs/api/document.html#document_Document-validate"
         severity: error

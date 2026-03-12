@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-27"
 status: production
+evidence_quality: stub
 
 detection:
   type_names:
@@ -24,7 +25,8 @@ functions:
           File system errors (missing directory, permissions), invalid image data, and memory
           issues will reject the Promise and crash the application if unhandled.
           Use pattern: try { await sharp(input).toFile('output.jpg'); } catch (error) { /* handle */ }
-        source: "https://sharp.pixelplumbing.com/api-output#tofile"
+        sources:
+          - "https://sharp.pixelplumbing.com/api-output#tofile"
         severity: error
 
   - name: toBuffer
@@ -38,7 +40,8 @@ functions:
           Caller MUST use try-catch or .catch() to handle Promise rejections from toBuffer().
           Invalid or corrupted image data will reject the Promise and crash if unhandled.
           Use pattern: try { const buffer = await sharp(input).toBuffer(); } catch (error) { /* handle */ }
-        source: "https://sharp.pixelplumbing.com/api-output#tobuffer"
+        sources:
+          - "https://sharp.pixelplumbing.com/api-output#tobuffer"
         severity: error
 
 # Category: image-processing

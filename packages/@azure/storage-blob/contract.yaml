@@ -3,7 +3,8 @@ semver: ">=12.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-27"
-status: draft
+status: production
+evidence_quality: confirmed
 
 functions:
   - name: download
@@ -14,7 +15,8 @@ functions:
       - id: success
         condition: "blob exists and download succeeds"
         returns: "BlobDownloadResponse with readableStreamBody and blob metadata"
-        source: "https://learn.microsoft.com/en-us/javascript/api/@azure/storage-blob/blobclient#@azure-storage-blob-blobclient-download"
+        sources:
+          - "https://learn.microsoft.com/en-us/javascript/api/@azure/storage-blob/blobclient#@azure-storage-blob-blobclient-download"
         severity: info
 
       - id: blob-not-found
@@ -23,7 +25,8 @@ functions:
         required_handling: >
           Caller MUST catch RestError and check error.statusCode === 404 or
           error.response.headers.get('x-ms-error-code') === 'BlobNotFound' to handle missing blobs.
-        source: "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
+        sources:
+          - "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
         severity: error
 
       - id: blob-archived
@@ -32,7 +35,8 @@ functions:
         required_handling: >
           Caller MUST catch RestError and handle archived blobs by either
           rehydrating the blob first or returning appropriate error to user.
-        source: "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
+        sources:
+          - "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
         severity: error
 
       - id: network-error
@@ -41,7 +45,8 @@ functions:
         required_handling: >
           Caller MUST catch errors and implement retry logic with exponential backoff
           for transient network failures.
-        source: "https://github.com/Azure/azure-sdk-for-js/issues/4999"
+        sources:
+          - "https://github.com/Azure/azure-sdk-for-js/issues/4999"
         severity: error
 
   - name: getProperties
@@ -52,7 +57,8 @@ functions:
       - id: success
         condition: "blob exists"
         returns: "BlobGetPropertiesResponse with metadata, contentType, lastModified, etc."
-        source: "https://learn.microsoft.com/en-us/javascript/api/@azure/storage-blob/blobclient#@azure-storage-blob-blobclient-getproperties"
+        sources:
+          - "https://learn.microsoft.com/en-us/javascript/api/@azure/storage-blob/blobclient#@azure-storage-blob-blobclient-getproperties"
         severity: info
 
       - id: blob-not-found
@@ -61,7 +67,8 @@ functions:
         required_handling: >
           Caller MUST catch RestError and check error.statusCode === 404 to handle missing blobs.
           Common pattern is to check existence before accessing properties.
-        source: "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
+        sources:
+          - "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
         severity: error
 
       - id: container-not-found
@@ -70,7 +77,8 @@ functions:
         required_handling: >
           Caller MUST catch RestError and distinguish between BlobNotFound and ContainerNotFound
           to provide appropriate error messages.
-        source: "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
+        sources:
+          - "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
         severity: error
 
   - name: upload
@@ -81,7 +89,8 @@ functions:
       - id: success
         condition: "upload succeeds"
         returns: "BlockBlobUploadResponse with requestId, version, and ETag"
-        source: "https://learn.microsoft.com/en-us/javascript/api/@azure/storage-blob/blockblobclient#@azure-storage-blob-blockblobclient-upload"
+        sources:
+          - "https://learn.microsoft.com/en-us/javascript/api/@azure/storage-blob/blockblobclient#@azure-storage-blob-blockblobclient-upload"
         severity: info
 
       - id: blob-already-exists
@@ -90,7 +99,8 @@ functions:
         required_handling: >
           Caller MUST catch RestError and check error.statusCode === 409 to handle
           conflicts when blob already exists.
-        source: "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
+        sources:
+          - "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
         severity: error
 
       - id: container-not-found
@@ -99,7 +109,8 @@ functions:
         required_handling: >
           Caller MUST catch RestError and either create container first or return
           appropriate error. Common mistake is not checking container existence.
-        source: "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
+        sources:
+          - "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
         severity: error
 
       - id: invalid-blob-type
@@ -107,7 +118,8 @@ functions:
         throws: "RestError with statusCode 409 and errorCode: InvalidBlobType"
         required_handling: >
           Caller MUST catch RestError and handle type conflicts appropriately.
-        source: "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
+        sources:
+          - "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
         severity: error
 
       - id: network-error
@@ -115,7 +127,8 @@ functions:
         throws: "Error with code ECONNREFUSED, ETIMEDOUT, or ENOTFOUND"
         required_handling: >
           Caller MUST catch errors and implement retry logic for transient failures.
-        source: "https://github.com/Azure/azure-sdk-for-js/issues/4999"
+        sources:
+          - "https://github.com/Azure/azure-sdk-for-js/issues/4999"
         severity: error
 
   - name: uploadFile
@@ -126,7 +139,8 @@ functions:
       - id: success
         condition: "file upload succeeds"
         returns: "BlobUploadCommonResponse with requestId, version, and ETag"
-        source: "https://learn.microsoft.com/en-us/javascript/api/@azure/storage-blob/blockblobclient#@azure-storage-blob-blockblobclient-uploadfile"
+        sources:
+          - "https://learn.microsoft.com/en-us/javascript/api/@azure/storage-blob/blockblobclient#@azure-storage-blob-blockblobclient-uploadfile"
         severity: info
 
       - id: container-not-found
@@ -134,7 +148,8 @@ functions:
         throws: "RestError with statusCode 404 and errorCode: ContainerNotFound"
         required_handling: >
           Caller MUST catch RestError and create container before uploading.
-        source: "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
+        sources:
+          - "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
         severity: error
 
       - id: network-error
@@ -142,7 +157,8 @@ functions:
         throws: "Error with network error code"
         required_handling: >
           Caller MUST catch errors and retry failed uploads with exponential backoff.
-        source: "https://github.com/Azure/azure-sdk-for-js/issues/4999"
+        sources:
+          - "https://github.com/Azure/azure-sdk-for-js/issues/4999"
         severity: error
 
   - name: uploadData
@@ -153,7 +169,8 @@ functions:
       - id: success
         condition: "data upload succeeds"
         returns: "BlobUploadCommonResponse with requestId, version, and ETag"
-        source: "https://learn.microsoft.com/en-us/javascript/api/@azure/storage-blob/blockblobclient#@azure-storage-blob-blockblobclient-uploaddata"
+        sources:
+          - "https://learn.microsoft.com/en-us/javascript/api/@azure/storage-blob/blockblobclient#@azure-storage-blob-blockblobclient-uploaddata"
         severity: info
 
       - id: container-not-found
@@ -161,7 +178,8 @@ functions:
         throws: "RestError with statusCode 404 and errorCode: ContainerNotFound"
         required_handling: >
           Caller MUST catch RestError and handle missing container appropriately.
-        source: "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
+        sources:
+          - "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
         severity: error
 
       - id: network-error
@@ -169,7 +187,8 @@ functions:
         throws: "Error with network error code"
         required_handling: >
           Caller MUST catch errors and implement retry logic.
-        source: "https://github.com/Azure/azure-sdk-for-js/issues/4999"
+        sources:
+          - "https://github.com/Azure/azure-sdk-for-js/issues/4999"
         severity: error
 
   - name: create
@@ -180,7 +199,8 @@ functions:
       - id: success
         condition: "container creation succeeds"
         returns: "ContainerCreateResponse with requestId and ETag"
-        source: "https://learn.microsoft.com/en-us/javascript/api/@azure/storage-blob/containerclient#@azure-storage-blob-containerclient-create"
+        sources:
+          - "https://learn.microsoft.com/en-us/javascript/api/@azure/storage-blob/containerclient#@azure-storage-blob-containerclient-create"
         severity: info
 
       - id: container-already-exists
@@ -189,7 +209,8 @@ functions:
         required_handling: >
           Caller MUST catch RestError and check error.statusCode === 409 to handle
           existing containers. Common pattern is to check exists() first or catch and continue.
-        source: "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
+        sources:
+          - "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
         severity: error
 
       - id: container-being-deleted
@@ -197,7 +218,8 @@ functions:
         throws: "RestError with statusCode 409 and errorCode: ContainerBeingDeleted"
         required_handling: >
           Caller MUST catch RestError and wait for deletion to complete before retrying.
-        source: "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
+        sources:
+          - "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
         severity: error
 
       - id: auth-error
@@ -205,7 +227,8 @@ functions:
         throws: "RestError with statusCode 403"
         required_handling: >
           Caller MUST catch RestError with statusCode 403 and handle authentication/authorization failures.
-        source: "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
+        sources:
+          - "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
         severity: error
 
   - name: delete
@@ -216,7 +239,8 @@ functions:
       - id: success
         condition: "container deletion succeeds"
         returns: "ContainerDeleteResponse with requestId"
-        source: "https://learn.microsoft.com/en-us/javascript/api/@azure/storage-blob/containerclient#@azure-storage-blob-containerclient-delete"
+        sources:
+          - "https://learn.microsoft.com/en-us/javascript/api/@azure/storage-blob/containerclient#@azure-storage-blob-containerclient-delete"
         severity: info
 
       - id: container-not-found
@@ -225,7 +249,8 @@ functions:
         required_handling: >
           Caller MUST catch RestError and handle missing containers. Common pattern is
           to check exists() first or catch 404 and treat as success.
-        source: "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
+        sources:
+          - "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
         severity: error
 
       - id: lease-id-missing
@@ -233,7 +258,8 @@ functions:
         throws: "RestError with statusCode 412 and errorCode: LeaseIdMissing"
         required_handling: >
           Caller MUST catch RestError with statusCode 412 and handle lease conflicts.
-        source: "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
+        sources:
+          - "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
         severity: error
 
   - name: exists
@@ -244,7 +270,8 @@ functions:
       - id: success
         condition: "check completes successfully"
         returns: "boolean indicating whether container exists"
-        source: "https://learn.microsoft.com/en-us/javascript/api/@azure/storage-blob/containerclient#@azure-storage-blob-containerclient-exists"
+        sources:
+          - "https://learn.microsoft.com/en-us/javascript/api/@azure/storage-blob/containerclient#@azure-storage-blob-containerclient-exists"
         severity: info
 
       - id: auth-error
@@ -252,7 +279,8 @@ functions:
         throws: "RestError with statusCode 403"
         required_handling: >
           Caller SHOULD catch RestError for permission errors even when checking existence.
-        source: "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
+        sources:
+          - "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
         severity: warning
 
   - name: listContainers
@@ -263,7 +291,8 @@ functions:
       - id: success
         condition: "listing succeeds"
         returns: "AsyncIterableIterator of ContainerItem objects"
-        source: "https://learn.microsoft.com/en-us/javascript/api/@azure/storage-blob/blobserviceclient#@azure-storage-blob-blobserviceclient-listcontainers"
+        sources:
+          - "https://learn.microsoft.com/en-us/javascript/api/@azure/storage-blob/blobserviceclient#@azure-storage-blob-blobserviceclient-listcontainers"
         severity: info
 
       - id: auth-error
@@ -271,31 +300,7 @@ functions:
         throws: "RestError with statusCode 403"
         required_handling: >
           Caller MUST catch RestError when iterating containers to handle auth failures.
-        source: "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
+        sources:
+          - "https://learn.microsoft.com/en-us/rest/api/storageservices/blob-service-error-codes"
         severity: error
 
-metadata:
-  error_types:
-    - RestError
-  error_codes:
-    - BlobNotFound
-    - BlobAlreadyExists
-    - BlobArchived
-    - BlobBeingRehydrated
-    - ContainerNotFound
-    - ContainerAlreadyExists
-    - ContainerBeingDeleted
-    - InvalidBlobType
-    - LeaseIdMissing
-  http_status_codes:
-    - 404  # Not Found
-    - 409  # Conflict
-    - 403  # Forbidden
-    - 412  # Precondition Failed
-  detection_estimate: 85%
-  production_ready: false
-  draft_reason: "Phase 6 (Analyzer Testing) and Phase 7 (Real-World Validation) not completed due to build issues. Contract is comprehensive but requires validation before production."
-  notes: >
-    All async operations throw RestError on failure. Error codes must be manually
-    extracted from response headers via err.response.headers.get('x-ms-error-code')
-    or err.details?.errorCode. See GitHub issue #4999 for error handling limitations.

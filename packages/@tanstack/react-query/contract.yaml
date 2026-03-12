@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "behavioral-contracts"
 last_verified: "2026-02-24"
 status: production
+evidence_quality: stub
 
 functions:
   - name: useQuery
@@ -22,7 +23,8 @@ functions:
 
           Query errors are NOT thrown - they are returned in the error property.
           Ignoring the error state leaves users with broken UI and no feedback.
-        source: "https://tanstack.com/query/latest/docs/framework/react/guides/query-functions"
+        sources:
+          - "https://tanstack.com/query/latest/docs/framework/react/guides/query-functions"
         severity: error
 
       - id: query-retry-client-errors
@@ -39,7 +41,8 @@ functions:
 
           Retrying client errors wastes resources and delays user feedback.
           Only server errors (5xx) and network errors should trigger retries.
-        source: "https://tanstack.com/query/latest/docs/framework/react/guides/query-retries"
+        sources:
+          - "https://tanstack.com/query/latest/docs/framework/react/guides/query-retries"
         severity: warning
 
       - id: stale-query-refetch-error
@@ -55,7 +58,8 @@ functions:
           3. Use `failureReason` to track errors without entering error state.
 
           Silent failures leave users viewing stale data with no indication of problems.
-        source: "https://tanstack.com/query/latest/docs/framework/react/guides/caching"
+        sources:
+          - "https://tanstack.com/query/latest/docs/framework/react/guides/caching"
         severity: error
 
       - id: network-error-handling
@@ -70,18 +74,21 @@ functions:
           3. Consider different retry strategies (network errors may need exponential backoff)
 
           Treating all errors the same provides poor user experience.
-        source: "https://tanstack.com/query/latest/docs/framework/react/guides/query-functions"
+        sources:
+          - "https://tanstack.com/query/latest/docs/framework/react/guides/query-functions"
         severity: error
 
     edge_cases:
       - id: query-fn-returns-error
         description: "If queryFn returns an error object instead of throwing, React Query treats it as successful data"
-        source: "https://tanstack.com/query/latest/docs/framework/react/guides/query-functions"
+        sources:
+          - "https://tanstack.com/query/latest/docs/framework/react/guides/query-functions"
         severity: warning
 
       - id: concurrent-query-errors
         description: "Multiple components using same query key share error state. Error in one affects all."
-        source: "https://tanstack.com/query/latest/docs/framework/react/guides/queries"
+        sources:
+          - "https://tanstack.com/query/latest/docs/framework/react/guides/queries"
         severity: info
 
   - name: useMutation
@@ -101,7 +108,8 @@ functions:
 
           Mutations modify server state - users MUST know if they failed.
           Silent failures lead to data inconsistency and user confusion.
-        source: "https://tanstack.com/query/latest/docs/framework/react/guides/mutations"
+        sources:
+          - "https://tanstack.com/query/latest/docs/framework/react/guides/mutations"
         severity: error
 
       - id: mutation-optimistic-update-rollback
@@ -124,7 +132,8 @@ functions:
           ```
 
           Without rollback, failed mutations leave UI showing incorrect data.
-        source: "https://tanstack.com/query/latest/docs/framework/react/guides/optimistic-updates"
+        sources:
+          - "https://tanstack.com/query/latest/docs/framework/react/guides/optimistic-updates"
         severity: error
 
       - id: mutation-default-no-retry
@@ -144,7 +153,8 @@ functions:
             // Only retry GET-like mutations or with idempotency keys
             return error.response?.status >= 500 && failureCount < 2
           }
-        source: "https://tanstack.com/query/latest/docs/framework/react/guides/mutations"
+        sources:
+          - "https://tanstack.com/query/latest/docs/framework/react/guides/mutations"
         severity: warning
 
       - id: mutation-parallel-execution
@@ -159,18 +169,21 @@ functions:
           3. Configure mutation queue in QueryClient.
 
           Parallel mutations can cause: last-write-wins conflicts, data inconsistency, incorrect UI state.
-        source: "https://tanstack.com/query/latest/docs/framework/react/guides/mutations"
+        sources:
+          - "https://tanstack.com/query/latest/docs/framework/react/guides/mutations"
         severity: warning
 
     edge_cases:
       - id: mutate-vs-mutateasync
         description: "mutate() doesn't return a Promise. Use mutateAsync() if you need to await the result."
-        source: "https://tanstack.com/query/latest/docs/framework/react/reference/useMutation"
+        sources:
+          - "https://tanstack.com/query/latest/docs/framework/react/reference/useMutation"
         severity: info
 
       - id: mutation-context-type-safety
         description: "Context returned from onMutate must match type expected in onError/onSuccess"
-        source: "https://tanstack.com/query/latest/docs/framework/react/guides/optimistic-updates"
+        sources:
+          - "https://tanstack.com/query/latest/docs/framework/react/guides/optimistic-updates"
         severity: info
 
   - name: useInfiniteQuery
@@ -189,7 +202,8 @@ functions:
 
           When fetchNextPage fails, previously loaded pages remain accessible via `data`.
           User must be informed that loading more failed.
-        source: "https://tanstack.com/query/latest/docs/framework/react/guides/infinite-queries"
+        sources:
+          - "https://tanstack.com/query/latest/docs/framework/react/guides/infinite-queries"
         severity: error
 
       - id: infinite-query-refetch-all-pages
@@ -205,18 +219,21 @@ functions:
           3. Use refetchOnWindowFocus: false to prevent automatic refetches.
 
           Refetch failures can lose all previously loaded pages if not handled.
-        source: "https://tanstack.com/query/latest/docs/framework/react/guides/infinite-queries"
+        sources:
+          - "https://tanstack.com/query/latest/docs/framework/react/guides/infinite-queries"
         severity: error
 
     edge_cases:
       - id: getnextpageparam-undefined
         description: "If getNextPageParam returns undefined, hasNextPage becomes false. Ensure this is intentional."
-        source: "https://tanstack.com/query/latest/docs/framework/react/guides/infinite-queries"
+        sources:
+          - "https://tanstack.com/query/latest/docs/framework/react/guides/infinite-queries"
         severity: info
 
       - id: infinite-query-memory
         description: "Infinite queries accumulate pages in memory. Consider gcTime for cleanup or limit max pages."
-        source: "https://tanstack.com/query/latest/docs/framework/react/guides/infinite-queries"
+        sources:
+          - "https://tanstack.com/query/latest/docs/framework/react/guides/infinite-queries"
         severity: info
 
   - name: QueryClient
@@ -250,7 +267,8 @@ functions:
 
           Without global handlers, developers must handle errors in every hook usage.
           Global handlers ensure consistent error UX across the application.
-        source: "https://tanstack.com/query/latest/docs/framework/react/guides/query-functions"
+        sources:
+          - "https://tanstack.com/query/latest/docs/framework/react/guides/query-functions"
         severity: warning
 
       - id: default-retry-strategy-production
@@ -277,11 +295,13 @@ functions:
           ```
 
           Smart retry prevents wasted API calls and provides faster user feedback.
-        source: "https://tanstack.com/query/latest/docs/framework/react/guides/query-retries"
+        sources:
+          - "https://tanstack.com/query/latest/docs/framework/react/guides/query-retries"
         severity: warning
 
     edge_cases:
       - id: staletime-vs-gctime
         description: "staleTime (data freshness) and gcTime (memory cleanup) serve different purposes. Understand the difference."
-        source: "https://tanstack.com/query/latest/docs/framework/react/guides/caching"
+        sources:
+          - "https://tanstack.com/query/latest/docs/framework/react/guides/caching"
         severity: info

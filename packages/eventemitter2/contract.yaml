@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-27"
 status: production  # Event listener detection now supported by EventListenerAnalyzer
+evidence_quality: stub
 description: "Event emitter with namespaces, wildcards, and additional features"
 
 detection:
@@ -27,4 +28,5 @@ functions:
         throws: "Uncaught exception unless ignoreErrors configured"
         required_handling: "Caller MUST attach error event listener"
         severity: error
-        source: "https://github.com/EventEmitter2/EventEmitter2"
+        sources:
+          - "https://github.com/EventEmitter2/EventEmitter2"

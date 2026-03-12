@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
 status: production
+evidence_quality: stub
 category: http-client
 description: Official Node.js HTTP/1.1 client implementing the Fetch API standard
 
@@ -21,7 +22,8 @@ functions:
         condition: "network failure, DNS error, timeout, connection refused"
         throws: "Promise rejection with Error"
         required_handling: "Use try-catch (async/await) or .catch() (promises)"
-        source: "https://www.npmjs.com/package/undici"
+        sources:
+          - "https://www.npmjs.com/package/undici"
         severity: error
 
   - name: fetch
@@ -32,7 +34,8 @@ functions:
         condition: "network failure, DNS error, timeout, connection refused, certificate errors"
         throws: "TypeError with 'fetch failed' message and cause property containing underlying error (UND_ERR_SOCKET, etc.)"
         required_handling: "Use try-catch (async/await) or .catch() (promises)"
-        source: "https://undici.nodejs.org/"
+        sources:
+          - "https://undici.nodejs.org/"
         severity: error
         notes: >
           Per Fetch standard, HTTP error status codes (4xx, 5xx) do NOT throw.

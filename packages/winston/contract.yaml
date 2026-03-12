@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
 status: production
+evidence_quality: stub
 
 detection:
   type_names:
@@ -20,7 +21,8 @@ functions:
         condition: "transport fails (file write error, network error, permission denied)"
         returns: "logger instance that silently fails without error listener"
         required_handling: "Caller MUST attach 'error' event listener to logger and transports to handle transport failures. Without listener, errors are silently ignored and logs may be lost."
-        source: "https://github.com/winstonjs/winston#handling-uncaught-exceptions-with-winston"
+        sources:
+          - "https://github.com/winstonjs/winston#handling-uncaught-exceptions-with-winston"
         severity: warning
 
   - name: log
@@ -31,13 +33,15 @@ functions:
         condition: "transport fails during log write (file system full, network down, permissions)"
         returns: "void (operation may fail silently)"
         required_handling: "Caller MUST attach 'error' event listener to logger to detect transport failures. Use logger.on('error', handler) to prevent silent log loss."
-        source: "https://github.com/winstonjs/winston#awaiting-logs-to-be-written-in-winston"
+        sources:
+          - "https://github.com/winstonjs/winston#awaiting-logs-to-be-written-in-winston"
         severity: warning
 
 edge_cases:
   - id: uncaught-exception-handling
     description: "handleExceptions option catches uncaught exceptions but may prevent proper error handling if not configured with exitOnError properly"
-    source: "https://github.com/winstonjs/winston#to-exit-or-not-to-exit"
+    sources:
+      - "https://github.com/winstonjs/winston#to-exit-or-not-to-exit"
     severity: warning
 
 # Category: logging

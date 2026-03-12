@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-27"
 status: production
+evidence_quality: stub
 priority: low
 
 functions:
@@ -19,7 +20,8 @@ functions:
           Invalid DateTime objects contain error information in invalidReason and invalidExplanation.
           Without validation, invalid dates cause calculation errors, display issues, or data corruption.
           Use pattern: const dt = DateTime.fromISO(input); if (!dt.isValid) { console.error(dt.invalidReason); }
-        source: "https://moment.github.io/luxon/api-docs/index.html#datetimefromiso"
+        sources:
+          - "https://moment.github.io/luxon/api-docs/index.html#datetimefromiso"
         severity: warning
 
   - name: DateTime.fromFormat
@@ -33,7 +35,8 @@ functions:
           Caller MUST check isValid property after parsing.
           Invalid DateTime objects indicate parsing failure but do not throw.
           Use pattern: const dt = DateTime.fromFormat(input, format); if (!dt.isValid) { /* handle */ }
-        source: "https://moment.github.io/luxon/api-docs/index.html#datetimefromformat"
+        sources:
+          - "https://moment.github.io/luxon/api-docs/index.html#datetimefromformat"
         severity: warning
 
   - name: DateTime.fromSQL
@@ -47,7 +50,8 @@ functions:
           Caller MUST check isValid property.
           Invalid SQL dates can cause database query errors and data corruption.
           Use pattern: const dt = DateTime.fromSQL(input); if (!dt.isValid) { /* handle */ }
-        source: "https://moment.github.io/luxon/api-docs/index.html#datetimefromsql"
+        sources:
+          - "https://moment.github.io/luxon/api-docs/index.html#datetimefromsql"
         severity: warning
 
   - name: DateTime.fromHTTP
@@ -61,7 +65,8 @@ functions:
           Caller MUST check isValid property.
           Invalid HTTP dates can cause caching errors and incorrect header processing.
           Use pattern: const dt = DateTime.fromHTTP(input); if (!dt.isValid) { /* handle */ }
-        source: "https://moment.github.io/luxon/api-docs/index.html#datetimefromhttp"
+        sources:
+          - "https://moment.github.io/luxon/api-docs/index.html#datetimefromhttp"
         severity: warning
 
   - name: DateTime.fromRFC2822
@@ -74,7 +79,8 @@ functions:
         required_handling: >
           Caller MUST check isValid property.
           Use pattern: const dt = DateTime.fromRFC2822(input); if (!dt.isValid) { /* handle */ }
-        source: "https://moment.github.io/luxon/api-docs/index.html#datetimefromrfc2822"
+        sources:
+          - "https://moment.github.io/luxon/api-docs/index.html#datetimefromrfc2822"
         severity: warning
         security_notes: >
           CVE-2023-22467: Versions <1.28.1, <2.5.2, <3.2.1 vulnerable to ReDoS attack with inputs >10k chars.
@@ -92,7 +98,8 @@ functions:
           Caller MUST check isValid property.
           Invalid calendar values (February 30, 25:00, month 13) produce invalid DateTimes.
           Use pattern: const dt = DateTime.fromObject({year, month, day}); if (!dt.isValid) { /* handle */ }
-        source: "https://moment.github.io/luxon/api-docs/index.html#datetimefromobject"
+        sources:
+          - "https://moment.github.io/luxon/api-docs/index.html#datetimefromobject"
         severity: warning
 
 # Category: utilities

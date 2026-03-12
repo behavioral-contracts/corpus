@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "agent-001"
 last_verified: "2026-03-06"
 status: production
+evidence_quality: stub
 
 functions:
   - name: useNavigate
@@ -17,7 +18,8 @@ functions:
         required_handling: >
           Caller MUST handle navigation errors with error boundary or try-catch if using
           navigate programmatically. Invalid routes will throw at runtime.
-        source: "https://tanstack.com/router/latest/docs/framework/react/guide/type-safety"
+        sources:
+          - "https://tanstack.com/router/latest/docs/framework/react/guide/type-safety"
         severity: error
 
       - id: navigation-during-unmount
@@ -26,7 +28,8 @@ functions:
         required_handling: >
           Caller MUST either cleanup navigation side effects or use error boundary to catch
           unmount errors. Common in async navigation (e.g., after API call completes).
-        source: "https://github.com/TanStack/router/issues/1181"
+        sources:
+          - "https://github.com/TanStack/router/issues/1181"
         severity: warning
 
       - id: invalid-params
@@ -35,13 +38,15 @@ functions:
         required_handling: >
           Caller MUST ensure params match the target route's expected types.
           TypeScript types help but runtime validation still needed.
-        source: "https://tanstack.com/router/latest/docs/framework/react/guide/type-safety"
+        sources:
+          - "https://tanstack.com/router/latest/docs/framework/react/guide/type-safety"
         severity: error
 
     edge_cases:
       - id: strict-mode-validation
         description: "With strict: true, runtime validation throws if route expectations don't match. Use strict: false for shared components."
-        source: "https://tanstack.com/router/latest/docs/guide/type-safety"
+        sources:
+          - "https://tanstack.com/router/latest/docs/guide/type-safety"
         severity: info
 
   - name: useMatch
@@ -55,7 +60,8 @@ functions:
         required_handling: >
           Caller MUST either use correct 'from' route, set strict: false for shared components,
           or wrap in error boundary to handle mismatch gracefully.
-        source: "https://tanstack.com/router/latest/docs/guide/type-safety"
+        sources:
+          - "https://tanstack.com/router/latest/docs/guide/type-safety"
         severity: error
 
       - id: route-not-found
@@ -64,7 +70,8 @@ functions:
         required_handling: >
           Caller MUST ensure route exists before calling useMatch with that route.
           Verify route is registered in router configuration.
-        source: "https://tanstack.com/router/v1/docs/framework/react/guide/not-found-errors"
+        sources:
+          - "https://tanstack.com/router/v1/docs/framework/react/guide/not-found-errors"
         severity: error
 
   - name: useLoaderData
@@ -78,7 +85,8 @@ functions:
         required_handling: >
           Caller MUST implement ErrorComponent in route definition or parent route to catch
           loader errors. Without error boundary, loader errors crash the app.
-        source: "https://tanstack.com/router/latest/docs/framework/react/guide/error-boundaries"
+        sources:
+          - "https://tanstack.com/router/latest/docs/framework/react/guide/error-boundaries"
         severity: error
 
       - id: loader-data-unavailable
@@ -87,7 +95,8 @@ functions:
         required_handling: >
           Caller MUST handle Suspense boundaries properly. useLoaderData throws when data
           is not yet available, triggering Suspense.
-        source: "https://tanstack.com/router/latest/docs/framework/react/api/router/RouteOptionsType"
+        sources:
+          - "https://tanstack.com/router/latest/docs/framework/react/api/router/RouteOptionsType"
         severity: error
 
       - id: no-loader-defined
@@ -96,7 +105,8 @@ functions:
         required_handling: >
           Caller MUST ensure route has loader function defined before calling useLoaderData.
           Check route configuration.
-        source: "https://tanstack.com/router/latest/docs/framework/react/api/router/RouteOptionsType"
+        sources:
+          - "https://tanstack.com/router/latest/docs/framework/react/api/router/RouteOptionsType"
         severity: error
 
   - name: useParams
@@ -110,7 +120,8 @@ functions:
         required_handling: >
           Caller MUST validate params match expected types. Runtime validation needed even
           with TypeScript types.
-        source: "https://tanstack.com/router/latest/docs/guide/type-safety"
+        sources:
+          - "https://tanstack.com/router/latest/docs/guide/type-safety"
         severity: error
 
       - id: required-param-missing
@@ -119,7 +130,8 @@ functions:
         required_handling: >
           Caller MUST ensure all required params are provided when navigating to route.
           Check route configuration for required params.
-        source: "https://tanstack.com/router/latest/docs/guide/type-safety"
+        sources:
+          - "https://tanstack.com/router/latest/docs/guide/type-safety"
         severity: error
 
   - name: useSearch
@@ -133,7 +145,8 @@ functions:
         required_handling: >
           Caller MUST handle search param validation errors with error boundary.
           Use validateSearch option in route to define validation schema.
-        source: "https://tanstack.com/router/latest/docs/framework/react/api/router/RouteOptionsType"
+        sources:
+          - "https://tanstack.com/router/latest/docs/framework/react/api/router/RouteOptionsType"
         severity: error
 
       - id: search-param-parse-error
@@ -142,7 +155,8 @@ functions:
         required_handling: >
           Caller MUST validate search param types. URL strings may not match expected types
           (e.g., number, boolean, array).
-        source: "https://tanstack.com/router/latest/docs/framework/react/api/router/RouteOptionsType"
+        sources:
+          - "https://tanstack.com/router/latest/docs/framework/react/api/router/RouteOptionsType"
         severity: error
 
   - name: useRouteContext
@@ -156,7 +170,8 @@ functions:
         required_handling: >
           Caller MUST ensure route or parent route provides context via beforeLoad or context option.
           Wrap in error boundary or provide fallback.
-        source: "https://tanstack.com/router/v1/docs/framework/react/api/router/RouteOptionsType"
+        sources:
+          - "https://tanstack.com/router/v1/docs/framework/react/api/router/RouteOptionsType"
         severity: error
 
       - id: route-mismatch-strict-context
@@ -164,7 +179,8 @@ functions:
         throws: "Error indicating route mismatch"
         required_handling: >
           Caller MUST use correct 'from' route or set strict: false for shared components.
-        source: "https://tanstack.com/router/latest/docs/guide/type-safety"
+        sources:
+          - "https://tanstack.com/router/latest/docs/guide/type-safety"
         severity: error
 
   - name: createRouter
@@ -178,7 +194,8 @@ functions:
         required_handling: >
           Caller MUST ensure all route paths are unique within router configuration.
           Check for conflicting route definitions.
-        source: "https://tanstack.com/router/latest/docs/framework/react/api/router/RouterOptionsType"
+        sources:
+          - "https://tanstack.com/router/latest/docs/framework/react/api/router/RouterOptionsType"
         severity: error
 
       - id: invalid-route-hierarchy
@@ -187,7 +204,8 @@ functions:
         required_handling: >
           Caller MUST ensure route hierarchy is valid with proper parent-child relationships.
           Wrap createRouter in try-catch during initialization.
-        source: "https://tanstack.com/router/latest/docs/framework/react/api/router/RouterOptionsType"
+        sources:
+          - "https://tanstack.com/router/latest/docs/framework/react/api/router/RouterOptionsType"
         severity: error
 
       - id: missing-root-route
@@ -195,7 +213,8 @@ functions:
         throws: "Error indicating no root route defined"
         required_handling: >
           Caller MUST provide root route using createRootRoute or createRootRouteWithContext.
-        source: "https://tanstack.com/router/latest/docs/framework/react/api/router/RouterOptionsType"
+        sources:
+          - "https://tanstack.com/router/latest/docs/framework/react/api/router/RouterOptionsType"
         severity: error
 
   - name: Navigate
@@ -209,7 +228,8 @@ functions:
         required_handling: >
           Caller MUST ensure target route exists before rendering Navigate component.
           Wrap in error boundary to prevent crashes.
-        source: "https://tanstack.com/router/v1/docs/framework/react/guide/not-found-errors"
+        sources:
+          - "https://tanstack.com/router/v1/docs/framework/react/guide/not-found-errors"
         severity: error
 
       - id: navigate-infinite-loop
@@ -218,7 +238,8 @@ functions:
         required_handling: >
           Caller MUST avoid navigation loops by checking conditions before rendering Navigate.
           Use replace prop to prevent history stack overflow.
-        source: "https://github.com/TanStack/router/issues/1181"
+        sources:
+          - "https://github.com/TanStack/router/issues/1181"
         severity: error
 
   - name: Link
@@ -232,7 +253,8 @@ functions:
         required_handling: >
           Caller MUST ensure target route exists. Invalid links throw at render time.
           Use error boundary to catch link errors.
-        source: "https://tanstack.com/router/latest/docs/guide/type-safety"
+        sources:
+          - "https://tanstack.com/router/latest/docs/guide/type-safety"
         severity: error
 
       - id: invalid-link-params
@@ -241,7 +263,8 @@ functions:
         required_handling: >
           Caller MUST ensure link params match target route's expected types.
           TypeScript helps but runtime validation needed.
-        source: "https://tanstack.com/router/latest/docs/guide/type-safety"
+        sources:
+          - "https://tanstack.com/router/latest/docs/guide/type-safety"
         severity: error
 
   - name: createRoute
@@ -255,7 +278,8 @@ functions:
         required_handling: >
           Caller MUST ensure loader function is defined correctly and doesn't throw during
           initialization. Wrap route definition in try-catch if loader has initialization logic.
-        source: "https://tanstack.com/router/latest/docs/framework/react/api/router/RouteOptionsType"
+        sources:
+          - "https://tanstack.com/router/latest/docs/framework/react/api/router/RouteOptionsType"
         severity: error
 
       - id: invalid-search-schema
@@ -264,11 +288,13 @@ functions:
         required_handling: >
           Caller MUST ensure validateSearch function is correctly defined and returns valid schema.
           Test schema validation during development.
-        source: "https://tanstack.com/router/latest/docs/framework/react/api/router/RouteOptionsType"
+        sources:
+          - "https://tanstack.com/router/latest/docs/framework/react/api/router/RouteOptionsType"
         severity: error
 
     edge_cases:
       - id: lazy-route-loading-error
         description: "Lazy-loaded routes can fail to load. Implement errorComponent to handle loading failures."
-        source: "https://tanstack.com/router/latest/docs/framework/react/guide/error-boundaries"
+        sources:
+          - "https://tanstack.com/router/latest/docs/framework/react/guide/error-boundaries"
         severity: warning

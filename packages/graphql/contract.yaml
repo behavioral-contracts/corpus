@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
 status: production
+evidence_quality: stub
 
 detection:
   type_names:
@@ -20,7 +21,8 @@ functions:
         condition: "resolver throws error or promise rejects (database error, validation error, network error)"
         returns: "{errors: GraphQLError[], data: null | partial} - errors array contains resolver failures"
         required_handling: "Caller MUST check result.errors array before accessing result.data. Resolver errors are returned in errors array, not thrown. Use if (result.errors) to detect failures and handle appropriately."
-        source: "https://graphql.org/graphql-js/execution/#execute"
+        sources:
+          - "https://graphql.org/graphql-js/execution/#execute"
         severity: error
 
   - name: parse
@@ -31,7 +33,8 @@ functions:
         condition: "query string has syntax error (invalid GraphQL syntax, malformed query)"
         throws: "GraphQLError with syntax error details and location"
         required_handling: "Caller MUST wrap parse() in try-catch to handle syntax errors. Invalid query syntax throws GraphQLError that crashes application if unhandled."
-        source: "https://graphql.org/graphql-js/language/#parse"
+        sources:
+          - "https://graphql.org/graphql-js/language/#parse"
         severity: error
 
   - name: validate
@@ -42,13 +45,15 @@ functions:
         condition: "query violates schema rules (unknown field, type mismatch, invalid argument)"
         returns: "GraphQLError[] - array of validation errors (empty array means valid)"
         required_handling: "Caller MUST check if validate() returns non-empty array before executing query. Validation errors indicate query will fail - check if (errors.length > 0) and handle before execution."
-        source: "https://graphql.org/graphql-js/validation/#validate"
+        sources:
+          - "https://graphql.org/graphql-js/validation/#validate"
         severity: error
 
 edge_cases:
   - id: resolver-error-masking
     description: "GraphQL resolvers should handle errors and return proper GraphQLError instances - uncaught errors expose internal stack traces to clients unless formatError is configured"
-    source: "https://graphql.org/learn/execution/#handling-errors"
+    sources:
+      - "https://graphql.org/learn/execution/#handling-errors"
     severity: error
 
 # Category: api

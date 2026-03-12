@@ -1,0 +1,256 @@
+package: "@upstash/redis"
+semver: ">=1.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-03-12"
+status: production
+evidence_quality: stub
+
+functions:
+  - name: get
+    import_path: "@upstash/redis"
+    description: "Retrieve a value from Redis by key. Returns null if key does not exist."
+
+    postconditions:
+      - id: network-or-api-error
+        condition: "network failure after retries OR Upstash API returns an error response"
+        throws: "UpstashError (for API errors) or Error (for network exhaustion)"
+        required_handling: >
+          Caller MUST wrap in try-catch. Uncaught UpstashError or network errors will
+          propagate and crash the caller. Common API errors include: invalid auth token,
+          quota exceeded, wrong key type. Network errors occur when Upstash is unreachable
+          after the default 5 retry attempts.
+        sources:
+          - "https://github.com/upstash/upstash-redis"
+        severity: error
+
+  - name: set
+    import_path: "@upstash/redis"
+    description: "Store a value in Redis with optional TTL (ex, px, exat, pxat options) and conditional flags (nx, xx, get)."
+
+    postconditions:
+      - id: network-or-api-error
+        condition: "network failure after retries OR Upstash API returns an error response"
+        throws: "UpstashError (for API errors) or Error (for network exhaustion)"
+        required_handling: >
+          Caller MUST wrap in try-catch. UpstashError is thrown for API-level errors
+          (e.g., wrong type for key) and network errors when Upstash is unreachable.
+        sources:
+          - "https://github.com/upstash/upstash-redis"
+        severity: error
+
+  - name: del
+    import_path: "@upstash/redis"
+    description: "Delete one or more keys from Redis. Returns the number of keys deleted."
+
+    postconditions:
+      - id: network-or-api-error
+        condition: "network failure after retries OR Upstash API returns an error response"
+        throws: "UpstashError or Error"
+        required_handling: >
+          Caller MUST wrap in try-catch. Even deletion can fail if the network is down
+          or the auth token is invalid.
+        sources:
+          - "https://github.com/upstash/upstash-redis"
+        severity: error
+
+  - name: mget
+    import_path: "@upstash/redis"
+    description: "Get the values of multiple keys in a single call. Returns array with null for missing keys."
+
+    postconditions:
+      - id: network-or-api-error
+        condition: "network failure after retries OR Upstash API returns an error response"
+        throws: "UpstashError or Error"
+        required_handling: >
+          Caller MUST wrap in try-catch. Batch reads still fail atomically if the
+          HTTP request fails.
+        sources:
+          - "https://github.com/upstash/upstash-redis"
+        severity: error
+
+  - name: hget
+    import_path: "@upstash/redis"
+    description: "Get the value of a hash field. Returns null if key or field does not exist."
+
+    postconditions:
+      - id: network-or-api-error
+        condition: "network failure after retries OR Upstash API returns an error response"
+        throws: "UpstashError (including WRONGTYPE if key is not a hash) or Error"
+        required_handling: >
+          Caller MUST wrap in try-catch. UpstashError is thrown for wrong key type
+          (e.g., key exists but is a string, not a hash) as well as network errors.
+        sources:
+          - "https://github.com/upstash/upstash-redis"
+        severity: error
+
+  - name: hset
+    import_path: "@upstash/redis"
+    description: "Set one or more hash fields. Returns the number of new fields added."
+
+    postconditions:
+      - id: network-or-api-error
+        condition: "network failure after retries OR Upstash API returns an error response"
+        throws: "UpstashError (including WRONGTYPE if key is not a hash) or Error"
+        required_handling: >
+          Caller MUST wrap in try-catch. UpstashError for wrong type or auth errors;
+          network error for connectivity failures.
+        sources:
+          - "https://github.com/upstash/upstash-redis"
+        severity: error
+
+  - name: hgetall
+    import_path: "@upstash/redis"
+    description: "Get all fields and values in a hash. Returns null if key does not exist."
+
+    postconditions:
+      - id: network-or-api-error
+        condition: "network failure after retries OR Upstash API returns an error response"
+        throws: "UpstashError or Error"
+        required_handling: >
+          Caller MUST wrap in try-catch. UpstashError includes WRONGTYPE errors;
+          network errors when Upstash is unreachable.
+        sources:
+          - "https://github.com/upstash/upstash-redis"
+        severity: error
+
+  - name: lpush
+    import_path: "@upstash/redis"
+    description: "Prepend one or more elements to a list. Returns the new length of the list."
+
+    postconditions:
+      - id: network-or-api-error
+        condition: "network failure after retries OR Upstash API returns an error response"
+        throws: "UpstashError (including WRONGTYPE if key is not a list) or Error"
+        required_handling: >
+          Caller MUST wrap in try-catch. WRONGTYPE error if key holds a different type.
+        sources:
+          - "https://github.com/upstash/upstash-redis"
+        severity: error
+
+  - name: lrange
+    import_path: "@upstash/redis"
+    description: "Get a range of elements from a list. Returns empty array for out-of-range indices."
+
+    postconditions:
+      - id: network-or-api-error
+        condition: "network failure after retries OR Upstash API returns an error response"
+        throws: "UpstashError or Error"
+        required_handling: >
+          Caller MUST wrap in try-catch.
+        sources:
+          - "https://github.com/upstash/upstash-redis"
+        severity: error
+
+  - name: sadd
+    import_path: "@upstash/redis"
+    description: "Add one or more members to a set. Returns the number of members added."
+
+    postconditions:
+      - id: network-or-api-error
+        condition: "network failure after retries OR Upstash API returns an error response"
+        throws: "UpstashError (including WRONGTYPE if key is not a set) or Error"
+        required_handling: >
+          Caller MUST wrap in try-catch.
+        sources:
+          - "https://github.com/upstash/upstash-redis"
+        severity: error
+
+  - name: smembers
+    import_path: "@upstash/redis"
+    description: "Get all members of a set. Returns empty array if key does not exist."
+
+    postconditions:
+      - id: network-or-api-error
+        condition: "network failure after retries OR Upstash API returns an error response"
+        throws: "UpstashError or Error"
+        required_handling: >
+          Caller MUST wrap in try-catch.
+        sources:
+          - "https://github.com/upstash/upstash-redis"
+        severity: error
+
+  - name: zadd
+    import_path: "@upstash/redis"
+    description: "Add members with scores to a sorted set. Returns the number of elements added."
+
+    postconditions:
+      - id: network-or-api-error
+        condition: "network failure after retries OR Upstash API returns an error response"
+        throws: "UpstashError (including WRONGTYPE if key is not a sorted set) or Error"
+        required_handling: >
+          Caller MUST wrap in try-catch.
+        sources:
+          - "https://github.com/upstash/upstash-redis"
+        severity: error
+
+  - name: zrange
+    import_path: "@upstash/redis"
+    description: "Get a range of members from a sorted set by index, score, or lex order."
+
+    postconditions:
+      - id: network-or-api-error
+        condition: "network failure after retries OR Upstash API returns an error response"
+        throws: "UpstashError or Error"
+        required_handling: >
+          Caller MUST wrap in try-catch.
+        sources:
+          - "https://github.com/upstash/upstash-redis"
+        severity: error
+
+  - name: expire
+    import_path: "@upstash/redis"
+    description: "Set a key's time to live in seconds. Returns 1 if timeout set, 0 if key does not exist."
+
+    postconditions:
+      - id: network-or-api-error
+        condition: "network failure after retries OR Upstash API returns an error response"
+        throws: "UpstashError or Error"
+        required_handling: >
+          Caller MUST wrap in try-catch.
+        sources:
+          - "https://github.com/upstash/upstash-redis"
+        severity: error
+
+  - name: exists
+    import_path: "@upstash/redis"
+    description: "Check if one or more keys exist. Returns the count of keys that exist."
+
+    postconditions:
+      - id: network-or-api-error
+        condition: "network failure after retries OR Upstash API returns an error response"
+        throws: "UpstashError or Error"
+        required_handling: >
+          Caller MUST wrap in try-catch.
+        sources:
+          - "https://github.com/upstash/upstash-redis"
+        severity: error
+
+  - name: incr
+    import_path: "@upstash/redis"
+    description: "Increment the integer value of a key by one. Returns the new value."
+
+    postconditions:
+      - id: network-or-api-error
+        condition: "network failure after retries OR Upstash API returns an error response"
+        throws: "UpstashError (including WRONGTYPE if value is not an integer) or Error"
+        required_handling: >
+          Caller MUST wrap in try-catch. UpstashError if key holds a non-integer value.
+        sources:
+          - "https://github.com/upstash/upstash-redis"
+        severity: error
+
+  - name: exec
+    import_path: "@upstash/redis"
+    description: "Execute a pipeline of batched Redis commands. Called as pipeline.exec() after building a pipeline via redis.pipeline()."
+
+    postconditions:
+      - id: network-or-api-error
+        condition: "network failure after retries OR any pipeline command returns an error"
+        throws: "UpstashError or Error — individual command errors throw UpstashError with message 'Command failed: <error>'"
+        required_handling: >
+          The pipeline.exec() call MUST be wrapped in try-catch. The entire pipeline
+          fails if the HTTP request fails or any batched command returns an error.
+        sources:
+          - "https://github.com/upstash/upstash-redis"
+        severity: error

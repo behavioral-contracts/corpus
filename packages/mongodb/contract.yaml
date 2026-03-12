@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
 status: production
+evidence_quality: stub
 
 # CRITICAL SECURITY NOTES:
 #
@@ -79,7 +80,8 @@ functions:
           Caller MUST catch connection errors and handle them separately from query errors.
           Implement retry logic with exponential backoff for transient connection issues.
           Log connection errors for operations monitoring.
-        source: "https://www.mongodb.com/docs/drivers/node/current/connection-troubleshooting/"
+        sources:
+          - "https://www.mongodb.com/docs/drivers/node/current/connection-troubleshooting/"
         severity: error
 
   - name: find
@@ -93,7 +95,8 @@ functions:
           Caller MUST catch query errors.
           Network errors (MongoNetworkError) may be transient and can be retried.
           Invalid query errors (MongoServerError) should not be retried.
-        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        sources:
+          - "https://www.mongodb.com/docs/drivers/node/current/"
         severity: error
 
   - name: findOne
@@ -107,7 +110,8 @@ functions:
           Caller MUST catch query errors.
           Returns null if no document matches (not an error).
           Network errors may be transient and retriable.
-        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        sources:
+          - "https://www.mongodb.com/docs/drivers/node/current/"
         severity: error
 
   - name: insertOne
@@ -121,7 +125,8 @@ functions:
           Caller MUST catch duplicate key errors (code 11000) and handle gracefully.
           Extract conflicting field from error message.
           DO NOT retry without changing the unique field value.
-        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        sources:
+          - "https://www.mongodb.com/docs/drivers/node/current/"
         severity: error
 
   - name: insertMany
@@ -135,7 +140,8 @@ functions:
           Caller MUST catch bulk write errors.
           Check error.result to see which documents succeeded and which failed.
           Handle partial success scenarios appropriately.
-        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        sources:
+          - "https://www.mongodb.com/docs/drivers/node/current/"
         severity: error
 
   - name: updateOne
@@ -149,7 +155,8 @@ functions:
           Caller MUST catch update errors.
           Network errors may be transient.
           Invalid update operators (MongoServerError) should not be retried.
-        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        sources:
+          - "https://www.mongodb.com/docs/drivers/node/current/"
         severity: error
 
   - name: updateMany
@@ -163,7 +170,8 @@ functions:
           Caller MUST catch bulk update errors.
           Check result.modifiedCount to verify how many documents were updated.
           Implement retry logic for transient failures.
-        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        sources:
+          - "https://www.mongodb.com/docs/drivers/node/current/"
         severity: error
 
   - name: deleteOne
@@ -177,7 +185,8 @@ functions:
           Caller MUST catch delete errors.
           Deleting non-existent document is NOT an error (deletedCount = 0).
           Network errors may be transient and retriable.
-        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        sources:
+          - "https://www.mongodb.com/docs/drivers/node/current/"
         severity: error
 
   - name: deleteMany
@@ -191,7 +200,8 @@ functions:
           Caller MUST catch bulk delete errors.
           Check result.deletedCount to verify how many documents were deleted.
           Implement retry logic for transient failures.
-        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        sources:
+          - "https://www.mongodb.com/docs/drivers/node/current/"
         severity: error
 
   - name: aggregate
@@ -205,7 +215,8 @@ functions:
           Caller MUST catch aggregation errors.
           Pipeline syntax errors (MongoServerError) should not be retried.
           Network errors may be transient and retriable.
-        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        sources:
+          - "https://www.mongodb.com/docs/drivers/node/current/"
         severity: error
 
   - name: countDocuments
@@ -219,7 +230,8 @@ functions:
           Caller MUST catch count errors.
           Network errors may be transient.
           Invalid filters should not be retried.
-        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        sources:
+          - "https://www.mongodb.com/docs/drivers/node/current/"
         severity: error
 
   - name: createIndex
@@ -233,7 +245,8 @@ functions:
           Caller MUST catch index creation errors.
           Index with same name but different options will fail.
           Check if index already exists before creating.
-        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        sources:
+          - "https://www.mongodb.com/docs/drivers/node/current/"
         severity: error
 
   - name: drop
@@ -247,7 +260,8 @@ functions:
           Caller MUST catch drop errors.
           Dropping non-existent collection throws error.
           Use dropCollection with ifExists option to avoid errors.
-        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        sources:
+          - "https://www.mongodb.com/docs/drivers/node/current/"
         severity: error
 
   - name: collection
@@ -261,7 +275,8 @@ functions:
           Caller MUST catch collection access errors.
           Ensure database connection is established before accessing collections.
           Validate collection names before use.
-        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        sources:
+          - "https://www.mongodb.com/docs/drivers/node/current/"
         severity: error
 
   - name: bulkWrite
@@ -275,7 +290,8 @@ functions:
           Caller MUST catch bulk write errors.
           Check error.result for success/failure details of each operation.
           Handle partial success appropriately.
-        source: "https://www.mongodb.com/docs/drivers/node/current/"
+        sources:
+          - "https://www.mongodb.com/docs/drivers/node/current/"
         severity: error
 
 # Common edge cases and production bugs
@@ -305,7 +321,8 @@ edge_cases:
       ```
 
       For long-running applications, reuse a single MongoClient instance with connection pooling.
-    source: "https://github.com/n8n-io/n8n/issues/1595"
+    sources:
+      - "https://github.com/n8n-io/n8n/issues/1595"
     severity: warning
 
   - id: duplicate-key-not-handled
@@ -328,7 +345,8 @@ edge_cases:
       ```
 
       DO NOT retry duplicate key errors without changing the conflicting value.
-    source: "https://www.mongodb.com/docs/drivers/node/current/"
+    sources:
+      - "https://www.mongodb.com/docs/drivers/node/current/"
     severity: warning
 
   - id: transient-errors-not-retried
@@ -356,7 +374,8 @@ edge_cases:
       ```
 
       parse-server implements this pattern: https://github.com/parse-community/parse-server
-    source: "https://www.mongodb.com/docs/drivers/node/current/"
+    sources:
+      - "https://www.mongodb.com/docs/drivers/node/current/"
     severity: info
 
   - id: generic-catch-blocks
@@ -384,7 +403,8 @@ edge_cases:
         }
       }
       ```
-    source: "https://github.com/parse-community/parse-server"
+    sources:
+      - "https://github.com/parse-community/parse-server"
     severity: info
 
   - id: connection-pool-misconfiguration
@@ -418,5 +438,6 @@ edge_cases:
       ```
 
       Close client only on application shutdown.
-    source: "https://www.mongodb.com/docs/drivers/node/current/"
+    sources:
+      - "https://www.mongodb.com/docs/drivers/node/current/"
     severity: info

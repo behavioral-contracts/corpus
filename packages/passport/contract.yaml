@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
 status: production
+evidence_quality: stub
 
 detection:
   type_names:
@@ -20,19 +21,22 @@ functions:
         condition: "authentication fails (invalid credentials, missing user, strategy error)"
         returns: "middleware that may call callback with error or fail object"
         required_handling: "Caller MUST handle authentication failures in callback or error middleware. Use custom callback (req, res, next) => passport.authenticate('strategy', (err, user, info) => {...}) to handle errors, missing users, and validation failures."
-        source: "https://www.passportjs.org/docs/authenticate/"
+        sources:
+          - "https://www.passportjs.org/docs/authenticate/"
         severity: error
       - id: authenticate-strategy-error
         condition: "strategy encounters error (database down, network timeout, invalid configuration)"
         returns: "middleware that calls callback with error as first argument"
         required_handling: "Caller MUST handle strategy errors in callback or Express error handler. Check if (err) in custom callback and forward to next(err) for centralized error handling."
-        source: "https://www.passportjs.org/docs/authenticate/"
+        sources:
+          - "https://www.passportjs.org/docs/authenticate/"
         severity: error
 
 edge_cases:
   - id: custom-strategy-errors
     description: "Custom strategies must properly call done(err) or done(null, false, info) to propagate errors - uncaught errors in strategy crash application"
-    source: "https://www.passportjs.org/packages/passport-strategy/"
+    sources:
+      - "https://www.passportjs.org/packages/passport-strategy/"
     severity: error
 
 # Category: authentication

@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-25"
 status: production
+evidence_quality: stub
 
 detection:
   type_names:
@@ -22,4 +23,5 @@ functions:
         required_handling: "Wrap async operations in try-catch and return appropriate error responses"
         severity: error
         rationale: "Unhandled errors return 500 with stack traces exposed in response"
-        source: "https://nextjs.org/docs/app/building-your-application/routing/route-handlers"
+        sources:
+          - "https://nextjs.org/docs/app/building-your-application/routing/route-handlers"

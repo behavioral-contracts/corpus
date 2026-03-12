@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-26"
 status: production
+evidence_quality: stub
 
 detection:
   type_names:
@@ -20,13 +21,15 @@ functions:
         condition: "called with valid or no arguments"
         returns: "string containing valid UUID v4 format"
         required_handling: "When accepting UUID from user input, caller SHOULD use validate() to verify format before using in database queries or business logic. Malformed UUIDs can cause SQL errors or security issues."
-        source: "https://github.com/uuidjs/uuid#uuidvalidatestr"
+        sources:
+          - "https://github.com/uuidjs/uuid#uuidvalidatestr"
         severity: warning
 
 edge_cases:
   - id: user-input-validation
     description: "Use validate() to check UUID format when parsing user-provided UUIDs before database queries - prevents SQL injection attempts and invalid data errors"
-    source: "https://github.com/uuidjs/uuid#uuidvalidatestr"
+    sources:
+      - "https://github.com/uuidjs/uuid#uuidvalidatestr"
     severity: warning
 
 # Category: utility

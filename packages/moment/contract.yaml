@@ -4,6 +4,7 @@ contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-27"
 status: production
+evidence_quality: stub
 
 functions:
   - name: moment
@@ -18,7 +19,8 @@ functions:
           Invalid moment objects can cause incorrect date calculations, display issues,
           or NaN values propagating through the application.
           Use pattern: const m = moment(input); if (!m.isValid()) { /* handle error */ }
-        source: "https://momentjs.com/docs/#/parsing/string/"
+        sources:
+          - "https://momentjs.com/docs/#/parsing/string/"
         severity: error
 
   - name: utc
@@ -32,7 +34,8 @@ functions:
           Caller MUST check isValid() after parsing.
           Invalid UTC moments can cause timezone calculation errors and data corruption.
           Use pattern: const m = moment.utc(input); if (!m.isValid()) { /* handle error */ }
-        source: "https://momentjs.com/docs/#/parsing/utc/"
+        sources:
+          - "https://momentjs.com/docs/#/parsing/utc/"
         severity: error
 
   - name: locale
@@ -48,7 +51,8 @@ functions:
           Vulnerable versions (1.0.1-2.29.1) allow path traversal via locale strings
           containing dot-dot sequences (/../). Patched in version 2.29.2.
           Use pattern: const allowed = ['en','fr','de']; if (allowed.includes(userLocale)) moment.locale(userLocale);
-        source: "https://nvd.nist.gov/vuln/detail/CVE-2022-24785"
+        sources:
+          - "https://nvd.nist.gov/vuln/detail/CVE-2022-24785"
         severity: error
         cve: "CVE-2022-24785"
 

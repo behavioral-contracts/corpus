@@ -1,17 +1,13 @@
+# Security-critical JWT library. jwt.verify() is an auth boundary — missing error handling = auth bypass or crash.
+# CVE-2015-9235: Always specify algorithms option. CVE-2022-23529, CVE-2022-23540: Fixed in v9.0.0.
+# NEVER use jwt.decode() for authentication — does not verify signatures.
 package: jsonwebtoken
 semver: ">=9.0.0"
 contract_version: "1.0.0"
 maintainer: "corpus-team"
 last_verified: "2026-02-27"
-status: draft
-
-detection:
-  # jsonwebtoken exports functions directly on the module
-  await_patterns:
-    - "jwt.verify("
-    - "jwt.sign("
-    - "jsonwebtoken.verify("
-    - "jsonwebtoken.sign("
+status: production
+evidence_quality: confirmed
 
 functions:
   - name: verify
@@ -26,7 +22,8 @@ functions:
           Caller MUST wrap jwt.verify() in try-catch block or use callback error-first pattern.
           TokenExpiredError indicates legitimate expiration - handle gracefully with 401 response
           and prompt user to refresh token or re-authenticate.
-        source: "https://github.com/auth0/node-jsonwebtoken#errors--codes"
+        sources:
+          - "https://github.com/auth0/node-jsonwebtoken#errors--codes"
         severity: error
 
       - id: verify-token-not-active
@@ -35,7 +32,8 @@ functions:
         required_handling: >
           Caller MUST handle NotBeforeError. Token is valid but not yet active.
           Either reject with 401 or retry after specified date.
-        source: "https://github.com/auth0/node-jsonwebtoken#errors--codes"
+        sources:
+          - "https://github.com/auth0/node-jsonwebtoken#errors--codes"
         severity: error
 
       - id: verify-invalid-signature
@@ -45,7 +43,8 @@ functions:
           Caller MUST handle JsonWebTokenError for invalid signatures.
           This indicates tampering or wrong secret/key. CRITICAL security event -
           log and reject with 403. Never expose error details to client.
-        source: "https://github.com/auth0/node-jsonwebtoken#errors--codes"
+        sources:
+          - "https://github.com/auth0/node-jsonwebtoken#errors--codes"
         severity: error
 
       - id: verify-malformed-token
@@ -54,7 +53,8 @@ functions:
         required_handling: >
           Caller MUST handle JsonWebTokenError for malformed tokens.
           Invalid structure indicates corrupted token or attack. Reject with 400 or 403.
-        source: "https://github.com/auth0/node-jsonwebtoken#errors--codes"
+        sources:
+          - "https://github.com/auth0/node-jsonwebtoken#errors--codes"
         severity: error
 
       - id: verify-invalid-algorithm
@@ -63,7 +63,8 @@ functions:
         required_handling: >
           Caller MUST handle algorithm mismatch errors. This prevents CVE-2015-9235
           algorithm confusion attack. Always specify algorithms option in verify().
-        source: "https://nvd.nist.gov/vuln/detail/CVE-2015-9235"
+        sources:
+          - "https://nvd.nist.gov/vuln/detail/CVE-2015-9235"
         severity: error
 
       - id: verify-audience-mismatch
@@ -72,7 +73,8 @@ functions:
         required_handling: >
           Caller MUST handle audience validation errors when using options.audience.
           Audience mismatch indicates token intended for different service.
-        source: "https://github.com/auth0/node-jsonwebtoken#jwtverifytoken-secretorpublickey-options-callback"
+        sources:
+          - "https://github.com/auth0/node-jsonwebtoken#jwtverifytoken-secretorpublickey-options-callback"
         severity: error
 
       - id: verify-issuer-mismatch
@@ -81,7 +83,8 @@ functions:
         required_handling: >
           Caller MUST handle issuer validation errors when using options.issuer.
           Issuer mismatch indicates token from untrusted source.
-        source: "https://github.com/auth0/node-jsonwebtoken#jwtverifytoken-secretorpublickey-options-callback"
+        sources:
+          - "https://github.com/auth0/node-jsonwebtoken#jwtverifytoken-secretorpublickey-options-callback"
         severity: error
 
       - id: verify-missing-secret
@@ -91,7 +94,8 @@ functions:
           Caller MUST handle missing secret errors. This typically indicates
           configuration error (missing environment variable). Fatal error - should
           fail fast on application startup, not at runtime.
-        source: "https://github.com/auth0/node-jsonwebtoken"
+        sources:
+          - "https://github.com/auth0/node-jsonwebtoken"
         severity: error
 
     edge_cases:
@@ -103,7 +107,8 @@ functions:
           public key as HMAC secret, bypassing signature verification.
           Vulnerable: jwt.verify(token, publicKey)
           Secure: jwt.verify(token, publicKey, { algorithms: ['RS256'] })
-        source: "https://nvd.nist.gov/vuln/detail/CVE-2015-9235"
+        sources:
+          - "https://nvd.nist.gov/vuln/detail/CVE-2015-9235"
         severity: warning
 
       - id: callback-error-handling
@@ -114,7 +119,8 @@ functions:
             console.log(decoded.userId); // BUG: decoded undefined if error\!
           });
           Correct pattern: Check err first, return early if error exists.
-        source: "https://github.com/auth0/node-jsonwebtoken#jwtverifytoken-secretorpublickey-options-callback"
+        sources:
+          - "https://github.com/auth0/node-jsonwebtoken#jwtverifytoken-secretorpublickey-options-callback"
         severity: warning
 
   - name: sign
@@ -129,7 +135,8 @@ functions:
           Caller MUST validate payload type before calling jwt.sign() or wrap
           in try-catch. Common when payload is null, undefined, or Promise object
           (forgot await on database query).
-        source: "https://github.com/auth0/node-jsonwebtoken#jwtsignpayload-secretorprivatekey-options-callback"
+        sources:
+          - "https://github.com/auth0/node-jsonwebtoken#jwtsignpayload-secretorprivatekey-options-callback"
         severity: error
 
       - id: sign-missing-secret
@@ -139,7 +146,8 @@ functions:
           Caller MUST ensure secret exists before calling jwt.sign().
           Missing secret indicates configuration error. Should fail fast on
           startup, not at runtime during login.
-        source: "https://github.com/auth0/node-jsonwebtoken#jwtsignpayload-secretorprivatekey-options-callback"
+        sources:
+          - "https://github.com/auth0/node-jsonwebtoken#jwtsignpayload-secretorprivatekey-options-callback"
         severity: error
 
       - id: sign-invalid-options
@@ -148,7 +156,8 @@ functions:
         required_handling: >
           Caller MUST validate algorithm option. Common mistake: typo in algorithm
           name (e.g., 'HS-256' instead of 'HS256').
-        source: "https://github.com/auth0/node-jsonwebtoken#jwtsignpayload-secretorprivatekey-options-callback"
+        sources:
+          - "https://github.com/auth0/node-jsonwebtoken#jwtsignpayload-secretorprivatekey-options-callback"
         severity: error
 
       - id: sign-invalid-expiresin
@@ -157,7 +166,8 @@ functions:
         required_handling: >
           Caller MUST validate expiresIn format. Accepts seconds (number) or
           time span string ('1h', '2d', '30s'). Invalid format throws.
-        source: "https://github.com/auth0/node-jsonwebtoken#token-expiration-exp-claim"
+        sources:
+          - "https://github.com/auth0/node-jsonwebtoken#token-expiration-exp-claim"
         severity: error
 
       - id: sign-claim-conflict
@@ -166,13 +176,7 @@ functions:
         required_handling: >
           Caller MUST NOT set exp in both payload and options. Choose one method:
           either payload.exp or options.expiresIn, not both.
-        source: "https://github.com/auth0/node-jsonwebtoken#token-expiration-exp-claim"
+        sources:
+          - "https://github.com/auth0/node-jsonwebtoken#token-expiration-exp-claim"
         severity: error
 
-notes:
-  - "CRITICAL: jwt.verify() is security boundary - missing error handling = auth bypass or crash"
-  - "CVE-2015-9235: Always specify algorithms option to prevent algorithm confusion"
-  - "CVE-2022-23529, CVE-2022-23540: Fixed in v9.0.0 - use latest version"
-  - "NEVER use jwt.decode() for authentication - does not verify signatures"
-  - "Common mistake: Not checking callback err parameter before using decoded"
-  - "Best practices: Try-catch on verify/sign, algorithm whitelist, token expiration, strong secrets"
