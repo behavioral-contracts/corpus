@@ -5,6 +5,10 @@ maintainer: "corpus-team"
 last_verified: "2026-02-24"
 status: production
 
+detection:
+  factory_methods:
+    - createClient
+
 functions:
   - name: signUp
     import_path: "@supabase/supabase-js"
