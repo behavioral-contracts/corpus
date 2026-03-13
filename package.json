@@ -1,6 +1,6 @@
 {
   "name": "@behavioral-contracts/corpus",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Behavioral contracts for popular npm packages - YAML definitions of error handling requirements",
   "main": "index.js",
   "types": "index.d.ts",
