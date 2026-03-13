@@ -1,0 +1,195 @@
+package: "@elastic/elasticsearch"
+semver: ">=7.0.0 <9.0.0"
+contract_version: "1.0.0"
+maintainer: "corpus-team"
+last_verified: "2026-03-13"
+status: draft
+evidence_quality: stub
+
+detection:
+  class_names: ["Client"]
+  require_instance_tracking: true
+
+functions:
+  - name: search
+    import_path: "@elastic/elasticsearch"
+    description: >
+      Executes a search query against one or more Elasticsearch indices. Sends an HTTP
+      GET/POST request; always makes a network call. Throws on connection failure,
+      timeout, or a non-2xx HTTP response (ResponseError).
+
+    postconditions:
+      - id: api-error
+        condition: >
+          Any network or HTTP failure: connection refused, timeout, 4xx or 5xx response
+          (including 400 bad request, 401 unauthorized, 403 forbidden, 404 index not found,
+          429 too many requests, 5xx server error)
+        throws: >
+          ResponseError (4xx/5xx HTTP response, contains meta.statusCode and meta.body),
+          ConnectionError (TCP failure, TLS error), TimeoutError (requestTimeout exceeded),
+          or NoLivingConnectionsError (all pool nodes unreachable)
+        required_handling: >
+          Caller MUST wrap in try-catch. Elasticsearch network and server errors will
+          propagate and crash the caller if uncaught.
+
+          Minimum handling:
+            try {
+              const result = await client.search({ index: 'my-index', query: { ... } });
+            } catch (err) {
+              if (err instanceof errors.ResponseError) {
+                // HTTP error — check err.meta.statusCode
+              } else if (err instanceof errors.ConnectionError) {
+                // Network failure
+              }
+            }
+
+          Import error types: import { errors } from '@elastic/elasticsearch'
+        sources:
+          - "https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/client-connecting.html"
+          - "https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html"
+        severity: error
+
+  - name: index
+    import_path: "@elastic/elasticsearch"
+    description: >
+      Creates or replaces a document in an Elasticsearch index. Sends an HTTP PUT/POST
+      request. Throws on connection failure, timeout, or a non-2xx HTTP response.
+
+    postconditions:
+      - id: api-error
+        condition: >
+          Any network or HTTP failure: connection refused, timeout, 4xx or 5xx response
+          (including 409 version conflict, 429 too many requests, 5xx server error)
+        throws: >
+          ResponseError (4xx/5xx HTTP response), ConnectionError (network failure),
+          TimeoutError (requestTimeout exceeded), or NoLivingConnectionsError
+        required_handling: >
+          Caller MUST wrap in try-catch. Write operations that silently fail will cause
+          data loss. Version conflicts (409) and capacity errors (429) require
+          explicit handling for correct behavior.
+        sources:
+          - "https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/client-connecting.html"
+          - "https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html"
+        severity: error
+
+  - name: get
+    import_path: "@elastic/elasticsearch"
+    description: >
+      Retrieves a single document by ID from an Elasticsearch index. Sends an HTTP GET
+      request. Throws ResponseError with status 404 when the document does not exist
+      (unlike v7's optional ignore: [404] pattern — v8 always throws on 404).
+
+    postconditions:
+      - id: api-error
+        condition: >
+          Document not found (404), connection failure, timeout, or other HTTP error
+        throws: >
+          ResponseError with meta.statusCode=404 when document not found;
+          ResponseError for other HTTP errors; ConnectionError or TimeoutError for
+          network failures
+        required_handling: >
+          Caller MUST wrap in try-catch. A missing document throws instead of returning
+          null — callers that skip try-catch will crash when any document is absent.
+
+          Handle 404 explicitly:
+            try {
+              const doc = await client.get({ index: 'my-index', id: '123' });
+            } catch (err) {
+              if (err instanceof errors.ResponseError && err.meta.statusCode === 404) {
+                // Document not found — handle gracefully
+              } else {
+                throw err;
+              }
+            }
+        sources:
+          - "https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/client-connecting.html"
+          - "https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html"
+        severity: error
+
+  - name: delete
+    import_path: "@elastic/elasticsearch"
+    description: >
+      Deletes a document by ID from an Elasticsearch index. Sends an HTTP DELETE
+      request. Throws ResponseError with 404 if the document does not exist.
+
+    postconditions:
+      - id: api-error
+        condition: >
+          Document not found (404), connection failure, timeout, or HTTP error
+        throws: >
+          ResponseError (including 404 when document is absent), ConnectionError,
+          TimeoutError, or NoLivingConnectionsError
+        required_handling: >
+          Caller MUST wrap in try-catch. Deleting a non-existent document throws
+          ResponseError (404) — this must be handled or idempotent delete will crash.
+        sources:
+          - "https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/client-connecting.html"
+          - "https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html"
+        severity: error
+
+  - name: update
+    import_path: "@elastic/elasticsearch"
+    description: >
+      Partially updates an existing document in an Elasticsearch index using a script
+      or partial document. Throws on 404 (document not found), 409 (version conflict),
+      or network/HTTP failure.
+
+    postconditions:
+      - id: api-error
+        condition: >
+          Document not found (404), version conflict (409), connection failure, timeout,
+          or other HTTP error
+        throws: >
+          ResponseError (404 if document absent, 409 on version conflict, 5xx on server error),
+          ConnectionError, TimeoutError, or NoLivingConnectionsError
+        required_handling: >
+          Caller MUST wrap in try-catch. Version conflicts (409) are common under
+          concurrent write load and require application-level retry or conflict resolution.
+        sources:
+          - "https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/client-connecting.html"
+          - "https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html"
+        severity: error
+
+  - name: bulk
+    import_path: "@elastic/elasticsearch"
+    description: >
+      Performs multiple index/create/update/delete operations in a single HTTP request.
+      The Promise resolves even if individual items fail — callers MUST check
+      response.errors and inspect response.items for per-document failures.
+
+    postconditions:
+      - id: api-error
+        condition: >
+          Connection failure, timeout, or HTTP-level failure (the entire request fails)
+        throws: >
+          ConnectionError, TimeoutError, ResponseError (on HTTP 4xx/5xx for the bulk
+          request itself, not individual item failures), or NoLivingConnectionsError
+        required_handling: >
+          Caller MUST wrap in try-catch for connection/HTTP-level failures, AND check
+          response.errors after a successful Promise resolution for per-item failures.
+
+          Full handling:
+            try {
+              const response = await client.bulk({ operations: [...] });
+              if (response.errors) {
+                for (const item of response.items) {
+                  const op = item.index || item.create || item.update || item.delete;
+                  if (op?.error) console.error('Item failed:', op.error);
+                }
+              }
+            } catch (err) {
+              // Connection/HTTP failure for the bulk request
+            }
+        sources:
+          - "https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/client-connecting.html"
+          - "https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/client-helpers.html"
+          - "https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html"
+        severity: error
+
+notes:
+  - "v8 unwraps response body: response.hits.hits (not response.body.hits.hits as in v7)"
+  - "All methods throw synchronously on connection failure after maxRetries (default: 3)"
+  - "ResponseError.meta.statusCode has the HTTP status; ResponseError.meta.body.error.type has ES error type string"
+  - "bulk() Promise resolves even on partial failures — MUST check response.errors flag"
+  - "errors module: import { errors } from '@elastic/elasticsearch' for type-narrowing"
+  - "404 always throws in v8 — unlike v7 where ignore: [404] suppressed it"

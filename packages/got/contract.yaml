@@ -85,8 +85,8 @@ functions:
         severity: error
 
       - id: max-redirects-error
-        condition: The server redirected more than maxRedirects times (default: 10).
-        throws: MaxRedirectsError (subclass of RequestError) with code ERR_TOO_MANY_REDIRECTS
+        condition: "The server redirected more than maxRedirects times (default: 10)."
+        throws: "MaxRedirectsError (subclass of RequestError) with code ERR_TOO_MANY_REDIRECTS"
         required_handling: >
           Caller MUST wrap in try-catch. This indicates a redirect loop or misconfigured server.
           Do not retry automatically.
